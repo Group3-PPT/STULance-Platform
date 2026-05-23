@@ -1,0 +1,108 @@
+/* --- TRANG BẢNG ĐIỀU KHIỂN --- */
+.dashboard-page {
+    position: relative;
+    z-index: 10;
+}
+
+/* CV Icons */
+.cv-icon-bg {
+    width: 42px;
+    height: 42px;
+    background: rgba(59, 130, 246, 0.1);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--primary-blue);
+}
+
+.cv-item-box {
+    border: 1px solid rgba(255, 255, 255, 0.05) !important;
+    background: rgba(255, 255, 255, 0.02) !important;
+    transition: 0.3s;
+}
+
+.cv-item-box:hover {
+    border-color: var(--primary-blue) !important;
+    background: rgba(255, 255, 255, 0.05) !important;
+    transform: translateX(5px);
+}
+
+.icon-btn-sm {
+    background: none;
+    border: none;
+    color: #94a3b8;
+    padding: 5px;
+    transition: 0.2s;
+}
+
+.icon-btn-sm:hover {
+    color: white;
+    transform: scale(1.2);
+}
+
+/* Progress Bars */
+.custom-progress {
+    height: 8px !important;
+    background-color: rgba(255, 255, 255, 0.05) !important;
+    border-radius: 10px !important;
+}
+
+.custom-progress .progress-bar {
+    background-color: var(--primary-blue) !important;
+    box-shadow: 0 0 10px var(--primary-blue);
+}
+
+.custom-progress-sm {
+    height: 5px !important;
+    background-color: rgba(255, 255, 255, 0.05) !important;
+}
+
+/* Contract Cards */
+.contract-card-item {
+    border: 1px solid rgba(255, 255, 255, 0.05) !important;
+    background: rgba(255, 255, 255, 0.01) !important;
+    transition: 0.3s;
+}
+
+.contract-card-item:hover {
+    border-color: var(--primary-blue) !important;
+    background: rgba(255, 255, 255, 0.03) !important;
+}
+
+/* Typography & Badges */
+.text-primary-glow {
+    color: var(--primary-blue);
+    text-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+}
+
+.x-small-badge {
+    font-size: 9px !important;
+    padding: 4px 8px !important;
+}
+
+.uppercase-tracking {
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.bg-white-5 { background: rgba(255, 255, 255, 0.03); }
+.border-white-10 { border: 1px solid rgba(255, 255, 255, 0.08); }
+
+.x-small { font-size: 11px; }
+
+/* Animations */
+.animate-fade-in {
+    animation: fadeInDash 0.8s ease-out;
+}
+
+@keyframes fadeInDash {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 991px) {
+    .dashboard-page {
+        padding-top: 80px;
+    }
+}

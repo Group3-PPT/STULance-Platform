@@ -1,0 +1,109 @@
+/* --- TỔNG THỂ --- */
+.home-page { position: relative; z-index: 10; }
+.text-white-80 { color: rgba(255, 255, 255, 0.8); }
+
+/* --- PHẦN 1: HERO & SEARCH --- */
+.hero-search-section { padding: 80px 0 60px; }
+.main-title { letter-spacing: -2px; text-shadow: 0 10px 20px rgba(0,0,0,0.5); }
+.text-primary-glow { color: var(--primary-blue); text-shadow: 0 0 25px rgba(59, 130, 246, 0.6); }
+.hero-slogan { letter-spacing: 2px; text-transform: uppercase; opacity: 0.9; }
+
+.search-container {
+    max-width: 950px;
+    border-radius: 15px !important;
+    border: 1px solid rgba(255,255,255,0.15) !important;
+    overflow: hidden;
+}
+
+.search-header {
+    background: rgba(59, 130, 246, 0.2);
+    padding: 12px;
+    font-weight: 800;
+    font-size: 13px;
+    color: #60a5fa;
+    letter-spacing: 1px;
+}
+
+.hub-select {
+    background-color: rgba(255, 255, 255, 0.08) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    color: white !important;
+    height: 45px;
+    border-radius: 8px !important;
+}
+
+/* --- PHẦN 2: CATEGORY --- */
+.cat-card {
+    position: relative;
+    padding: 35px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    cursor: pointer;
+}
+.cat-icon-wrapper {
+    width: 70px; height: 70px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 20px; margin-bottom: 15px;
+}
+.cat-card:hover {
+    transform: translateY(-12px);
+    border-color: var(--border-color) !important;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.4), 0 0 15px var(--border-color);
+}
+
+/* --- PHẦN 3: AGENCY --- */
+.agency-logo-wrapper {
+    width: 60px; height: 60px;
+    background: white; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--primary-blue); font-size: 24px; font-weight: 800;
+}
+.slider-btn {
+    position: absolute; top: 50%; transform: translateY(-50%);
+    background: rgba(255,255,255,0.1); border: 1px solid var(--glass-border);
+    color: white; border-radius: 50%; width: 45px; height: 45px; z-index: 5;
+}
+.slider-btn.prev { left: -60px; }
+.slider-btn.next { right: -60px; }
+
+/* --- PHẦN 6: BLOG --- */
+.blog-item.big { height: 280px; position: relative; cursor: pointer; }
+.blog-item.big img { width: 100%; height: 100%; object-fit: cover; transition: 0.6s; }
+.blog-overlay {
+    position: absolute; bottom: 0; left: 0; width: 100%; height: 100%;
+    display: flex; flex-direction: column; justify-content: flex-end;
+    background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, transparent 100%);
+}
+.blog-item-desc { font-size: 13px; color: #cbd5e1; line-height: 1.5; }
+.blog-item:hover img { transform: scale(1.1); }
+
+/* --- PHẦN 7: GUIDE --- */
+.guide-step-card {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 28px;
+    height: 100%;
+    transition: 0.4s ease;
+}
+.guide-step-card:hover { transform: translateY(-10px); border-color: var(--primary-blue); }
+.step-image-wrap { background: rgba(0, 0, 0, 0.3); border-radius: 20px; padding: 15px; }
+.step-img-fluid { width: 100%; height: auto; filter: drop-shadow(0 10px 20px rgba(0,0,0,0.5)); }
+.step-number-circle {
+    width: 38px; height: 38px; background: var(--primary-blue);
+    color: white; border-radius: 50%; display: flex;
+    align-items: center; justify-content: center; font-weight: 800;
+}
+.steps-line {
+    position: absolute; top: 19px; left: 15%; right: 15%;
+    border-top: 2px dashed rgba(59, 130, 246, 0.4); z-index: 1;
+}
+
+/* --- ANIMATION --- */
+.animate-fade-in { animation: fadeIn 0.8s ease-out; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+/* Responsive */
+@media (max-width: 1200px) { .slider-btn { display: none; } }

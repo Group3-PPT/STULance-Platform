@@ -1,0 +1,92 @@
+.auth-wrapper { 
+    position: relative;
+    min-height: 100vh; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    padding: 100px 20px 60px;
+    overflow: hidden;
+}
+
+.auth-card { 
+    width: 100%;
+    max-width: 500px; 
+    padding: 40px; 
+    position: relative; 
+    z-index: 1;
+}
+
+/* Custom Tabs logic */
+.auth-tabs { display: flex; margin-bottom: 25px; border-bottom: 1px solid var(--glass-border); }
+.tab { 
+    flex: 1; 
+    padding: 15px; 
+    cursor: pointer; 
+    color: #94a3b8; 
+    text-align: center; 
+    transition: 0.3s; 
+    font-weight: 600; 
+}
+.tab.active { color: var(--primary-blue); border-bottom: 2px solid var(--primary-blue); }
+
+.role-selector { 
+    display: flex; 
+    background: rgba(255, 255, 255, 0.05); 
+    border-radius: 12px; 
+    padding: 5px; 
+    margin-bottom: 25px; 
+    border: 1px solid var(--glass-border);
+}
+
+.role-tab { 
+    flex: 1; 
+    padding: 10px; 
+    text-align: center; 
+    cursor: pointer; 
+    font-size: 13px; 
+    font-weight: 600; 
+    border-radius: 8px; 
+    transition: 0.3s;
+    color: #94a3b8;
+}
+.role-tab.active { background: var(--primary-blue); color: white; }
+
+.auth-form-container { animation: fadeIn 0.5s ease; }
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.form-group label { display: block; margin-bottom: 8px; font-size: 14px; font-weight: 500; color: #cbd5e1; }
+.form-control-dark { 
+    background: rgba(255,255,255,0.08) !important; 
+    border: 1px solid var(--glass-border) !important; 
+    color: white !important;
+    padding: 12px !important;
+    border-radius: 10px !important;
+}
+.form-control-dark:focus { 
+    border-color: var(--primary-blue) !important; 
+    background: rgba(255,255,255,0.12) !important; 
+    box-shadow: 0 0 10px rgba(59, 130, 246, 0.3) !important;
+}
+
+.social-text { margin: 25px 0 15px; color: #94a3b8; font-size: 12px; text-align: center; position: relative; }
+.social-text::before, .social-text::after { content: ""; position: absolute; top: 50%; width: 30%; height: 1px; background: var(--glass-border); }
+.social-text::before { left: 0; } .social-text::after { right: 0; }
+
+.s-btn { width: 42px; 
+    height: 42px; 
+    border-radius: 50%; 
+    border: 1px solid var(--glass-border); 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    cursor: pointer; 
+    transition: 0.3s; 
+    background: rgba(255,255,255,0.03); 
+    color: white; }
+.s-btn:hover { background: var(--primary-blue); 
+    border-color: var(--primary-blue); 
+    transform: scale(1.1); }

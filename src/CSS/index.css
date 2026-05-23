@@ -1,0 +1,35 @@
+
+:root {
+  --primary-blue: #3b82f6;
+  --dark-bg: #020617;
+  --glass: rgba(255, 255, 255, 0.03);
+  --glass-border: rgba(255, 255, 255, 0.1);
+}
+
+html, body, #root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  margin: 0;
+  background-color: var(--dark-bg);
+  color: white;
+  font-family: 'Inter', sans-serif;
+  overflow-x: hidden;
+}
+
+.glass-card {
+  background: var(--glass);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+  border-radius: 1.5rem;
+}
+
+.btn-primary {
+  background-color: var(--primary-blue);
+  border: none;
+  border-radius: 10px;
+  font-weight: 700;
+  padding: 10px 25px;
+}

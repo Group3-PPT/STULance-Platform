@@ -1,0 +1,110 @@
+/* --- TRANG ĐĂNG TIN TUYỂN DỤNG --- */
+.post-job-page {
+    position: relative;
+    z-index: 10;
+}
+
+.post-container {
+    max-width: 850px;
+    padding: 50px !important;
+    border-radius: 24px !important;
+}
+
+/* Section Header Styles */
+.form-section-wrapper {
+    background: rgba(255, 255, 255, 0.02);
+    padding: 30px;
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.section-header-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: white;
+    margin-bottom: 25px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+/* Input & Form Controls */
+.small-label {
+    font-size: 13px;
+    font-weight: 700;
+    color: #94a3b8;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* FIX CHUNG CHO CÁC Ô NHẬP LIỆU */
+.post-input {
+    background: rgba(255, 255, 255, 0.05) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    color: white !important;
+    padding: 12px 18px !important;
+    border-radius: 12px !important;
+    transition: 0.3s ease !important;
+    appearance: none; /* Tắt giao diện mặc định */
+}
+
+.post-input:focus {
+    background: rgba(255, 255, 255, 0.08) !important;
+    border-color: var(--primary-blue) !important;
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.2) !important;
+}
+
+.post-input::placeholder {
+    color: rgba(255, 255, 255, 0.2);
+    font-size: 14px;
+}
+
+/* --- FIX LỖI MŨI TÊN LẶP LẠI (Ô SELECT) --- */
+.post-input.form-select {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='white'%3e%3cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3e%3c/svg%3e") !important;
+    background-repeat: no-repeat !important;      /* KHÔNG cho lặp lại mũi tên */
+    background-position: right 15px center !important; /* Đặt mũi tên ở góc phải */
+    background-size: 12px !important;             /* Thu nhỏ mũi tên vừa vặn */
+    padding-right: 45px !important;               /* Tránh chữ đè lên mũi tên */
+}
+
+.input-hint {
+    font-size: 12px;
+    color: #64748b;
+    margin-top: 6px;
+    font-style: italic;
+}
+
+/* Nút Submit */
+.hub-btn-post {
+    background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%) !important;
+    border: none !important;
+    font-size: 16px;
+    letter-spacing: 1px;
+    border-radius: 15px !important;
+    padding: 15px !important;
+}
+
+.hub-btn-post:hover {
+    transform: translateY(-3px);
+    filter: brightness(1.1);
+    box-shadow: 0 10px 25px rgba(59, 130, 246, 0.4) !important;
+}
+
+/* Chữ phát sáng */
+.text-primary-glow {
+    color: var(--primary-blue);
+    text-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+}
+
+/* Responsive */
+@media (max-width: 767px) {
+    .post-container {
+        padding: 30px 20px !important;
+        margin-top: 100px;
+    }
+    .form-section-wrapper {
+        padding: 20px 15px;
+    }
+}

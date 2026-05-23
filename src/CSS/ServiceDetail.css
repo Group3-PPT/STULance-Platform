@@ -1,0 +1,172 @@
+/* --- CONTAINER TỔNG THỂ --- */
+.service-detail-wrapper {
+    position: relative;
+    z-index: 10;
+    padding-bottom: 100px;
+}
+
+/* --- CỘT TRÁI: NỘI DUNG CHI TIẾT --- */
+.detail-avatar {
+    width: 55px;
+    height: 55px;
+    border-radius: 50%;
+    border: 2px solid var(--primary-blue);
+    object-fit: cover;
+    transition: 0.3s;
+}
+
+.detail-avatar:hover {
+    transform: scale(1.1);
+    box-shadow: 0 0 15px rgba(59, 130, 246, 0.5);
+}
+
+.main-image-box {
+    border-radius: 24px;
+    overflow: hidden;
+    border: 1px solid var(--glass-border);
+    background: rgba(0, 0, 0, 0.2);
+}
+
+.main-service-img {
+    height: 480px;
+    width: 100%;
+    object-fit: cover;
+    transition: 0.5s ease;
+}
+
+.main-image-box:hover .main-service-img {
+    transform: scale(1.02);
+}
+
+/* Card thông tin tác giả phía dưới */
+.author-card {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 20px;
+    transition: 0.3s;
+}
+
+.author-large-img {
+    width: 100px;
+    height: 100px;
+    border-radius: 24px;
+    border: 3px solid rgba(255, 255, 255, 0.1);
+    object-fit: cover;
+}
+
+/* --- CỘT PHẢI: BẢNG GIÁ STICKY --- */
+.sticky-sidebar {
+    position: sticky;
+    top: 100px; /* Cách Navbar một khoảng */
+    z-index: 100;
+}
+
+/* Tabs chọn gói Basic/Premium */
+.package-tabs {
+    display: flex;
+    background: rgba(0, 0, 0, 0.4);
+    border-bottom: 1px solid var(--glass-border);
+}
+
+.package-tab-item {
+    flex: 1;
+    padding: 18px;
+    text-align: center;
+    cursor: pointer;
+    font-weight: 800;
+    font-size: 14px;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: 0.3s all ease;
+}
+
+.package-tab-item:hover {
+    color: white;
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.package-tab-item.active {
+    color: white;
+    background: rgba(59, 130, 246, 0.1);
+    border-bottom: 3px solid var(--primary-blue);
+}
+
+/* Giá tiền và Nút bấm */
+.hub-btn-pink {
+    background: #f02f5c !important; /* Màu hồng đỏ đặc trưng của Freelance Hub */
+    border: none !important;
+    border-radius: 12px !important;
+    font-size: 16px;
+    letter-spacing: 0.5px;
+    transition: 0.3s;
+}
+
+.hub-btn-pink:hover {
+    background: #ff1e50 !important;
+    transform: translateY(-3px);
+    box-shadow: 0 10px 20px rgba(240, 47, 92, 0.4);
+}
+
+/* --- CÁC THÀNH PHẦN TYPOGRAPHY & NHỎ --- */
+.text-white-80 {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 15px;
+    line-height: 1.8;
+}
+
+.text-primary-glow {
+    color: var(--primary-blue);
+    text-shadow: 0 0 15px rgba(59, 130, 246, 0.5);
+    font-weight: 800;
+}
+
+.x-small {
+    font-size: 11px;
+    letter-spacing: 0.5px;
+}
+
+.whitespace-pre-line {
+    white-space: pre-line;
+}
+
+/* --- ANIMATION --- */
+.animate-fade-in {
+    animation: detailFadeIn 0.6s ease-out;
+}
+
+@keyframes detailFadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* --- RESPONSIVE --- */
+@media (max-width: 1199px) {
+    .main-service-img {
+        height: 350px;
+    }
+}
+
+@media (max-width: 991px) {
+    .sticky-sidebar {
+        position: static;
+        margin-top: 40px;
+    }
+    .main-service-img {
+        height: 280px;
+    }
+    .author-large-img {
+        width: 80px;
+        height: 80px;
+    }
+}
+
+@media (max-width: 575px) {
+    .detail-content h1 {
+        font-size: 1.5rem;
+    }
+    .package-tab-item {
+        padding: 12px;
+        font-size: 12px;
+    }
+}

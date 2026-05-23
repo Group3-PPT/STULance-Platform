@@ -1,0 +1,106 @@
+/* --- CONTRACT STYLES --- */
+.contract-page-container { position: relative; z-index: 10; }
+
+.contract-paper {
+    background: #fff;
+    color: #000;
+    padding: 80px 70px; /* Padding lớn đúng kiểu in ấn */
+    font-family: "Times New Roman", Times, serif;
+    line-height: 1.5;
+    min-height: 1100px;
+}
+
+.doc-divider {
+    width: 160px;
+    height: 1.5px;
+    background: #000;
+    margin-top: 5px;
+}
+
+.party-box {
+    padding: 15px;
+    background: #f9fafb;
+    border-radius: 4px;
+    border-left: 5px solid #2c424e;
+}
+
+.party-box p, .articles p {
+    margin-bottom: 5px;
+    font-size: 14.5px; /* Size chữ chuẩn hợp đồng */
+}
+
+.articles h6 {
+    margin-top: 20px;
+    font-size: 15px;
+}
+
+.masked-data {
+    font-family: monospace;
+    background: #f1f5f9;
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-weight: bold;
+}
+
+/* Chữ ký & Con dấu */
+.signature-row { display: grid; grid-template-columns: 1fr 1fr; }
+
+.stamp-box {
+    width: 130px;
+    height: 80px;
+    border: 5px double;
+    margin: 15px auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 900;
+    font-size: 22px;
+    transform: rotate(-12deg);
+    opacity: 0.85;
+}
+
+.signed { border-color: #b91c1c; color: #b91c1c; }
+.signed-blue { border-color: #1d4ed8; color: #1d4ed8; }
+
+.empty-sig {
+    height: 80px;
+    margin: 15px auto;
+    border: 1px dashed #d1d5db;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #9ca3af;
+    width: 150px;
+}
+
+/* UI Sidebar & Helpers */
+.sticky-sidebar { position: sticky; top: 100px; }
+.bg-white-5 { background: rgba(255, 255, 255, 0.05); }
+.border-white-10 { border: 1px solid rgba(255, 255, 255, 0.1); }
+
+.alert-info-box {
+    background: rgba(245, 158, 11, 0.1);
+    padding: 12px;
+    border-radius: 10px;
+    border: 1px solid rgba(245, 158, 11, 0.2);
+}
+
+.btn-back-link {
+    text-decoration: none;
+    color: var(--primary-blue);
+    font-weight: bold;
+}
+
+/* Print Settings */
+@media print {
+    .navbar, .btn-back-link, .sticky-sidebar, #canvas-container, button {
+        display: none !important;
+    }
+    body { background: white !important; }
+    .contract-paper { 
+        box-shadow: none !important; 
+        width: 100% !important; 
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+}

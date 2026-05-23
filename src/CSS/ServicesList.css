@@ -1,0 +1,82 @@
+/* --- TRANG DANH SÁCH DỊCH VỤ --- */
+.services-list-page {
+    position: relative;
+    z-index: 10;
+}
+
+.title-underline {
+    width: 50px;
+    height: 3px;
+    background: #2ecc71; /* Màu xanh lá như trong ảnh mẫu */
+    margin-top: 15px;
+    border-radius: 10px;
+}
+
+/* Card chứa nhóm danh mục */
+.category-group-card {
+    padding: 25px;
+    height: 100%;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    transition: all 0.3s ease;
+}
+
+.category-group-card:hover {
+    border-color: #2ecc71 !important;
+    background: rgba(255, 255, 255, 0.05);
+    transform: translateY(-5px);
+}
+
+/* Icon hình tròn xanh */
+.cat-icon-box {
+    width: 40px;
+    height: 40px;
+    background: #2ecc71;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.total-count {
+    font-size: 14px;
+    font-weight: 400;
+    color: #94a3b8;
+}
+
+/* Danh sách con */
+.sub-cat-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.sub-cat-item {
+    margin-bottom: 12px;
+}
+
+.sub-cat-link {
+    text-decoration: none;
+    color: #cbd5e1;
+    font-size: 14px;
+    transition: 0.2s;
+    display: inline-block;
+}
+
+.sub-cat-link:hover {
+    color: #2ecc71;
+    padding-left: 5px;
+}
+
+.sub-count {
+    color: #64748b;
+    font-size: 13px;
+}
+
+/* Responsive */
+@media (max-width: 991px) {
+    .category-group-card {
+        padding: 20px;
+    }
+}

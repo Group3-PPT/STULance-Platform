@@ -1,0 +1,78 @@
+/* --- TRANG DOANH NGHIỆP --- */
+.businesses-page {
+    position: relative;
+    z-index: 10;
+}
+
+/* Thẻ Card Doanh nghiệp */
+.biz-card {
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+.biz-card:hover {
+    transform: translateY(-12px); /* Bay lên cao hơn một chút */
+    border-color: var(--primary-blue) !important;
+    background: rgba(255, 255, 255, 0.06);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+}
+
+/* Hiệu ứng Logo trắng rồi có màu */
+.biz-logo-wrapper {
+    width: 90px;
+    height: 90px;
+    background: white;
+    border-radius: 20px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 15px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    transition: 0.3s;
+}
+
+.biz-logo-wrapper img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    filter: grayscale(1); /* Mặc định là xám */
+    transition: 0.4s;
+}
+
+.biz-card:hover .biz-logo-wrapper {
+    transform: scale(1.1) rotate(5deg);
+}
+
+.biz-card:hover .biz-logo-wrapper img {
+    filter: grayscale(0); /* Hover vào hiện màu */
+}
+
+/* Chữ phát sáng */
+.text-primary-glow {
+    color: var(--primary-blue);
+    text-shadow: 0 0 15px rgba(59, 130, 246, 0.6);
+}
+
+/* Thống kê */
+.stat-item span {
+    font-size: 1.2rem;
+}
+
+/* Animation */
+.animate-fade-in {
+    animation: fadeIn 0.8s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Responsive tinh chỉnh */
+@media (max-width: 768px) {
+    .biz-logo-wrapper {
+        width: 80px;
+        height: 80px;
+    }
+}

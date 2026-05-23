@@ -1,0 +1,100 @@
+/* --- TRANG ĐĂNG DỊCH VỤ --- */
+.post-service-page {
+    position: relative;
+    z-index: 10;
+}
+
+/* Upload Dropzone */
+.upload-dropzone {
+    border: 2px dashed rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.02);
+    cursor: pointer;
+    transition: 0.3s;
+    position: relative;
+    overflow: hidden;
+    min-height: 250px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.upload-dropzone:hover {
+    border-color: var(--primary-blue);
+    background: rgba(59, 130, 246, 0.05);
+}
+
+.img-preview-full {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    position: absolute;
+    inset: 0;
+}
+
+/* Tier Switcher */
+.tier-switcher {
+    background: rgba(0, 0, 0, 0.4);
+    border-bottom: 1px solid var(--glass-border);
+}
+
+.tier-btn {
+    flex: 1;
+    padding: 15px;
+    text-align: center;
+    cursor: pointer;
+    font-weight: 800;
+    font-size: 13px;
+    color: #64748b;
+    text-transform: uppercase;
+    transition: 0.3s;
+}
+
+.tier-btn.active {
+    color: white;
+    background: rgba(59, 130, 246, 0.15);
+    border-bottom: 3px solid var(--primary-blue);
+}
+
+/* Input Styles */
+.small-label {
+    font-size: 12px;
+    font-weight: 700;
+    color: #94a3b8;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.post-input {
+    background: rgba(255, 255, 255, 0.05) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    color: white !important;
+    border-radius: 12px !important;
+}
+
+.post-input:focus {
+    border-color: var(--primary-blue) !important;
+    box-shadow: 0 0 15px rgba(59, 130, 246, 0.2) !important;
+}
+
+.bg-dark-input {
+    background: rgba(0, 0, 0, 0.2) !important;
+}
+
+/* Button & Badge */
+.hub-btn-pink {
+    background: #f02f5c !important;
+    border: none !important;
+}
+
+.text-primary-glow {
+    color: var(--primary-blue);
+    text-shadow: 0 0 15px rgba(59, 130, 246, 0.6);
+}
+
+.x-small { font-size: 11px; }
+
+@media (max-width: 991px) {
+    .post-service-page { padding-top: 80px; }
+}

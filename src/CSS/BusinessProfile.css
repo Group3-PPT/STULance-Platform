@@ -1,0 +1,121 @@
+/* --- TRANG HỒ SƠ DOANH NGHIỆP --- */
+.biz-profile-page {
+    position: relative;
+    z-index: 10;
+}
+
+/* Hero & Banner */
+.biz-hero {
+    position: relative;
+    padding-bottom: 40px;
+    margin-bottom: 30px;
+}
+
+.biz-banner-wrap {
+    height: 300px;
+    width: 100%;
+    overflow: hidden;
+    position: relative;
+}
+
+.biz-banner-wrap::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to bottom, transparent, var(--dark-bg));
+}
+
+.biz-banner-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0.5;
+}
+
+/* Logo Overlap */
+.biz-main-info-row {
+    display: flex;
+    align-items: flex-end;
+    gap: 30px;
+    margin-top: -100px;
+    position: relative;
+    z-index: 20;
+}
+
+.biz-logo-large {
+    width: 180px;
+    height: 180px;
+    padding: 15px;
+    background: white !important;
+    border: 6px solid var(--dark-bg) !important;
+    border-radius: 28px !important;
+    flex-shrink: 0;
+}
+
+.biz-logo-large img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+/* Stats */
+.biz-stats-bar {
+    padding: 25px !important;
+    border-radius: 24px !important;
+}
+
+.stat-box h3 {
+    margin-bottom: 5px;
+    font-size: 26px;
+}
+
+/* Sidebar Contact Styles */
+.contact-icon-bg {
+    width: 36px;
+    height: 36px;
+    background: rgba(59, 130, 246, 0.1);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--primary-blue);
+    flex-shrink: 0;
+}
+
+/* Hiring List */
+.job-hiring-item {
+    background: rgba(255, 255, 255, 0.02) !important;
+    border: 1px solid rgba(255, 255, 255, 0.06) !important;
+    transition: 0.3s;
+}
+
+.job-hiring-item:hover {
+    border-color: var(--primary-blue) !important;
+    background: rgba(255, 255, 255, 0.05) !important;
+    transform: translateX(8px);
+}
+
+.text-accent { color: var(--accent); }
+.text-secondary-cv { color: #cbd5e1; line-height: 1.8; font-size: 15px; text-align: justify; }
+
+.text-primary-glow {
+    color: var(--primary-blue);
+    text-shadow: 0 0 15px rgba(59, 130, 246, 0.6);
+}
+
+/* Responsive */
+@media (max-width: 991px) {
+    .biz-main-info-row {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        margin-top: -80px;
+    }
+    
+    .border-end-md {
+        border-right: none !important;
+        border-bottom: 1px solid var(--border);
+        padding-bottom: 15px;
+        margin-bottom: 15px;
+    }
+}

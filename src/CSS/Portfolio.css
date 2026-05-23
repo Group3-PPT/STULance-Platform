@@ -1,0 +1,113 @@
+/* --- TRANG PORTFOLIO EDITABLE --- */
+.portfolio-page {
+    position: relative;
+    z-index: 10;
+}
+
+/* Nút chuyển đổi chế độ Edit */
+.btn-edit-toggle {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    z-index: 1050;
+    padding: 15px 30px !important;
+    border-radius: 50px !important;
+    font-weight: 800 !important;
+}
+
+/* Avatar Chỉnh sửa */
+.editable-avatar-container {
+    position: relative;
+    display: inline-block;
+}
+
+.profile-avatar {
+    width: 200px;
+    height: 200px;
+    object-fit: cover;
+    border-radius: 30px;
+    border: 5px solid var(--dark-bg);
+    transition: 0.3s;
+}
+
+.editable-avatar-container.editing .profile-avatar {
+    filter: brightness(0.5);
+}
+
+.camera-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    cursor: pointer;
+}
+
+.avatar-url-input {
+    width: 150px;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid white;
+    font-size: 10px;
+    color: white;
+    border-radius: 5px;
+}
+
+/* Form Styles */
+.bg-dark-input {
+    background: rgba(255, 255, 255, 0.05) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    color: white !important;
+}
+
+.bg-dark-input:focus {
+    border-color: var(--primary-blue) !important;
+    background: rgba(255, 255, 255, 0.08) !important;
+}
+
+.border-dashed-blue {
+    border: 1px dashed var(--primary-blue) !important;
+}
+
+/* Badge Kỹ năng */
+.skill-badge-edit {
+    display: flex;
+    align-items: center;
+    font-weight: 600 !important;
+}
+
+.pointer { cursor: pointer; }
+
+/* Thẻ dự án */
+.project-img-thumb {
+    height: 220px;
+    object-fit: cover;
+}
+
+.project-edit-card {
+    transition: 0.3s;
+}
+
+.text-secondary-cv {
+    color: #94a3b8;
+    line-height: 1.8;
+}
+
+.text-primary-glow {
+    color: var(--primary-blue);
+    text-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .profile-avatar {
+        width: 150px;
+        height: 150px;
+    }
+    .btn-edit-toggle {
+        bottom: 20px;
+        right: 20px;
+        padding: 10px 20px !important;
+    }
+}

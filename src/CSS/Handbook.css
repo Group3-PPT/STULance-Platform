@@ -1,0 +1,133 @@
+/* --- TRANG CẨM NANG --- */
+.handbook-page {
+    position: relative;
+    z-index: 10;
+}
+
+/* Category Filter */
+.cat-pill {
+    background: rgba(255, 255, 255, 0.03) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    color: #94a3b8 !important;
+    padding: 8px 25px !important;
+    border-radius: 50px !important;
+    font-weight: 600 !important;
+    transition: 0.3s !important;
+}
+
+.cat-pill:hover, .cat-pill.active {
+    background: var(--primary-blue) !important;
+    color: white !important;
+    border-color: var(--primary-blue) !important;
+    box-shadow: 0 0 15px rgba(59, 130, 246, 0.4);
+}
+
+/* Blog Card New Style */
+.blog-card-new {
+    border-radius: 25px !important;
+    overflow: hidden;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+.blog-card-new:hover {
+    transform: translateY(-12px);
+    border-color: var(--primary-blue) !important;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.blog-img-box {
+    position: relative;
+    height: 200px;
+    overflow: hidden;
+}
+
+.blog-thumb {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: 0.5s ease;
+}
+
+.blog-card-new:hover .blog-thumb {
+    transform: scale(1.1);
+}
+
+.blog-cat-badge {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: var(--primary-blue);
+    color: white;
+    padding: 4px 15px;
+    border-radius: 50px;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 1px;
+}
+
+/* Typography */
+.blog-title {
+    line-height: 1.5;
+    transition: 0.3s;
+}
+
+.blog-card-new:hover .blog-title {
+    color: var(--primary-blue) !important;
+}
+
+.blog-meta-top {
+    font-size: 11px;
+    color: #64748b;
+    font-weight: 600;
+}
+
+.text-muted-cv {
+    color: #94a3b8;
+    line-height: 1.6;
+}
+
+.read-more-link {
+    text-decoration: none;
+    color: var(--primary-blue);
+    font-weight: 800;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: 0.3s;
+}
+
+.read-more-link:hover {
+    gap: 15px !important; /* Hiệu ứng icon mũi tên đẩy ra xa */
+}
+
+/* Nút xem thêm */
+.btn-load-more {
+    background: transparent;
+    border: 2px solid var(--primary-blue);
+    color: var(--primary-blue);
+    padding: 12px 40px;
+    border-radius: 50px;
+    font-weight: 800;
+    transition: 0.3s;
+}
+
+.btn-load-more:hover {
+    background: var(--primary-blue);
+    color: white;
+}
+
+.text-primary-glow {
+    color: var(--primary-blue);
+    text-shadow: 0 0 15px rgba(59, 130, 246, 0.6);
+}
+
+/* Animation */
+.animate-fade-in {
+    animation: fadeInPage 0.8s ease-out;
+}
+
+@keyframes fadeInPage {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
