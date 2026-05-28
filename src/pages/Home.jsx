@@ -5,7 +5,7 @@ import {
   Search, Code, Layout, Briefcase, MapPin, 
   Building2, Bookmark, ChevronRight, ChevronLeft,
   UserPlus, MessagesSquare, FileText, CheckCircle2,
-  Calendar, Eye, Clock, Wallet, Sparkles
+  Calendar, Eye, Clock, Wallet, Sparkles, Database,GraduationCap
 } from 'lucide-react';
 import '../CSS/Home.css';
 
@@ -24,8 +24,8 @@ const Home = () => {
               "Hành trình khởi nghiệp - Kết nối tri thức"
             </p>
             <p className="hero-description lead mx-auto text-white-80" style={{ maxWidth: '750px' }}>
-              Nền tảng hàng đầu kết nối sinh viên tài năng với các dự án thực tế từ doanh nghiệp. 
-              Nâng tầm kỹ năng, xây dựng hồ sơ năng lực chuyên nghiệp ngay từ khi còn ngồi trên ghế nhà trường.
+              Nền tảng hàng đầu kết nối sinh viên tài năng với các dự án thực tế. 
+              Nâng tầm kỹ năng, xây dựng hồ sơ năng lực chuyên nghiệp ngay từ khi còn đi học.
             </p>
           </div>
 
@@ -56,7 +56,7 @@ const Home = () => {
       {/* --- PHẦN 2: CATEGORY GRID --- */}
       <section className="category-section py-5">
         <Container>
-          <div className="section-header-wrap mb-5">
+          <div className="section-header-wrap mb-5 text-center">
             <h2 className="text-white fw-bold">Khám phá theo danh mục</h2>
             <p className="text-white-50">Tìm kiếm công việc phù hợp với chuyên môn của bạn</p>
           </div>
@@ -72,7 +72,7 @@ const Home = () => {
               <Col xs={12} sm={6} md={4} lg={2} key={index}>
                 <div className="cat-card glass-card h-100" style={{"--border-color": item.color}}>
                   <div className="cat-icon-wrapper" style={{color: item.color, backgroundColor: `${item.color}15`}}>{item.icon}</div>
-                  <div className="cat-content mt-3">
+                  <div className="cat-content mt-3 text-center">
                     <h5 className="cat-title text-white">{item.title}</h5>
                     <div className="cat-stats"><span className="count-num" style={{color: item.color}}>{item.count}</span> <span className="text-white-50 ms-1">Dự án</span></div>
                   </div>
@@ -83,26 +83,26 @@ const Home = () => {
         </Container>
       </section>
 
-      {/* --- PHẦN 3: CÁC CÔNG TY MÔI GIỚI ĐỀ XUẤT --- */}
+      {/* --- PHẦN 3: ĐỐI TÁC TIÊU BIỂU (4 CỘT) --- */}
       <section className="agency-section py-5">
         <Container>
           <div className="text-center mb-5">
             <h2 className="fw-bold text-white">Đối tác tuyển dụng tiêu biểu</h2>
           </div>
           <div className="position-relative">
-            <Button className="slider-btn prev"><ChevronLeft /></Button>
             <Row className="g-4">
               {[
-                { name: "Levatech Freelance", projects: "98,325", desc: "Đơn vị cung cấp nhân sự tự do hàng đầu trong ngành công nghệ thông tin.", logo: "L" },
-                { name: "Findy Freelance", projects: "2,269", desc: "Nền tảng môi giới dành riêng cho các kỹ sư tài năng với mức lương hấp dẫn.", logo: "F" },
-                { name: "Coconala Tech", projects: "6,346", desc: "Dịch vụ giới thiệu dự án lớn nhất với hơn 30.000 đầu việc đang hoạt động.", logo: "C" }
+                { name: "Levatech Freelance", projects: "98,325", desc: "Đơn vị cung cấp nhân sự tự do hàng đầu trong ngành IT.", logo: "L" },
+                { name: "Findy Freelance", projects: "2,269", desc: "Nền tảng môi giới dành riêng cho các kỹ sư tài năng.", logo: "F" },
+                { name: "Coconala Tech", projects: "6,346", desc: "Dịch vụ giới thiệu dự án lớn nhất với hơn 30.000 đầu việc.", logo: "C" },
+                { name: "Global Hub", projects: "1,150", desc: "Kết nối sinh viên với các dự án outsourcing quốc tế.", logo: "G" }
               ].map((agency, i) => (
-                <Col md={4} key={i}>
+                <Col md={6} lg={3} key={i}>
                   <div className="agency-card glass-card p-4 h-100 text-center">
                     <div className="agency-logo-wrapper mx-auto mb-3">{agency.logo}</div>
                     <h5 className="text-white fw-bold">{agency.name}</h5>
                     <div className="text-primary small mb-3"><Briefcase size={14} className="me-1"/> {agency.projects} dự án</div>
-                    <p className="text-white-50 small mb-4">{agency.desc}</p>
+                    <p className="text-white-50 small mb-4 line-clamp-2">{agency.desc}</p>
                     <div className="d-flex gap-2">
                       <Button variant="outline-primary" size="sm" className="flex-grow-1">Xem tin</Button>
                       <Button variant="primary" size="sm" className="flex-grow-1">Chi tiết</Button>
@@ -111,33 +111,132 @@ const Home = () => {
                 </Col>
               ))}
             </Row>
-            <Button className="slider-btn next"><ChevronRight /></Button>
           </div>
         </Container>
       </section>
+      {/* --- PHẦN 4: MẠNG LƯỚI TRƯỜNG LIÊN KẾT (4 CỘT) --- */}
+<section className="university-section py-5">
+  <Container>
+    <div className="text-center mb-5">
+      <h2 className="fw-bold text-white">Mạng lưới trường học đối tác</h2>
+      <p className="text-white-50">StudentLance tự hào đồng hành cùng các đơn vị đào tạo hàng đầu</p>
+    </div>
+    <Row className="g-4">
+      {[
+        { 
+          name: "ĐH Bách Khoa Hà Nội", 
+          type: "Kỹ thuật & Công nghệ", 
+          stats: "15,000+ SV", 
+          logo: "https://upload.wikimedia.org/wikipedia/vi/1/1b/Logo_Đại_học_Bách_Khoa_Hà_Nội.png" 
+        },
+        { 
+          name: "ĐH Kinh tế Quốc dân", 
+          type: "Kinh tế & Quản lý", 
+          stats: "12,000+ SV", 
+          logo: "https://upload.wikimedia.org/wikipedia/vi/8/82/Logo_Đại_học_Kinh_tế_Quốc_dân.svg" 
+        },
+        { 
+          name: "Đại học FPT", 
+          type: "CNTT & Mỹ thuật số", 
+          stats: "20,000+ SV", 
+          logo: "https://upload.wikimedia.org/wikipedia/commons/1/11/FPT_logo.svg" 
+        },
+        { 
+          name: "ĐH Ngoại thương", 
+          type: "Kinh tế & Đối ngoại", 
+          stats: "10,000+ SV", 
+          logo: "https://upload.wikimedia.org/wikipedia/vi/a/a2/Logo_Đại_học_Ngoại_thương.png" 
+        }
+      ].map((uni, i) => (
+        <Col md={6} lg={3} key={i}>
+          <div className="uni-card-home glass-card p-4 h-100 text-center">
+            {/* Logo Wrapper với hiệu ứng Grayscale */}
+            <div className="uni-logo-box mx-auto mb-3">
+              <img src={uni.logo} alt={uni.name} className="uni-logo-img" />
+            </div>
+            
+            <h6 className="text-white fw-bold mb-2" style={{minHeight: '40px'}}>{uni.name}</h6>
+            
+            <div className="d-flex flex-column gap-1 mb-3">
+               <span className="x-small text-primary-glow fw-bold">{uni.type}</span>
+               <span className="x-small text-white-50"><GraduationCap size={12} className="me-1"/> {uni.stats} tham gia</span>
+            </div>
 
-      {/* --- PHẦN 5: DANH SÁCH MỚI --- */}
+            <Button as={Link} to="/universities" variant="outline-light" size="sm" className="w-100 py-2 btn-uni-more">
+              XEM CHI TIẾT <ChevronRight size={14} className="ms-1"/>
+            </Button>
+          </div>
+        </Col>
+      ))}
+    </Row>
+  </Container>
+</section>
+
+      {/* --- PHẦN 5: DỰ ÁN MỚI (4 CỘT - NỘI DUNG THEO YÊU CẦU) --- */}
       <section className="new-listings py-5">
         <Container>
           <div className="text-center mb-5">
             <h2 className="fw-bold text-white">Dự án mới đăng tải</h2>
           </div>
           <Row className="g-4">
-            {[1, 2, 3].map((item) => (
-              <Col md={4} key={item}>
-                <div className="project-card-detail glass-card p-4">
-                  <Badge bg="warning" className="mb-3 text-dark">MỚI</Badge>
-                  <h6 className="text-primary fw-bold mb-3 line-clamp-2">
-                    [Kỹ sư AI] Dự án phân tích dữ liệu ứng dụng y tế và giáo dục 2026
+            {[
+              {
+                tag: "SV HỖ TRỢ",
+                tagColor: "info",
+                title: "[SV Hỗ Trợ] Hướng dẫn & Fix lỗi Đồ án Tốt nghiệp ngành IT",
+                location: "Online / Thủ Đức",
+                price: "250.000đ",
+                unit: "gói",
+                icon: <Sparkles size={16}/>
+              },
+              {
+                tag: "VIỆC LÀM NHANH",
+                tagColor: "success",
+                title: "Tuyển cộng tác viên nhập liệu Data sản phẩm TMĐT",
+                location: "Làm việc từ xa",
+                price: "10.000đ",
+                unit: "giờ",
+                icon: <Database size={16}/>
+              },
+              {
+                tag: "SV HỖ TRỢ",
+                tagColor: "info",
+                title: "[Gấp] Hỗ trợ vẽ CAD & làm báo cáo Đồ án cơ khí",
+                location: "Quận 9, TP. HCM",
+                price: "300.000đ",
+                unit: "dự án",
+                icon: <Layout size={16}/>
+              },
+              {
+                tag: "DATA ENTRY",
+                tagColor: "warning",
+                title: "Xử lý số liệu thô và dán nhãn dữ liệu AI (Data Labeling)",
+                location: "Làm việc từ xa",
+                price: "10.000đ",
+                unit: "giờ",
+                icon: <FileText size={16}/>
+              }
+            ].map((project, index) => (
+              <Col md={6} lg={3} key={index}>
+                <div className="project-card-detail glass-card p-4 h-100 d-flex flex-column">
+                  <Badge bg={project.tagColor} className="mb-3 text-dark w-fit-content py-2 px-3">
+                    {project.tag}
+                  </Badge>
+                  <h6 className="text-primary fw-bold mb-3 line-clamp-2" style={{minHeight: '44px'}}>
+                    {project.title}
                   </h6>
-                  <ul className="project-meta-list list-unstyled mb-4">
-                    <li><Clock size={14}/> Có thể làm việc từ xa</li>
-                    <li><Wallet size={14}/> <span className="text-danger fw-bold">12.000.000đ</span> /tháng</li>
-                    <li><MapPin size={14}/> Quận 1, TP. Hồ Chí Minh</li>
+                  <ul className="project-meta-list list-unstyled mb-4 flex-grow-1">
+                    <li className="text-white-50 small mb-2"><Clock size={14}/> Vừa xong</li>
+                    <li className="text-white-50 small mb-2"><MapPin size={14}/> {project.location}</li>
+                    <li className="mt-3">
+                      <div className="text-danger fw-bold h5 mb-0">
+                        {project.price} <small className="text-white-50 fw-light fs-6">/{project.unit}</small>
+                      </div>
+                    </li>
                   </ul>
                   <div className="d-flex gap-2">
-                    <Button variant="outline-light" className="w-25"><Bookmark size={18}/></Button>
-                    <Button as={Link} to="/jobs" variant="primary" className="w-75 fw-bold">Xem chi tiết</Button>
+                    <Button variant="outline-light" className="px-2"><Bookmark size={18}/></Button>
+                    <Button as={Link} to="/jobs" variant="primary" className="w-100 fw-bold">Chi tiết</Button>
                   </div>
                 </div>
               </Col>
@@ -147,7 +246,7 @@ const Home = () => {
       </section>
 
       {/* --- PHẦN 6: NỘI DUNG PHỔ BIẾN & MỚI --- */}
-      <section className="blog-section py-5 mb-5">
+      <section className="blog-section py-5">
         <Container>
           <Row className="g-5">
             <Col lg={8}>
@@ -155,32 +254,32 @@ const Home = () => {
               <Row className="g-3">
                 <Col md={6}>
                   <div className="blog-item big glass-card overflow-hidden">
-                    <img src="https://images.unsplash.com/photo-1498050108023-c5249f4df085" alt="blog" />
+                    <img src="https://images.unsplash.com/photo-1498050108023-c5249f4df085" alt="blog" className="w-100" />
                     <div className="blog-overlay p-4">
                       <h6 className="text-white fw-bold mb-2">Làm việc tự do là gì? Hướng dẫn cho sinh viên</h6>
-                      <p className="blog-item-desc">Khám phá định nghĩa Freelance và lộ trình bắt đầu công việc tự do ngay từ khi còn đi học.</p>
+                      <p className="blog-item-desc small text-white-50">Khám phá định nghĩa Freelance và lộ trình bắt đầu công việc.</p>
                     </div>
                   </div>
                 </Col>
                 <Col md={6}>
                   <div className="blog-item big glass-card overflow-hidden">
-                    <img src="https://images.unsplash.com/photo-1519389950473-47ba0277781c" alt="blog" />
+                    <img src="https://images.unsplash.com/photo-1519389950473-47ba0277781c" alt="blog" className="w-100" />
                     <div className="blog-overlay p-4">
                       <h6 className="text-white fw-bold mb-2">5 bước để trở thành một Freelancer thành công</h6>
-                      <p className="blog-item-desc">Bí quyết xây dựng thương hiệu cá nhân và kỹ năng quản lý tài chính cho người mới.</p>
+                      <p className="blog-item-desc small text-white-50">Bí quyết xây dựng thương hiệu cá nhân chuyên nghiệp.</p>
                     </div>
                   </div>
                 </Col>
               </Row>
             </Col>
             <Col lg={4}>
-              <h4 className="text-white fw-bold mb-4 border-start border-primary border-4 ps-3">Nội dung mới</h4>
+              <h4 className="text-white fw-bold mb-4 border-start border-primary border-4 ps-3">Tin tức mới</h4>
               <div className="new-content-list">
                 {[1, 2, 3].map(i => (
                   <div key={i} className="new-content-item d-flex gap-3 mb-4">
-                    <div className="small-thumb glass-card"><Code size={20}/></div>
+                    <div className="small-thumb glass-card flex-shrink-0 d-flex align-items-center justify-content-center" style={{width: '50px', height: '50px'}}><Code size={20} className="text-primary"/></div>
                     <div>
-                      <h6 className="text-white small fw-bold mb-1">Nâng cao kiến thức lập trình hệ thống 2026</h6>
+                      <h6 className="text-white small fw-bold mb-1 line-clamp-2">Nâng cao kiến thức lập trình hệ thống cho sinh viên năm cuối</h6>
                       <div className="text-white-50 x-small"><Calendar size={10}/> 22/05/2024</div>
                     </div>
                   </div>
@@ -191,30 +290,26 @@ const Home = () => {
         </Container>
       </section>
 
-      {/* --- PHẦN 7: HƯỚNG DẪN SỬ DỤNG --- */}
-      <section className="how-to-use-section py-5">
+      {/* --- PHẦN 7: HƯỚNG DẪN SỬ DỤNG (4 CỘT) --- */}
+      <section className="how-to-use-section py-5 mb-5">
         <Container>
           <div className="text-center mb-5">
-            <h2 className="guide-title fw-bold text-white">Hướng dẫn sử dụng Student Freelance PLATFORM</h2>
+            <h2 className="guide-title fw-bold text-white">Hướng dẫn sử dụng Platform</h2>
             <div className="guide-underline mx-auto"></div>
           </div>
           <div className="steps-wrapper">
-            <div className="steps-line d-none d-lg-block"></div>
             <Row className="g-4">
               {[
-                { step: 1, img: "https://img.freepik.com/free-vector/isometric-working-character-design_23-2148498293.jpg", title: "Ứng tuyển", desc: "Tìm kiếm dự án từ hơn 360.000 tin đăng dựa trên kỹ năng của bạn." },
-                { step: 2, img: "https://img.freepik.com/free-vector/isometric-business-consulting-illustration_23-2148332158.jpg", title: "Tư vấn & Đề xuất", desc: "Hệ thống AI sẽ gửi đến bạn các đề xuất việc làm phù hợp nhất." },
-                { step: 3, img: "https://img.freepik.com/free-vector/flat-isometric-illustration-concept-strategic-analysis-business-meeting_130740-41.jpg", title: "Đàm phán", desc: "Thảo luận trực tiếp với doanh nghiệp về các điều khoản dự án." },
-                { step: 4, img: "https://img.freepik.com/free-vector/isometric-business-agreement-illustration_23-2148354228.jpg", title: "Ký kết & Làm việc", desc: "Hợp đồng điện tử được ký kết và bạn bắt đầu hành trình của mình." }
+                { step: 1, title: "Tìm việc", desc: "Duyệt qua hàng ngàn dự án phù hợp với kỹ năng của bạn." },
+                { step: 2, title: "Ứng tuyển", desc: "Gửi đề xuất và trao đổi trực tiếp với người đăng tin." },
+                { step: 3, title: "Làm việc", desc: "Thực hiện dự án và báo cáo tiến độ qua hệ thống." },
+                { step: 4, title: "Nhận tiền", desc: "Nhận thanh toán an toàn sau khi hoàn thành công việc." }
               ].map((item, index) => (
-                <Col lg={3} md={6} key={index} className="step-item p-3 text-center">
-                  <div className="step-number-circle mx-auto mb-3">{item.step}</div>
-                  <div className="guide-step-card p-4">
-                    <div className="step-image-wrap mb-4">
-                      <img src={item.img} alt={item.title} className="step-img-fluid" />
-                    </div>
+                <Col lg={3} md={6} key={index} className="step-item text-center"> 
+                  <div className="guide-step-card p-4 h-100 glass-card">
+                    <div className="step-number-circle mx-auto mb-3">{item.step}</div>
                     <h5 className="step-heading text-white fw-bold mb-3">{item.title}</h5>
-                    <p className="step-description text-white-80 mb-0">{item.desc}</p>
+                    <p className="step-description text-white-50 small mb-0">{item.desc}</p>
                   </div>
                 </Col>
               ))}

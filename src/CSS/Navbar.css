@@ -1,0 +1,84 @@
+.navbar-custom {
+    background: rgba(2, 6, 23, 0.8) !important;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 12px 0;
+    transition: 0.3s;
+}
+
+.brand-logo {
+    letter-spacing: -1px;
+}
+
+.text-primary-glow {
+    color: var(--primary-blue);
+    text-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+}
+
+/* Căn chỉnh menu giữa */
+.nav-links-gap {
+    gap: 15px;
+}
+
+.navbar-dark .navbar-nav .nav-link {
+    color: #94a3b8;
+    font-size: 15px;
+    font-weight: 500;
+    transition: 0.3s;
+    position: relative;
+}
+
+.navbar-dark .navbar-nav .nav-link:hover,
+.navbar-dark .navbar-nav .nav-link.active {
+    color: #fff;
+}
+
+/* Gạch chân dưới link khi active */
+.navbar-dark .navbar-nav .nav-link.active::after {
+    content: '';
+    position: absolute;
+    bottom: -5px;
+    left: 15%;
+    width: 70%;
+    height: 2px;
+    background: var(--primary-blue);
+    box-shadow: 0 0 10px var(--primary-blue);
+}
+
+/* Link đăng nhập */
+.login-text-link {
+    font-weight: 600;
+    font-size: 14px;
+}
+
+/* Nút đăng bài */
+.btn-post-nav {
+    border-radius: 12px !important;
+    padding: 10px 25px !important;
+    font-size: 14px !important;
+    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+}
+
+.btn-post-nav:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(59, 130, 246, 0.5);
+}
+
+/* Responsive cho Nút ô sọc (Mobile) */
+@media (max-width: 991px) {
+    .navbar-collapse {
+        background: #0f172a;
+        margin-top: 15px;
+        padding: 20px;
+        border-radius: 15px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .mx-auto {
+        margin-left: 0 !important;
+        margin-bottom: 20px;
+    }
+    .navbar-dark .navbar-nav .nav-link.active::after {
+        display: none; /* Bỏ gạch chân trên mobile */
+    }
+}

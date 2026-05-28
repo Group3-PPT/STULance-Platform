@@ -13,14 +13,7 @@ const ServiceInvoice = () => {
 
   // Dữ liệu giả lập từ bước trước truyền sang
   const invoiceData = {
-    orderId: "INV-2026-0089",
-    serviceTitle: "Thiết kế bộ nhận diện thương hiệu chuyên nghiệp cho Startup",
-    author: "Linh Nguyễn (@linh_design_ueh)",
-    package: "Premium Package",
-    price: 3500000,
-    fee: 175000, // 5% phí sàn
-    total: 3675000,
-    walletBalance: 5000000
+    Thanh
   };
 
   const formatMoney = (val) => {

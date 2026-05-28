@@ -1,0 +1,197 @@
+/* --- BIẾN MÀU --- */
+:root {
+    --adm-primary: #3b82f6;
+    --adm-bg-dark: #020617;
+}
+
+.adm-dashboard-content {
+    position: relative;
+    z-index: 10;
+}
+
+/* Thẻ thống kê */
+.adm-icon-box {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.uppercase-tracking {
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+/* Biểu đồ */
+.chart-container {
+    background: rgba(255, 255, 255, 0.02) !important;
+    border: 1px solid rgba(255, 255, 255, 0.05) !important;
+}
+
+.adm-select-sm {
+    width: auto;
+    background: rgba(255, 255, 255, 0.05) !important;
+    color: #94a3b8 !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    font-size: 11px !important;
+    padding: 2px 25px 2px 10px !important;
+}
+
+/* Nút Setting nổi */
+.adm-fab-settings {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    width: 45px;
+    height: 45px;
+    border-radius: 8px;
+    background: #3b82f6;
+    color: white;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 10px 20px rgba(59, 130, 246, 0.4);
+    z-index: 1000;
+}
+
+/* Recharts Custom */
+.recharts-cartesian-grid-horizontal line,
+.recharts-cartesian-grid-vertical line {
+    stroke: rgba(255, 255, 255, 0.05);
+}
+
+.text-primary-glow {
+    color: #3b82f6;
+    text-shadow: 0 0 15px rgba(59, 130, 246, 0.5);
+}
+
+.x-small { font-size: 11px; }
+
+/* Responsive */
+@media (max-width: 991px) {
+    .adm-fab-settings { bottom: 20px; right: 20px; }
+}/* --- CÁC THÀNH PHẦN MỚI --- */
+
+/* Biểu đồ tinh chỉnh */
+.adm-select-sm {
+    width: auto;
+    background: rgba(255, 255, 255, 0.05) !important;
+    color: #94a3b8 !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    font-size: 11px !important;
+    padding: 2px 25px 2px 10px !important;
+    border-radius: 6px !important;
+}
+
+/* Lịch (Calendar) */
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 5px;
+    text-align: center;
+}
+
+.cal-day-head {
+    font-size: 11px;
+    color: #64748b;
+    font-weight: 700;
+    padding-bottom: 10px;
+}
+
+.cal-date {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    border-radius: 8px;
+    color: #94a3b8;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.cal-date:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: white;
+}
+
+.cal-date.active {
+    background: #3b82f6;
+    color: white;
+    box-shadow: 0 0 15px rgba(59, 130, 246, 0.5);
+}
+
+/* Bảng dữ liệu sạch */
+.admin-table-clean thead th {
+    background: transparent !important;
+    color: #94a3b8 !important;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+    padding: 15px 10px;
+}
+
+.admin-table-clean tbody td {
+    padding: 15px 10px !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03) !important;
+}
+
+.img-placeholder-sm {
+    width: 35px;
+    height: 35px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+}
+
+.status-badge-sm {
+    font-size: 10px;
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.btn-icon-table {
+    background: none;
+    border: none;
+    color: #64748b;
+    transition: 0.3s;
+}
+
+.btn-icon-table:hover {
+    color: #3b82f6;
+    transform: scale(1.2);
+}
+
+/* FAB Settings */
+.adm-fab-settings {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    width: 48px;
+    height: 48px;
+    background: #3b82f6;
+    color: white;
+    border-radius: 12px;
+    border: none;
+    box-shadow: 0 10px 20px rgba(59, 130, 246, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+}
+
+/* Animation mượt */
+.animate-fade-in {
+    animation: fadeInPage 0.5s ease-out;
+}
+
+@keyframes fadeInPage {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}

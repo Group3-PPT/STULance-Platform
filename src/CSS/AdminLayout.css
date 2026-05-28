@@ -1,0 +1,186 @@
+/* --- BIẾN HỆ THỐNG --- */
+:root {
+    --adm-sidebar-width: 260px;
+    --adm-primary: #3b82f6;
+    --adm-bg: #020617;
+    --adm-sidebar-bg: #0f172a;
+    --adm-border: rgba(255, 255, 255, 0.05);
+}
+
+.adm-container {
+    display: flex;
+    min-height: 100vh;
+    background: var(--adm-bg);
+}
+
+/* --- SIDEBAR --- */
+.adm-sidebar {
+    width: var(--adm-sidebar-width);
+    height: 100vh;
+    background: var(--adm-sidebar-bg);
+    position: fixed;
+    left: 0;
+    top: 0;
+    display: flex;
+    flex-direction: column; /* Quan trọng để xếp menu hàng dọc */
+    border-right: 1px solid var(--adm-border);
+    z-index: 1000;
+    padding: 0;
+}
+
+.adm-logo-section {
+    padding: 35px 20px;
+    text-align: center;
+}
+
+.text-primary-glow {
+    color: var(--adm-primary);
+    text-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+}
+
+.adm-tag {
+    font-size: 10px;
+    font-weight: 800;
+    color: #fff;
+    background: var(--adm-primary);
+    padding: 2px 10px;
+    border-radius: 4px;
+    display: inline-block;
+    letter-spacing: 1px;
+}
+
+.adm-nav {
+    flex-grow: 1;
+    padding: 10px 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.adm-nav-link {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 18px;
+    color: #94a3b8;
+    text-decoration: none !important;
+    font-size: 14.5px;
+    font-weight: 600;
+    border-radius: 12px;
+    transition: 0.3s;
+}
+
+.adm-nav-link:hover {
+    background: rgba(255, 255, 255, 0.03);
+    color: #fff;
+    transform: translateX(5px);
+}
+
+.adm-nav-link.active {
+    background: var(--adm-primary) !important;
+    color: #fff !important;
+    box-shadow: 0 10px 20px rgba(59, 130, 246, 0.3);
+}
+
+.adm-pro-badge {
+    background: #f59e0b;
+    color: #000;
+    font-size: 10px;
+    font-weight: 800;
+    padding: 2px 8px;
+    border-radius: 50px;
+}
+
+.adm-sidebar-footer {
+    padding: 20px 15px;
+    border-top: 1px solid var(--adm-border);
+}
+
+/* --- MAIN & TOPBAR --- */
+.adm-main {
+    flex: 1;
+    margin-left: var(--adm-sidebar-width);
+    display: flex;
+    flex-direction: column;
+}
+
+.adm-topbar {
+    height: 70px;
+    background: rgba(2, 6, 23, 0.8);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--adm-border);
+    position: sticky;
+    top: 0;
+    z-index: 999;
+}
+
+.adm-search-wrapper {
+    background: rgba(255, 255, 255, 0.03);
+    padding: 8px 15px;
+    border-radius: 10px;
+    width: 320px;
+    align-items: center;
+}
+
+.adm-search-wrapper input {
+    background: transparent;
+    border: none;
+    color: #fff;
+    margin-left: 10px;
+    outline: none;
+    font-size: 13px;
+    width: 100%;
+}
+
+.adm-admin-name {
+    font-size: 13.5px;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 0;
+}
+
+.adm-admin-role {
+    font-size: 11px;
+    color: var(--adm-primary);
+    margin-bottom: 0;
+}
+
+.adm-avatar-img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 2px solid var(--adm-primary);
+}
+
+.adm-dot {
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    width: 8px;
+    height: 8px;
+    background: #ef4444;
+    border-radius: 50%;
+    border: 2px solid var(--adm-bg);
+}
+
+/* --- RESPONSIVE --- */
+@media (max-width: 991px) {
+    .adm-sidebar {
+        width: 80px;
+    }
+    .adm-nav-text, .adm-logo-section h4, .adm-tag, .adm-pro-badge {
+        display: none;
+    }
+    .adm-main {
+        margin-left: 80px;
+    }
+    .adm-nav-link {
+        justify-content: center;
+        padding: 15px;
+    }
+    .adm-search-wrapper {
+        width: 45px;
+        padding: 10px;
+    }
+    .adm-search-wrapper input { display: none; }
+}

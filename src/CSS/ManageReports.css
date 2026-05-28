@@ -1,0 +1,93 @@
+/* --- TRANG QUẢN LÝ TỐ CÁO --- */
+.report-manage-container {
+    padding: 10px;
+    animation: reportSlideUp 0.7s ease-out;
+}
+
+@keyframes reportSlideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Tiêu đề rực đỏ cảnh báo */
+.text-danger-glow {
+    color: #ef4444;
+    text-shadow: 0 0 15px rgba(239, 68, 68, 0.5);
+}
+
+/* Tabs */
+.report-tab-btn {
+    background: transparent;
+    border: 1px solid transparent;
+    color: #94a3b8;
+    padding: 8px 20px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    transition: 0.3s;
+}
+
+.report-tab-btn.active {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+    border-color: rgba(239, 68, 68, 0.2);
+}
+
+/* Table Style */
+.report-table-glass {
+    border-radius: 20px;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.01);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.report-custom-table thead th {
+    background: rgba(239, 68, 68, 0.05) !important;
+    color: #f87171 !important;
+    font-size: 12px;
+    text-transform: uppercase;
+    padding: 18px 15px;
+    border: none;
+}
+
+.report-row {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.report-id-text {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    color: #ef4444;
+}
+
+/* Priority Tags */
+.priority-tag {
+    font-size: 10px;
+    font-weight: 900;
+    padding: 4px 10px;
+    border-radius: 4px;
+    text-transform: uppercase;
+}
+
+.pri-critical { background: #7f1d1d; color: #fecaca; }
+.pri-high { background: #450a0a; color: #f87171; }
+.pri-normal { background: #1e293b; color: #94a3b8; }
+
+/* Buttons */
+.report-action-btn {
+    width: 34px; height: 34px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #fff;
+    transition: 0.3s;
+}
+
+.report-action-btn.view:hover { background: #3b82f6; border-color: #3b82f6; }
+.report-action-btn.ban:hover { background: #ef4444; border-color: #ef4444; }
+.report-action-btn.resolve:hover { background: #10b981; border-color: #10b981; }
+
+/* Utils */
+.text-white-80 { color: rgba(255, 255, 255, 0.8); }
+.italic { font-style: italic; }
+.x-small { font-size: 10px; }

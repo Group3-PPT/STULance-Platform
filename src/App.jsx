@@ -30,17 +30,31 @@ import DashboardLancer from './pages/Lancer/DashboardLancer'; // Đừng quên i
 import Handbook from './pages/Handbook'; // Đừng quên import trang Handbook nếu bạn đã tạo nó
 import Privacy from './pages/Privacy'; // Đừng quên import trang Privacy nếu bạn đã tạo nó
 import JobPayment from './pages/JobPayment'; // Đừng quên import trang JobPayment nếu bạn đã tạo nó
-// Component Layout dùng chung
-const Layout = () => {
+import Universities from './pages/Universities'; // Đừng quên import trang Universities nếu bạn đã tạo nó
+import AdminDashboard from './pages/Admin/AdminDashboard'; // Đừng quên import trang AdminDashboard nếu bạn đã tạo nó
+import ManageUsers from './pages/Admin/ManageAccounts'; // Đừng quên import trang ManageUsers nếu bạn đã tạo nó
+import ManageAccounts from './pages/Admin/ManageAccounts';
+import ManagePayments from './pages/Admin/ManagePayments';
+import AdminLayout from './pages/Admin/AdminLayout';
+import ManagePosts from './pages/Admin/ManagePosts';
+import AdminReports from './pages/Admin/AdminReports';
+import ManageReports from './pages/Admin/ManageReports';
+import ManageReportDetail from './components/ReportDetailView';
+
+// --- 1. LAYOUT CHO USER (CÓ LOADING SCREEN) ---
+const MainLayout = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   return (
     <div className="app-wrapper">
-      {/* 2. Hiển thị Loading nếu isLoading = true */}
+      {/* LoadingScreen chỉ xuất hiện ở đây */}
       {isLoading && <LoadingScreen onFinished={() => setIsLoading(false)} />}
       
-      {/* Nội dung trang chỉ hiện mờ mờ hoặc bắt đầu chạy khi Loading xong */}  
-      <div style={{ opacity: isLoading ? 0 : 1, transition: 'opacity 1s ease' }}>
+      <div style={{ 
+        opacity: isLoading ? 0 : 1, 
+        transition: 'opacity 1s ease',
+        visibility: isLoading ? 'hidden' : 'visible' 
+      }}>
         <ThreeBg /> 
         <NavbarComp />
         <main style={{ position: 'relative', zIndex: 10 }}>
@@ -52,10 +66,12 @@ const Layout = () => {
     </div>
   );
 };
+
+// --- 2. CẤU HÌNH ROUTER TỔNG ---
 const router = createBrowserRouter([
   {
     path: '/',
-    element: <Layout />,
+    element: <MainLayout />, // User side: CÓ Loading
     children: [
       { index: true, element: <Home /> },
       { path: 'auth', element: <Auth /> },
@@ -78,12 +94,24 @@ const router = createBrowserRouter([
       { path: 'handbook', element: <Handbook /> },
       { path: 'privacy', element: <Privacy /> },
       { path: 'JobPayment', element: <JobPayment /> },
+      { path: 'universities', element: <Universities /> },
     ],
   },
-], {
-  // Fix lỗi nếu bạn chạy project trong thư mục con
-  basename: "/", 
-});
+  {
+    path: '/admin',
+    element: <AdminLayout />, // Admin side: KHÔNG CÓ Loading
+    children: [
+      { index: true, element: <AdminDashboard /> },
+      { path: 'accounts', element: <ManageAccounts /> },
+      { path: 'payments', element: <ManagePayments /> },
+      { path: 'posts', element: <ManagePosts /> },
+      {path: 'reports', element: <AdminReports /> },
+      { path: 'manage-reports', element: <ManageReports /> },
+      { path: 'report-detail', element: <ManageReportDetail /> },
+
+    ]
+  }
+]);
 
 function App() {
   return <RouterProvider router={router} />;
