@@ -1,5 +1,6 @@
 import axios from 'axios';
 
+// Luôn để là /api để chạy qua Proxy (Vite ở local hoặc Vercel ở Production)
 const API_BASE_URL = "/api"; 
 
 const api = axios.create({
@@ -8,6 +9,18 @@ const api = axios.create({
         'Content-Type': 'application/json',
     }
 });
+
+// Giữ nguyên các phần interceptors xử lý Access Token và Refresh Token như cũ
+api.interceptors.request.use(
+    (config) => {
+        const token = localStorage.getItem('accessToken');
+        if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
+        }
+        return config;
+    },
+    (error) => Promise.reject(error)
+);
 
 // Biến kiểm soát trạng thái refresh
 let isRefreshing = false;
