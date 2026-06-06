@@ -1,0 +1,144 @@
+/* --- TRANG CÀI ĐẶT DOANH NGHIỆP --- */
+.biz-settings-page {
+    position: relative;
+    z-index: 10;
+}
+
+/* Sidebar Nav */
+.biz-nav-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 14px 20px;
+    color: #94a3b8;
+    border-radius: 14px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 14px;
+    transition: 0.3s;
+    margin-bottom: 8px;
+}
+
+.biz-nav-item:hover {
+    background: rgba(255, 255, 255, 0.03);
+    color: white;
+}
+
+.biz-nav-item.active {
+    background: var(--primary-blue);
+    color: white;
+    box-shadow: 0 5px 15px rgba(59, 130, 246, 0.3);
+}
+
+/* Banner & Logo Upload Area */
+.settings-banner-area {
+    height: 220px;
+    position: relative;
+    background: #000;
+}
+
+.settings-banner-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0.5;
+}
+
+.btn-change-banner {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: rgba(0, 0, 0, 0.6);
+    color: white;
+    padding: 8px 15px;
+    border-radius: 8px;
+    font-size: 12px;
+    cursor: pointer;
+    backdrop-filter: blur(5px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.settings-logo-overlap {
+    position: absolute;
+    bottom: -40px;
+    left: 40px;
+    width: 120px;
+    height: 120px;
+    background: white !important;
+    padding: 10px;
+    border-radius: 20px !important;
+    border: 4px solid var(--dark-bg) !important;
+    z-index: 20;
+}
+
+.settings-logo-overlap img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.btn-change-logo {
+    position: absolute;
+    bottom: -5px;
+    right: -5px;
+    background: var(--primary-blue);
+    color: white;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border: 3px solid var(--dark-bg);
+}
+
+/* Inputs */
+.biz-label {
+    font-size: 11px;
+    font-weight: 800;
+    color: #64748b;
+    margin-bottom: 10px;
+    letter-spacing: 1px;
+}
+
+.biz-input {
+    background: rgba(255, 255, 255, 0.04) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    color: white !important;
+    padding: 12px 18px !important;
+    border-radius: 12px !important;
+    font-size: 14px !important;
+}
+
+.biz-input:focus {
+    border-color: var(--primary-blue) !important;
+    background: rgba(255, 255, 255, 0.08) !important;
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.2) !important;
+}
+
+.biz-input option {
+    background: #0f172a;
+    color: white;
+}
+
+.text-primary-glow {
+    color: var(--primary-blue);
+    text-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+}
+
+/* Animation */
+.animate-fade-in {
+    animation: bizSettingsFade 0.8s ease-out;
+}
+
+@keyframes bizSettingsFade {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 991px) {
+    .biz-settings-page { padding-top: 80px; }
+    .settings-logo-overlap { left: 50%; transform: translateX(-50%); }
+    .btn-change-banner { display: none; }
+}

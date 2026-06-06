@@ -1,0 +1,143 @@
+.auth-container { position: relative; z-index: 10; }
+
+.auth-card {
+    max-width: 550px;
+    width: 100%;
+    border-radius: 20px !important;
+}
+
+/* Input Group chuẩn TopCV */
+.auth-input-group .input-group-text {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #adb1ca; /* Màu xanh lá đặc trưng */
+}
+.Textcenter {
+color: #3b82f6;
+}
+.auth-input-group .form-control {
+    background: rgba(255, 255, 255, 0.02) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    color: white !important;
+    padding: 12px;
+}
+
+.auth-input-group .form-control:focus {
+    border-color: #3c0a8c !important;
+    box-shadow: none;
+}
+
+/* Nút đăng ký xanh lá */
+.btn-register-topcv {
+    background: #120583 !important;
+    border: none !important;
+    transition: 0.3s;
+}
+
+.btn-register-topcv:hover {
+    background: #777788 !important;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(46, 204, 113, 0.4);
+}
+
+/* Social Buttons */
+.btn-social {
+    border: none;
+    padding: 10px 20px;
+    font-size: 14px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    border-radius: 8px;
+}
+
+.btn-social.google { background: #ea4335; color: white; }
+.btn-social.facebook { background: #1877f2; color: white; }
+.btn-social.linkedin { background: #0077b5; color: white; }
+
+/* Giao diện OTP */
+.otp-icon-circle {
+    width: 80px; height: 80px;
+    background: rgba(46, 204, 113, 0.1);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+}
+
+.otp-input-field {
+    width: 45px; height: 55px;
+    background: rgba(255,255,255,0.05);
+    border: 2px solid rgba(255,255,255,0.1);
+    border-radius: 10px;
+    text-align: center;
+    color: white;
+    font-size: 20px;
+    font-weight: bold;
+}
+
+.otp-input-field:focus {
+    border-color: #120c60;
+    outline: none;
+    background: rgba(255,255,255,0.1);
+}
+
+.text-white-80 { color: rgba(255, 255, 255, 0.8); }
+.text-danger-pulse {
+    color: #ef4444 !important;
+    animation: otpPulse 1s infinite;
+}
+
+@keyframes otpPulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.4; }
+    100% { opacity: 1; }
+}
+
+.text-primary-glow {
+    color: #3b82f6 !important;
+    text-shadow: 0 0 10px rgba(59, 130, 246, 0.4);
+}
+/* --- ROLE SELECTION MINI --- */
+.role-selection-group {
+    text-align: left;
+}
+
+.role-card-mini {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 12px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    color: #94a3b8;
+    cursor: pointer;
+    transition: 0.3s all ease;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.role-card-mini:hover {
+    background: rgba(255, 255, 255, 0.06);
+    color: white;
+}
+
+.role-card-mini.active {
+    background: rgba(46, 204, 113, 0.15); /* Màu xanh của TopCV */
+    border-color: #2ecc71;
+    color: #2ecc71;
+    box-shadow: 0 0 15px rgba(46, 204, 113, 0.2);
+}
+
+.role-card-mini svg {
+    transition: 0.3s;
+}
+
+.role-card-mini.active svg {
+    transform: scale(1.1);
+}
+
+.uppercase-tracking {
+    letter-spacing: 1px;
+}

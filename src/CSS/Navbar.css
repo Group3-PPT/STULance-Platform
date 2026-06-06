@@ -82,3 +82,43 @@
         display: none; /* Bỏ gạch chân trên mobile */
     }
 }
+/* Custom cho Dropdown Menu */
+.user-dropdown-custom .dropdown-menu {
+    background: #ffffff !important; /* Đổi sang nền trắng như ảnh bạn gửi */
+    border-radius: 8px;
+    padding: 0;
+    min-width: 220px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    overflow: hidden;
+}
+
+/* Kiểu cho từng dòng Item */
+.user-dropdown-custom .dropdown-item {
+    padding: 12px 20px;
+    color: #333 !important; /* Chữ đậm màu tối */
+    font-size: 15px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid #f1f1f1;
+}
+
+.user-dropdown-custom .dropdown-item:last-child {
+    border-bottom: none;
+}
+
+/* Màu khi hover vào item */
+.user-dropdown-custom .dropdown-item:hover {
+    background-color: #f8f9fa;
+    color: #000 !important;
+}
+
+/* Chỉnh màu riêng cho nút Đăng xuất */
+.user-dropdown-custom .text-danger {
+    color: #dc3545 !important;
+}
+
+/* Chỉnh icon Lucide */
+.user-dropdown-custom svg {
+    stroke-width: 2px;
+}

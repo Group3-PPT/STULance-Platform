@@ -1,54 +1,62 @@
-import React from 'react';
-import { Navbar, Nav, Container, Button } from 'react-bootstrap';
-import { Link, useLocation } from 'react-router-dom';
-import { LogIn, PlusSquare } from 'lucide-react';
-import '../CSS/Navbar.css';
+import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
+import StudentNavbar from './StudentNavbar';
+import BusinessNavbar from './BusinessNavbar';
+import AuthNavbar from './AuthNavbar';
 
 const NavbarComp = () => {
-  const location = useLocation();
+  const location = useLocation(); // Hook quan trọng để theo dõi chuyển trang
+  
+  // State quản lý trạng thái đăng nhập
+  const [auth, setAuth] = useState({
+    isLoggedIn: false,
+    userRole: null
+  });
 
-  // Hàm kiểm tra xem link có đang active không để đổi màu
-  const isActive = (path) => location.pathname === path;
+  // TỰ ĐỘNG CHẠY MỖI KHI URL THAY ĐỔI
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    const role = localStorage.getItem('userRole');
+    
+    if (token && role) {
+      setAuth({
+        isLoggedIn: true,
+        userRole: role
+      });
+    } else {
+      setAuth({
+        isLoggedIn: false,
+        userRole: null
+      });
+    }
+    // Log để kiểm tra thực tế (F12)
+    console.log("Navbar check - Current Role in Storage:", role);
+  }, [location]); // useEffect sẽ chạy lại mỗi khi bấm chuyển trang (sau khi Login xong)
 
-  return (
-    <Navbar expand="lg" variant="dark" className="navbar-custom fixed-top">
-      <Container fluid className="px-lg-5">
-        {/* LOGO SÁT LỀ TRÁI */}
-        <Navbar.Brand as={Link} to="/" className="fw-bold fs-3 brand-logo">
-          STU<span className="text-primary-glow">LANCE</span>
-        </Navbar.Brand>
+  // ĐỊNH NGHĨA CÁC MÃ ROLE (Khớp với Swagger của bạn)
+  const ROLE_STUDENT = 'odl1dDNm';   // Hoặc 'STUDENT'
+  const ROLE_ENTERPRISE = 'Jx7ze2Kd'; // Hoặc 'ENTERPRISE'
 
-        {/* NÚT Ô SỌC CHO MOBILE */}
-        <Navbar.Toggle aria-controls="basic-navbar-nav" className="border-0 shadow-none" />
+  // 1. Nếu chưa đăng nhập -> Hiện Navbar cho khách
+  if (!auth.isLoggedIn) {
+    return <AuthNavbar />;
+  }
 
-        <Navbar.Collapse id="basic-navbar-nav">
-          {/* MENU CHÍNH CĂN GIỮA */}
-          <Nav className="mx-auto nav-links-gap">
-            <Nav.Link as={Link} to="/jobs" className={isActive('/jobs') ? 'active' : ''}>Việc Làm</Nav.Link>
-            <Nav.Link as={Link} to="/businesses" className={isActive('/businesses') ? 'active' : ''}>Doanh nghiệp</Nav.Link>
-            <Nav.Link as={Link} to="/services-list" className={isActive('/services-list') ? 'active' : ''}>Dịch vụ</Nav.Link>
-            <Nav.Link as={Link} to="/handbook" className={isActive('/handbook') ? 'active' : ''}>Cẩm nang</Nav.Link>
-            <Nav.Link as={Link} to="/cv-maker" className={isActive('/cv-maker') ? 'active' : ''}>Tạo CV</Nav.Link>
-          </Nav>
+  // 2. Nếu đã đăng nhập -> Dùng Switch để đổi giao diện
+  // Lưu ý: So sánh cả mã ID và Tên chữ in hoa để phòng hờ API trả về khác nhau
+  switch (auth.userRole) {
+    case ROLE_STUDENT:
+    case 'STUDENT':
+      return <StudentNavbar />;
 
-          {/* CỤM NÚT SÁT LỀ PHẢI */}
-          <Nav className="align-items-center">
-            <Nav.Link as={Link} to="/auth" className="text-white me-3 login-text-link">
-               Đăng nhập
-            </Nav.Link>
-            <Button 
-              as={Link} 
-              to="/post-job" 
-              variant="primary" 
-              className="btn-post-nav d-flex align-items-center gap-2 fw-bold"
-            >
-              <PlusSquare size={18} /> Đăng bài
-            </Button>
-          </Nav>
-        </Navbar.Collapse>
-      </Container>
-    </Navbar>
-  );
+    case ROLE_ENTERPRISE:
+    case 'ENTERPRISE':
+      return <BusinessNavbar />;
+
+    default:
+      // Nếu có token nhưng role không khớp, quay về Navbar khách
+      return <AuthNavbar />;
+  }
 };
 
 export default NavbarComp;

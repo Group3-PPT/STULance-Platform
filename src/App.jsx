@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { createBrowserRouter, RouterProvider, Outlet } from 'react-router-dom';
-import NavbarComp from './components/Navbar';
+import NavbarComp from './components/NavbarComp';
+import AuthNavbar from './components/AuthNavbar';
+import BusinessNavbar from './components/BusinessNavbar';
+import StudentNavbar from './components/StudentNavbar';
 import FooterComp from './components/Footer';
 import ChatBox from './components/ChatBox';
 import ThreeBg from './components/Threebg'; // Sửa chữ B thành b cho đúng tên file
@@ -10,7 +13,9 @@ import LoadingScreen from './components/LoadingScreen';
 
 // IMPORT CÁC TRANG - Hãy kiểm tra kỹ đường dẫn file (components hay pages?)
 import Home from './pages/Home'; 
-import Auth from './pages/Auth';
+import Login from './pages/Auth/Login';
+import Register from './pages/Auth/Register';
+import ForgotPassword from './pages/Auth/ForgotPassword';
 import CVMaker from './pages/CVMaker';
 import Portfolio from './pages/Lancer/Portfolio';
 import BusinessProfile from './pages/Business/BusinessProfile';
@@ -40,6 +45,8 @@ import ManagePosts from './pages/Admin/ManagePosts';
 import AdminReports from './pages/Admin/AdminReports';
 import ManageReports from './pages/Admin/ManageReports';
 import ManageReportDetail from './components/ReportDetailView';
+import BusinessProfileSettings from './pages/Business/BusinessProfileSettings'; // Đừng quên import trang BusinessProfileSettings nếu bạn đã tạo nó
+
 
 // --- 1. LAYOUT CHO USER (CÓ LOADING SCREEN) ---
 const MainLayout = () => {
@@ -57,7 +64,11 @@ const MainLayout = () => {
       }}>
         <ThreeBg /> 
         <NavbarComp />
-        <main style={{ position: 'relative', zIndex: 10 }}>
+        <main style={{ 
+          position: 'relative', 
+          zIndex: 10, 
+          paddingTop: '90px', // Đẩy nội dung xuống 100px (chiều cao navbar + khoảng cách đẹp)
+          minHeight: '100vh' }}>
           <Outlet />
         </main>
         <ChatBox />
@@ -74,7 +85,6 @@ const router = createBrowserRouter([
     element: <MainLayout />, // User side: CÓ Loading
     children: [
       { index: true, element: <Home /> },
-      { path: 'auth', element: <Auth /> },
       { path: 'cv-maker', element: <CVMaker /> },
       { path: 'portfolio', element: <Portfolio /> },
       { path: 'businesses/business-profile', element: <BusinessProfile /> },
@@ -90,11 +100,16 @@ const router = createBrowserRouter([
       { path: 'post-job', element: <PostJob /> },
       { path: 'manage-jobs', element: <ManageJobs /> },
       { path: 'post-service', element: <PostService /> },
-      { path: 'dashboardlaner', element: <DashboardLancer /> }, 
+      { path: 'dashboardlancer', element: <DashboardLancer /> }, 
       { path: 'handbook', element: <Handbook /> },
       { path: 'privacy', element: <Privacy /> },
       { path: 'JobPayment', element: <JobPayment /> },
       { path: 'universities', element: <Universities /> },
+      { path: 'login', element: <Login /> },
+      { path: 'register', element: <Register /> },
+      { path: 'forgot-password', element: <ForgotPassword /> },
+      { path: 'businesses/business-profile-settings', element: <BusinessProfileSettings /> },
+
     ],
   },
   {
