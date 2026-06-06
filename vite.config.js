@@ -9,6 +9,8 @@ export default defineConfig({
         target: 'https://stulance-platform-eccxame4gff9hhgp.southeastasia-01.azurewebsites.net',
         changeOrigin: true,
         secure: false,
+        // Nếu Backend Azure KHÔNG CÓ chữ /api ở đầu route, hãy thêm dòng dưới:
+        // rewrite: (path) => path.replace(/^\/api/, '')
       }
     }
   }
