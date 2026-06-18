@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Table, Badge, Spinner } from 'react-bootstrap';
 import { Search, CheckCircle, XCircle, Eye, Calendar, Loader2, Building2 } from 'lucide-react';
-import { jobservice } from '../../services/jobservice';
+import { jobservice } from '../../services/asd';
 import '../../CSS/ManagePosts.css';
 
 const ManagePosts = () => {

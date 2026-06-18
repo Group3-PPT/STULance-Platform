@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Form, Button, Badge, Spinner } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import { Search, Globe, MapPin, Bookmark, Send, Laptop, ShieldCheck, Zap } from 'lucide-react';
-import { jobService } from '../services/jobService'; // Import service
+import { jobService } from '../services/asd'; // Import service
 import '../CSS/Jobs.css'; 
 
 const Jobs = () => {
