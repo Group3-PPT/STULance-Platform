@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Table, Badge, Spinner } from 'react-bootstrap';
 import { Search, CheckCircle, XCircle, Eye, Calendar, Loader2, Building2 } from 'lucide-react';
-import { jobservice } from '../../services/jobservice';
+import { jobService } from "../../services/jobservice"; 
 import '../../CSS/ManagePosts.css';
 
 const ManagePosts = () => {
@@ -14,7 +14,7 @@ const ManagePosts = () => {
   const fetchPosts = async () => {
     setLoading(true);
     try {
-      const res = await jobservice.adminGetAllJobs();
+      const res = await jobService.adminGetAllJobs();
       if (res.success) {
         setPosts(res.data || []);
       }
