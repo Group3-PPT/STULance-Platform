@@ -18,6 +18,8 @@ const AdminLayout = () => {
     { path: '/admin/payments', icon: <CreditCard size={20}/>, label: 'Thanh toán' },
     { path: '/admin/reports', icon: <BarChart3 size={20}/>, label: 'Báo cáo' },
     { path: '/admin/manage-reports', icon: <BarChart3 size={20}/>, label: 'Quản lý báo cáo' },
+    { path: '/admin/skills', icon: <ShieldCheck size={20}/>, label: 'Quản lý kỹ năng' },
+
 
   ];
 

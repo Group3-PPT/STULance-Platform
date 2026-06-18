@@ -1,56 +1,80 @@
-import React, { useState } from 'react';
-import { Container, Row, Col, Button, Badge } from 'react-bootstrap';
+import React, { useState, useEffect } from 'react';
+import { Container, Row, Col, Button, Badge, Spinner } from 'react-bootstrap';
+import { useParams } from 'react-router-dom';
 import { 
   MapPin, Globe, Mail, Phone, Users, 
-  CheckCircle, Briefcase, Star, ShieldCheck, 
-  Info, Calendar 
+  CheckCircle, ShieldCheck, Info 
 } from 'lucide-react';
+import { enterpriseService } from '../../services/enterprise.service';
 import '../../CSS/BusinessProfile.css';
 
 const BusinessProfile = () => {
-  // Dữ liệu mẫu Doanh nghiệp (Đã bỏ MXH)
-  const [company] = useState({
-    name: "TechNova Solutions",
-    location: "Tầng 12, Tòa nhà Lotte, Liễu Giai, Hà Nội",
-    website: "technova.vn",
-    email: "hr@technova.vn",
-    phone: "024 3333 8888",
-    size: "100 - 200 nhân viên",
-    bio: "TechNova Solutions là công ty công nghệ đi đầu trong lĩnh vực phát triển các giải pháp Trí tuệ nhân tạo (AI) và chuyển đổi số tại Việt Nam. Chúng tôi luôn mở rộng cánh cửa đón nhận những tài năng trẻ là các bạn sinh viên năng động, dám nghĩ dám làm. Tại TechNova, các bạn không chỉ làm việc, các bạn được học hỏi từ những chuyên gia hàng đầu.",
-    stats: {
-      projects: "50+",
-      hired: "120",
-      rating: "4.9/5",
-      payment: "100%"
-    }
-  });
+  const { id } = useParams(); // Lấy ID từ link web (nếu có)
+  const [loading, setLoading] = useState(true);
+  const [company, setCompany] = useState(null);
 
-  const [jobs] = useState([
-    { id: 1, title: 'Thực tập sinh Lập trình ReactJS', type: 'Internship', date: '2 ngày trước', salary: '5 - 7 triệu' },
-    { id: 2, title: 'Thiết kế đồ họa Freelance', type: 'Dự án', date: '5 ngày trước', salary: 'Thỏa thuận' },
-    { id: 3, title: 'Content Creator (Part-time)', type: 'Bán thời gian', date: '1 tuần trước', salary: '3 - 5 triệu' }
-  ]);
+  // 1. Tải dữ liệu từ Backend
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        let res;
+        if (id) {
+          // Nếu có ID trên URL -> Xem hồ sơ công khai
+          res = await enterpriseService.getPublicProfile(id);
+        } else {
+          // Nếu không có ID -> Xem hồ sơ của chính mình
+          res = await enterpriseService.getMe();
+        }
+
+        if (res.success) {
+          setCompany(res.data);
+        }
+      } catch (err) {
+        console.error("Lỗi tải hồ sơ doanh nghiệp:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProfile();
+  }, [id]);
+
+  if (loading) return (
+    <div className="vh-100 d-flex justify-content-center align-items-center bg-dark">
+      <Spinner animation="border" variant="primary" />
+    </div>
+  );
+
+  if (!company) return <div className="text-white text-center py-5">Không tìm thấy thông tin doanh nghiệp.</div>;
 
   return (
-    <div className="biz-profile-page">
+    <div className="biz-profile-page animate-fade-in">
       {/* HEADER: Banner & Logo */}
       <section className="biz-hero">
         <div className="biz-banner-wrap">
+          {/* Banner hiện tại lấy tạm ảnh mẫu vì trong API chưa có trường Banner riêng */}
           <img src="https://images.unsplash.com/photo-1497366216548-37526070297c" alt="Banner" className="biz-banner-img" />
         </div>
         <Container>
           <div className="biz-main-info-row">
-            <div className="biz-logo-large glass-card">
-              <img src="https://upload.wikimedia.org/wikipedia/commons/c/cd/Facebook_logo_%282019%29.svg" alt="Logo" />
+            <div className="biz-logo-large glass-card p-2 bg-white">
+              <img 
+                src={company.logoUrl || 'https://via.placeholder.com/150?text=LOGO'} 
+                alt="Logo" 
+                className="w-100 h-100 object-fit-contain"
+              />
             </div>
             <div className="biz-title-area">
               <h1 className="fw-bold text-white d-flex align-items-center gap-2">
-                {company.name} <CheckCircle className="text-primary-glow" size={24} />
+                {company.companyName} 
+                {company.verificationStatus === 'VERIFIED' && <CheckCircle className="text-primary-glow" size={24} />}
               </h1>
-              <p className=" mb-2"><MapPin size={16} className="me-1" /> {company.location}</p>
+              <p className="text-white-50 mb-2"><MapPin size={16} className="me-1" /> {company.address || 'Chưa cập nhật địa chỉ'}</p>
               <div className="d-flex gap-2">
-                <Badge bg="primary" className="px-3">AI & Phần mềm</Badge>
-                <Badge bg="info" className="px-3 text-dark">Expert Partner</Badge>
+                <Badge bg="primary" className="px-3">Doanh nghiệp</Badge>
+                <Badge bg={company.verificationStatus === 'VERIFIED' ? "success" : "secondary"} className="px-3">
+                    {company.verificationStatus}
+                </Badge>
               </div>
             </div>
             <div className="biz-action-area">
@@ -60,60 +84,25 @@ const BusinessProfile = () => {
         </Container>
       </section>
 
-      <Container className="pb-5">
-        {/* STATS BAR */}
-        <div className="glass-card biz-stats-bar mb-4">
-          <Row className="text-center g-0">
-            <Col xs={6} md={3} className="stat-box border-end-md">
-              <h3 className="text-primary-glow fw-bold">{company.stats.projects}</h3>
-              <p className="small  mb-0">Dự án đã đăng</p>
-            </Col>
-            <Col xs={6} md={3} className="stat-box border-end-md">
-              <h3 className="text-primary-glow fw-bold">{company.stats.hired}</h3>
-              <p className="small  mb-0">Sinh viên đã thuê</p>
-            </Col>
-            <Col xs={6} md={3} className="stat-box border-end-md">
-              <h3 className="text-warning fw-bold">{company.stats.rating}</h3>
-              <p className="small  mb-0">Đánh giá từ SV</p>
-            </Col>
-            <Col xs={6} md={3} className="stat-box">
-              <h3 className="text-success fw-bold">{company.stats.payment}</h3>
-              <p className="small  mb-0">Tỷ lệ thanh toán</p>
-            </Col>
-          </Row>
-        </div>
-
+      <Container className="pb-5 mt-5">
         <Row className="g-4">
-          {/* CỘT TRÁI: GIỚI THIỆU & CÔNG VIỆC */}
+          {/* CỘT TRÁI: GIỚI THIỆU */}
           <Col lg={8}>
             <div className="glass-card p-4 mb-4 shadow-sm">
               <h4 className="text-white fw-bold mb-3 border-start border-primary border-4 ps-3">Về chúng tôi</h4>
-              <p className="text-secondary-cv">{company.bio}</p>
+              <p className="text-secondary-cv" style={{ whiteSpace: 'pre-line' }}>
+                {company.bio || `${company.companyName} chưa cập nhật thông tin giới thiệu.`}
+              </p>
             </div>
 
+            {/* Phần việc làm (Cần API Job riêng để map vào đây) */}
             <div className="glass-card p-4 shadow-sm">
-              <div className="d-flex justify-content-between align-items-center mb-4 border-start border-primary border-4 ps-3">
-                <h4 className="text-white fw-bold mb-0">Đang tuyển dụng ({jobs.length})</h4>
-                <Button variant="link" className="text-primary text-decoration-none small p-0">Xem tất cả</Button>
-              </div>
-              <div className="active-jobs-list d-grid gap-3">
-                {jobs.map(job => (
-                  <div key={job.id} className="job-hiring-item glass-card p-3 d-flex justify-content-between align-items-center">
-                    <div>
-                      <h6 className="text-white fw-bold mb-1">{job.title}</h6>
-                      <p className="x-small  mb-0">{job.type} • {job.date}</p>
-                    </div>
-                    <div className="text-end">
-                      <p className="fw-bold text-accent mb-1">{job.salary}</p>
-                      <Button variant="outline-primary" size="sm" className="fw-bold px-3">Ứng tuyển</Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
+               <h4 className="text-white fw-bold mb-4 border-start border-primary border-4 ps-3">Vị trí đang tuyển</h4>
+               <p className="text-muted italic small text-center py-4">Chưa có vị trí tuyển dụng nào được đăng.</p>
             </div>
           </Col>
 
-          {/* CỘT PHẢI: THÔNG TIN LIÊN HỆ CHI TIẾT */}
+          {/* CỘT PHẢI: THÔNG TIN CHI TIẾT */}
           <Col lg={4}>
             <div className="glass-card p-4 mb-4 shadow-sm sticky-top" style={{ top: '100px' }}>
               <h5 className="text-white fw-bold mb-4 d-flex align-items-center gap-2">
@@ -124,35 +113,31 @@ const BusinessProfile = () => {
                   <div className="contact-icon-bg"><Globe size={16} /></div>
                   <div>
                     <strong className="d-block text-white">Website</strong>
-                    <span className="">{company.website}</span>
+                    <a href={company.website} target="_blank" rel="noreferrer" className="text-decoration-none text-primary">
+                        {company.website || 'N/A'}
+                    </a>
                   </div>
                 </li>
                 <li className="d-flex align-items-start gap-3">
                   <div className="contact-icon-bg"><Mail size={16} /></div>
                   <div>
-                    <strong className="d-block text-white">Email tuyển dụng</strong>
-                    <span className="">{company.email}</span>
-                  </div>
-                </li>
-                <li className="d-flex align-items-start gap-3">
-                  <div className="contact-icon-bg"><Phone size={16} /></div>
-                  <div>
-                    <strong className="d-block text-white">Hotline</strong>
-                    <span className="">{company.phone}</span>
+                    <strong className="d-block text-white">Mã số thuế</strong>
+                    <span className="text-white-50">{company.companyTaxCode}</span>
                   </div>
                 </li>
                 <li className="d-flex align-items-start gap-3">
                   <div className="contact-icon-bg"><Users size={16} /></div>
                   <div>
-                    <strong className="d-block text-white">Quy mô</strong>
-                    <span className="">{company.size}</span>
+                    <strong className="d-block text-white">Người đại diện</strong>
+                    <span className="text-white-50">{company.representName}</span>
                   </div>
                 </li>
               </ul>
               
               <div className="mt-4 pt-4 border-top border-secondary">
-                <div className="d-flex align-items-center gap-2 text-primary small fw-bold">
-                  <ShieldCheck size={16} /> Doanh nghiệp đã được xác thực
+                <div className={`d-flex align-items-center gap-2 small fw-bold ${company.verificationStatus === 'VERIFIED' ? 'text-primary' : 'text-muted'}`}>
+                  <ShieldCheck size={16} /> 
+                  {company.verificationStatus === 'VERIFIED' ? 'Doanh nghiệp đã được xác thực' : 'Đang chờ xác thực hồ sơ'}
                 </div>
               </div>
             </div>

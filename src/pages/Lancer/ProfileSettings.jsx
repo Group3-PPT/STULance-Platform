@@ -1,215 +1,246 @@
-import React, { useState } from 'react';
-import { Container, Row, Col, Form, Button } from 'react-bootstrap';
+import React, { useState, useEffect, useRef } from 'react';
+import { Container, Row, Col, Form, Button, Badge, Spinner, InputGroup, ListGroup } from 'react-bootstrap';
 import { 
-  UserCircle, GraduationCap, ShieldCheck, Bell, 
-  Camera, Save, X, Smartphone, Calendar, Mail, MapPin 
+  UserCircle, GraduationCap, Lock, Save, Camera, 
+  Smartphone, MapPin, Calendar, Loader2, Key, 
+  Hash, BookOpen, Search, Plus, XCircle, Info 
 } from 'lucide-react';
-import '../../CSS/ProfileSettings.css'; // Tuân thủ cấu trúc import bạn yêu cầu
+import { profileService } from '../../services/profileservice';
+import { studentService } from '../../services/studentservice';
+import { skillService } from '../../services/skillservice';
+import { authService } from '../../services/authService';
+import '../../CSS/ProfileSettings.css';
 
 const ProfileSettings = () => {
-  // State quản lý thông tin người dùng
-  const [user, setUser] = useState({
-    fullName: 'Nguyễn Văn A',
-    role: 'Web Developer',
-    phone: '0901234567',
-    birthday: '2002-05-20',
-    school: 'Đại học Bách Khoa',
-    gradYear: 2024,
-    bio: 'Em là sinh viên năm cuối chuyên ngành CNTT, có đam mê với Javascript và các nền tảng 3D trên web.',
-    avatar: 'https://ui-avatars.com/api/?name=Nguyen+Van+A&size=120&background=0D8ABC&color=fff'
+  const [activeTab, setActiveTab] = useState('personal');
+  const [loading, setLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const dropdownRef = useRef(null);
+
+  // --- STATE DỮ LIỆU ---
+  const [basicInfo, setBasicInfo] = useState({
+    fullName: '', birthday: '', gender: true, phoneNumber: '', avatarUrl: '', location: '', bio: ''
   });
 
-  const [activeTab, setActiveTab] = useState('personal');
+  const [studentInfo, setStudentInfo] = useState({
+    studentCode: '', school: '', major: '', gpa: 0, graduationYear: 2024, citizenId: ''
+  });
 
-  // Xử lý thay đổi input
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setUser({ ...user, [name]: value });
-  };
+  const [mySkills, setMySkills] = useState([]); // Kỹ năng hiện tại của SV
+  const [systemSkills, setSystemSkills] = useState([]); // Danh mục kỹ năng hệ thống (Approved)
+  const [searchTerm, setSearchTerm] = useState('');
+  const [showDropdown, setShowDropdown] = useState(false);
 
-  // Xử lý upload ảnh đại diện (Preview)
-  const handleAvatarChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        setUser({ ...user, avatar: event.target.result });
-      };
-      reader.readAsDataURL(file);
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: '', newPassword: '', confirmNewPassword: ''
+  });
+
+  // --- 1. TẢI DỮ LIỆU BAN ĐẦU ---
+  const initData = async () => {
+    setLoading(true);
+    try {
+      const results = await Promise.allSettled([
+        profileService.getBasicProfile(),
+        studentService.getProfile(),
+        studentService.getMySkills(),
+        skillService.getApprovedSkills()
+      ]);
+
+      if (results[0].status === 'fulfilled') setBasicInfo(results[0].value.data);
+      if (results[1].status === 'fulfilled') setStudentInfo(results[1].value.data);
+      if (results[2].status === 'fulfilled') setMySkills(results[2].value.data || []);
+      if (results[3].status === 'fulfilled') setSystemSkills(results[3].value.data || []);
+      
+    } catch (err) {
+      console.error("Lỗi khởi tạo dữ liệu");
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleSave = (e) => {
-    e.preventDefault();
-    alert("Đã lưu thay đổi thông tin cá nhân!");
-    console.log("Dữ liệu cập nhật:", user);
+  useEffect(() => { initData(); }, []);
+
+  // --- 2. XỬ LÝ AVATAR ---
+  const handleAvatarUpdate = async (url) => {
+    try {
+      await profileService.updateAvatar(url);
+      setBasicInfo({ ...basicInfo, avatarUrl: url });
+      alert("Đã cập nhật ảnh đại diện!");
+    } catch (err) { alert("Lỗi cập nhật ảnh"); }
   };
 
-  return (
-    <div className="settings-page py-5">
-      <Container>
-        <div className="mb-5 animate-fade-in">
-          <h1 className="fw-bold text-white">Thiết lập <span className="text-primary-glow">Tài khoản</span></h1>
-          <p className="text-muted">Quản lý thông tin định danh và tùy chỉnh trải nghiệm của bạn.</p>
-        </div>
+  // --- 3. LOGIC KỸ NĂNG (ADD/SUGGEST) ---
+  const handleSelectSkill = (skill) => {
+    if (!mySkills.find(s => s.skillId === skill.skillId)) {
+      setMySkills([...mySkills, skill]);
+    }
+    setSearchTerm('');
+    setShowDropdown(false);
+  };
 
+  const handleSuggestSkill = async () => {
+    if (!searchTerm.trim()) return;
+    try {
+      const res = await studentService.suggestSkill(searchTerm.trim());
+      setMySkills([...mySkills, res.data]); // Thêm ngay vào list với status PENDING
+      setSearchTerm('');
+      setShowDropdown(false);
+      alert("Đã gửi đề xuất kỹ năng mới!");
+    } catch (err) { alert("Kỹ năng đã tồn tại hoặc có lỗi."); }
+  };
+
+  const removeSkill = (id) => setMySkills(mySkills.filter(s => s.skillId !== id));
+
+  // --- 4. XỬ LÝ LƯU TỔNG THỂ ---
+  const handleSave = async (e) => {
+    e.preventDefault();
+    setIsSaving(true);
+    try {
+      if (activeTab === 'personal') {
+        const payload = { ...basicInfo, gender: Boolean(basicInfo.gender) };
+        await profileService.updateBasicProfile(payload);
+        alert("Lưu thông tin cá nhân thành công!");
+      } 
+      else if (activeTab === 'edu') {
+        // A. Lưu thông tin học vấn
+        const eduPayload = {
+          ...studentInfo,
+          gpa: parseFloat(studentInfo.gpa),
+          graduationYear: parseInt(studentInfo.graduationYear)
+        };
+        await studentService.updateProfile(eduPayload);
+
+        // B. Lưu danh sách kỹ năng (QUY TẮC 4.2: Chỉ gửi skill APPROVED)
+        const approvedIds = mySkills
+          .filter(s => s.status === 'APPROVED')
+          .map(s => s.skillId);
+        await studentService.updateMySkills(approvedIds);
+
+        alert("Lưu hồ sơ học vấn và kỹ năng thành công!");
+      }
+      else if (activeTab === 'security') {
+        if (passwordData.newPassword !== passwordData.confirmNewPassword) return alert("Mật khẩu mới không khớp!");
+        await authService.changePassword(passwordData);
+        alert("Đổi mật khẩu thành công!");
+        setPasswordData({ currentPassword: '', newPassword: '', confirmNewPassword: '' });
+      }
+      initData();
+    } catch (err) {
+      alert("Lỗi: " + (err.response?.data?.message || "Không thể thực hiện"));
+    } finally { setIsSaving(false); }
+  };
+
+  const filteredSuggestions = systemSkills.filter(s => 
+    s.skillName.toLowerCase().includes(searchTerm.toLowerCase()) &&
+    !mySkills.find(ms => ms.skillId === s.skillId)
+  );
+
+  if (loading) return <div className="vh-100 d-flex justify-content-center align-items-center bg-dark"><Spinner animation="border" variant="primary" /></div>;
+
+  return (
+    <div className="settings-page py-5 text-white animate-fade-in">
+      <Container>
+        <h1 className="fw-bold mb-5">Thiết lập <span className="text-primary-glow">Tài khoản</span></h1>
+        
         <Row className="g-4">
-          {/* CỘT TRÁI: MENU ĐIỀU HƯỚNG */}
           <Col lg={3}>
             <aside className="settings-sidebar glass-card p-3 sticky-top" style={{ top: '100px' }}>
-              <div 
-                className={`settings-nav-item ${activeTab === 'personal' ? 'active' : ''}`}
-                onClick={() => setActiveTab('personal')}
-              >
-                <UserCircle size={20} /> <span>Thông tin cá nhân</span>
+              <div className={`settings-nav-item ${activeTab === 'personal' ? 'active' : ''}`} onClick={() => setActiveTab('personal')}>
+                <UserCircle size={20} /> <span>Thông tin cơ bản</span>
               </div>
-              <div 
-                className={`settings-nav-item ${activeTab === 'edu' ? 'active' : ''}`}
-                onClick={() => setActiveTab('edu')}
-              >
+              <div className={`settings-nav-item ${activeTab === 'edu' ? 'active' : ''}`} onClick={() => setActiveTab('edu')}>
                 <GraduationCap size={20} /> <span>Học vấn & Kỹ năng</span>
               </div>
-              <div 
-                className={`settings-nav-item ${activeTab === 'security' ? 'active' : ''}`}
-                onClick={() => setActiveTab('security')}
-              >
-                <ShieldCheck size={20} /> <span>Bảo mật</span>
-              </div>
-              <div 
-                className={`settings-nav-item ${activeTab === 'notif' ? 'active' : ''}`}
-                onClick={() => setActiveTab('notif')}
-              >
-                <Bell size={20} /> <span>Thông báo</span>
+              <div className={`settings-nav-item ${activeTab === 'security' ? 'active' : ''}`} onClick={() => setActiveTab('security')}>
+                <Lock size={20} /> <span>Bảo mật & Mật khẩu</span>
               </div>
             </aside>
           </Col>
 
-          {/* CỘT PHẢI: FORM NHẬP LIỆU */}
           <Col lg={9}>
             <div className="glass-card p-4 p-md-5">
               <Form onSubmit={handleSave}>
-                {/* Upload Avatar */}
-                <div className="avatar-section text-center mb-5">
-                  <div className="avatar-wrapper mx-auto">
-                    <img src={user.avatar} alt="Avatar Preview" className="avatar-img shadow-lg" />
-                    <label htmlFor="avatar-upload" className="upload-icon-btn shadow">
-                      <Camera size={18} />
-                    </label>
-                    <input 
-                      type="file" 
-                      id="avatar-upload" 
-                      hidden 
-                      accept="image/*" 
-                      onChange={handleAvatarChange} 
-                    />
-                  </div>
-                  <p className="small text-muted mt-3">Nhấn vào biểu tượng camera để đổi ảnh</p>
-                </div>
-
-                <h5 className="text-white fw-bold mb-4 border-start border-primary border-4 ps-3">Thông tin định danh</h5>
                 
-                <Row>
-                  <Col md={6}>
-                    <Form.Group className="mb-4">
-                      <Form.Label className="small text-muted fw-bold text-uppercase">Họ và Tên</Form.Label>
-                      <Form.Control 
-                        type="text" 
-                        name="fullName"
-                        value={user.fullName}
-                        onChange={handleChange}
-                        className="settings-input"
-                      />
-                    </Form.Group>
-                  </Col>
-                  <Col md={6}>
-                    <Form.Group className="mb-4">
-                      <Form.Label className="small text-muted fw-bold text-uppercase">Vị trí chuyên môn</Form.Label>
-                      <Form.Control 
-                        type="text" 
-                        name="role"
-                        value={user.role}
-                        onChange={handleChange}
-                        className="settings-input"
-                      />
-                    </Form.Group>
-                  </Col>
-                </Row>
+                {/* TAB 1: PERSONAL */}
+                {activeTab === 'personal' && (
+                  <div className="animate-fade-in">
+                    <div className="avatar-section text-center mb-5">
+                      <div className="avatar-wrapper mx-auto">
+                        <img src={basicInfo.avatarUrl || 'https://ui-avatars.com/api/?name=User'} alt="Avatar" className="avatar-img shadow-lg" />
+                        <label className="upload-icon-btn">
+                          <Camera size={18} onClick={() => {
+                              const url = prompt("Nhập link ảnh mới:", basicInfo.avatarUrl);
+                              if(url) handleAvatarUpdate(url);
+                          }} />
+                        </label>
+                      </div>
+                      <p className="x-small mt-2">Tài khoản: {basicInfo.fullName || 'Chưa đặt tên'}</p>
+                    </div>
+                    <Row>
+                      <Col md={6}><Form.Group className="mb-4"><Form.Label className="small fw-bold">HỌ VÀ TÊN</Form.Label><Form.Control className="settings-input" value={basicInfo.fullName} onChange={e => setBasicInfo({...basicInfo, fullName: e.target.value})} /></Form.Group></Col>
+                      <Col md={6}><Form.Group className="mb-4"><Form.Label className="small fw-bold">SỐ ĐIỆN THOẠI</Form.Label><Form.Control className="settings-input" value={basicInfo.phoneNumber} onChange={e => setBasicInfo({...basicInfo, phoneNumber: e.target.value})} /></Form.Group></Col>
+                      <Col md={6}><Form.Group className="mb-4"><Form.Label className="small fw-bold">NGÀY SINH</Form.Label><Form.Control type="date" className="settings-input" value={basicInfo.birthday?.split('T')[0] || ''} onChange={e => setBasicInfo({...basicInfo, birthday: e.target.value})} /></Form.Group></Col>
+                      <Col md={6}><Form.Group className="mb-4"><Form.Label className="small fw-bold">GIỚI TÍNH</Form.Label><Form.Select className="settings-input" value={String(basicInfo.gender)} onChange={e => setBasicInfo({...basicInfo, gender: e.target.value === 'true'})}><option value="true">Nam</option><option value="false">Nữ</option></Form.Select></Form.Group></Col>
+                      <Col md={12}><Form.Group className="mb-4"><Form.Label className="small fw-bold">TIỂU SỬ</Form.Label><Form.Control as="textarea" rows={3} className="settings-input" value={basicInfo.bio} onChange={e => setBasicInfo({...basicInfo, bio: e.target.value})} /></Form.Group></Col>
+                    </Row>
+                  </div>
+                )}
 
-                <Row>
-                  <Col md={6}>
-                    <Form.Group className="mb-4">
-                      <Form.Label className="small text-muted fw-bold text-uppercase">Số điện thoại</Form.Label>
-                      <Form.Control 
-                        type="text" 
-                        name="phone"
-                        value={user.phone}
-                        onChange={handleChange}
-                        className="settings-input"
-                      />
-                    </Form.Group>
-                  </Col>
-                  <Col md={6}>
-                    <Form.Group className="mb-4">
-                      <Form.Label className="small text-muted fw-bold text-uppercase">Ngày sinh</Form.Label>
-                      <Form.Control 
-                        type="date" 
-                        name="birthday"
-                        value={user.birthday}
-                        onChange={handleChange}
-                        className="settings-input"
-                      />
-                    </Form.Group>
-                  </Col>
-                </Row>
+                {/* TAB 2: EDUCATION & SKILLS */}
+                {activeTab === 'edu' && (
+                  <div className="animate-fade-in">
+                    <h5 className="text-white fw-bold mb-4 border-start border-primary border-4 ps-3">Thông tin sinh viên</h5>
+                    <Row>
+                      <Col md={6}><Form.Group className="mb-4"><Form.Label className="small fw-bold"><Hash size={14}/> MSSV</Form.Label><Form.Control className="settings-input" value={studentInfo.studentCode} onChange={e => setStudentInfo({...studentInfo, studentCode: e.target.value})} /></Form.Group></Col>
+                      <Col md={6}><Form.Group className="mb-4"><Form.Label className="small fw-bold"><BookOpen size={14}/> TRƯỜNG</Form.Label><Form.Control className="settings-input" value={studentInfo.school} onChange={e => setStudentInfo({...studentInfo, school: e.target.value})} /></Form.Group></Col>
+                      <Col md={8}><Form.Group className="mb-4"><Form.Label className="small fw-bold">CHUYÊN NGÀNH</Form.Label><Form.Control className="settings-input" value={studentInfo.major} onChange={e => setStudentInfo({...studentInfo, major: e.target.value})} /></Form.Group></Col>
+                      <Col md={4}><Form.Group className="mb-4"><Form.Label className="small fw-bold">GPA</Form.Label><Form.Control type="number" step="0.1" className="settings-input" value={studentInfo.gpa} onChange={e => setStudentInfo({...studentInfo, gpa: e.target.value})} /></Form.Group></Col>
+                    </Row>
 
-                <h5 className="text-white fw-bold mt-4 mb-4 border-start border-primary border-4 ps-3">Học vấn</h5>
-                <Row>
-                  <Col md={8}>
-                    <Form.Group className="mb-4">
-                      <Form.Label className="small text-muted fw-bold text-uppercase">Trường đại học</Form.Label>
-                      <Form.Select 
-                        name="school" 
-                        value={user.school} 
-                        onChange={handleChange}
-                        className="settings-input"
-                      >
-                        <option>Đại học Bách Khoa</option>
-                        <option>Đại học Kinh tế Quốc dân</option>
-                        <option>Đại học FPT</option>
-                        <option>Đại học Ngoại thương</option>
-                      </Form.Select>
-                    </Form.Group>
-                  </Col>
-                  <Col md={4}>
-                    <Form.Group className="mb-4">
-                      <Form.Label className="small text-muted fw-bold text-uppercase">Năm tốt nghiệp</Form.Label>
-                      <Form.Control 
-                        type="number" 
-                        name="gradYear"
-                        value={user.gradYear}
-                        onChange={handleChange}
-                        className="settings-input"
-                      />
-                    </Form.Group>
-                  </Col>
-                </Row>
+                    <h5 className="text-white fw-bold mt-4 mb-4 border-start border-primary border-4 ps-3">Kỹ năng năng lực</h5>
+                    {/* BADGE LIST (MỤC 4.1) */}
+                    <div className="d-flex flex-wrap gap-2 mb-4 p-3 border-dashed-blue rounded">
+                      {mySkills.map(s => (
+                        <Badge key={s.skillId} pill className={`px-3 py-2 d-flex align-items-center gap-2 
+                          ${s.status === 'APPROVED' ? 'bg-primary' : s.status === 'PENDING' ? 'bg-warning text-dark' : 'bg-danger'}`}>
+                          {s.skillName} {s.status === 'PENDING' && <small className="opacity-75">(Đang duyệt)</small>}
+                          <XCircle size={14} className="ms-2 pointer" onClick={() => removeSkill(s.skillId)} />
+                        </Badge>
+                      ))}
+                    </div>
 
-                <Form.Group className="mb-5">
-                  <Form.Label className="small text-muted fw-bold text-uppercase">Giới thiệu bản thân</Form.Label>
-                  <Form.Control 
-                    as="textarea" 
-                    rows={4} 
-                    name="bio"
-                    value={user.bio}
-                    onChange={handleChange}
-                    className="settings-input"
-                  />
-                </Form.Group>
+                    {/* SEARCH & SUGGEST (MỤC 4.3) */}
+                    <div className="position-relative w-md-50" ref={dropdownRef}>
+                      <InputGroup className="bg-dark-input rounded">
+                        <InputGroup.Text className="bg-transparent border-0 text-muted"><Search size={18}/></InputGroup.Text>
+                        <Form.Control className="bg-transparent border-0 text-white" placeholder="Tìm kỹ năng..." value={searchTerm} onChange={e => {setSearchTerm(e.target.value); setShowDropdown(true)}} onFocus={() => setShowDropdown(true)} />
+                      </InputGroup>
+                      {showDropdown && searchTerm && (
+                        <ListGroup className="suggestion-dropdown shadow-lg mt-1">
+                          {filteredSuggestions.map(s => (
+                            <ListGroup.Item key={s.skillId} action className="bg-dark text-white border-secondary" onClick={() => handleSelectSkill(s)}>{s.skillName}</ListGroup.Item>
+                          ))}
+                          <ListGroup.Item action className="bg-dark text-info fw-bold border-secondary" onClick={handleSuggestSkill}>+ Đề xuất: "{searchTerm}"</ListGroup.Item>
+                        </ListGroup>
+                      )}
+                    </div>
+                  </div>
+                )}
 
-                <div className="d-flex justify-content-end gap-3">
-                  <Button variant="outline-light" className="px-4 py-2 fw-bold">HỦY BỎ</Button>
-                  <Button variant="primary" type="submit" className="px-5 py-2 fw-bold shadow-glow">
-                    LƯU THAY ĐỔI
+                {/* TAB 3: SECURITY */}
+                {activeTab === 'security' && (
+                  <div className="animate-fade-in">
+                    <h5 className="text-white fw-bold mb-4 border-start border-warning border-4 ps-3">Bảo mật tài khoản</h5>
+                    <Form.Group className="mb-4"><Form.Label className="small fw-bold">MẬT KHẨU HIỆN TẠI</Form.Label><Form.Control type="password" underline className="settings-input" value={passwordData.currentPassword} onChange={e => setPasswordData({...passwordData, currentPassword: e.target.value})} /></Form.Group>
+                    <Form.Group className="mb-4"><Form.Label className="small fw-bold">MẬT KHẨU MỚI</Form.Label><Form.Control type="password" underline className="settings-input" value={passwordData.newPassword} onChange={e => setPasswordData({...passwordData, newPassword: e.target.value})} /></Form.Group>
+                    <Form.Group className="mb-4"><Form.Label className="small fw-bold">XÁC NHẬN MẬT KHẨU MỚI</Form.Label><Form.Control type="password" underline className="settings-input" value={passwordData.confirmNewPassword} onChange={e => setPasswordData({...passwordData, confirmNewPassword: e.target.value})} /></Form.Group>
+                  </div>
+                )}
+
+                <div className="d-flex justify-content-end gap-3 mt-5 pt-4 border-top border-white-10">
+                  <Button variant="primary" type="submit" className="px-5 py-2 fw-bold shadow-glow" disabled={isSaving}>
+                    {isSaving ? <Loader2 className="spinner me-2" size={18} /> : <Save className="me-2" size={18} />}
+                    {activeTab === 'security' ? 'CẬP NHẬT MẬT KHẨU' : 'LƯU THAY ĐỔI'}
                   </Button>
                 </div>
               </Form>

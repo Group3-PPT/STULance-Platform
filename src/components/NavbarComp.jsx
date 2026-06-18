@@ -15,7 +15,8 @@ const NavbarComp = () => {
 
   // TỰ ĐỘNG CHẠY MỖI KHI URL THAY ĐỔI
   useEffect(() => {
-    const token = localStorage.getItem('token');
+    // ĐỔI 'token' THÀNH 'accessToken' Ở ĐÂY
+    const token = localStorage.getItem('accessToken'); 
     const role = localStorage.getItem('userRole');
     
     if (token && role) {
@@ -29,9 +30,9 @@ const NavbarComp = () => {
         userRole: null
       });
     }
-    // Log để kiểm tra thực tế (F12)
-    console.log("Navbar check - Current Role in Storage:", role);
-  }, [location]); // useEffect sẽ chạy lại mỗi khi bấm chuyển trang (sau khi Login xong)
+    console.log("Navbar check - Token:", token ? "Exist" : "Empty");
+    console.log("Navbar check - Current Role:", role);
+}, [location]); // Chạy lại khi chuyển từ trang /login sang trang dashboard
 
   // ĐỊNH NGHĨA CÁC MÃ ROLE (Khớp với Swagger của bạn)
   const ROLE_STUDENT = 'odl1dDNm';   // Hoặc 'STUDENT'

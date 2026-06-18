@@ -127,3 +127,17 @@
         padding: 10px 20px;
     }
 }
+.suggestion-dropdown {
+    position: absolute;
+    width: 100%;
+    z-index: 1000;
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid rgba(59, 130, 246, 0.5);
+}
+.border-dashed-blue {
+    border: 1px dashed #3b82f6 !important;
+}
+.min-height-50 { min-height: 50px; }
+.spinner { animation: rotate 1s linear infinite; }
+@keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }

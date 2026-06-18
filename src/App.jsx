@@ -28,7 +28,7 @@ import Payment from './pages/Payment';
 import ServiceInvoice from './pages/Services/ServiceInvoice'; // Đừng quên import trang ServiceInvoice nếu bạn đã tạo nó
 import Contract from './pages/Contract'; // Đừng quên import trang Contract nếu bạn đã tạo nó
 import ProfileSettings from './pages/Lancer/ProfileSettings'; // Đừng quên import trang ProfileSettings nếu bạn đã tạo nó
-import PostJob from './pages/Lancer/PostJob';
+import PostJob from './pages/Business/PostJob';
 import ManageJobs from './pages/Business/ManageJobs'; // Đừng quên import trang ManageJobs nếu bạn đã tạo nó
 import PostService from './pages/Services/PostService'; // Đừng quên import trang PostService nếu bạn đã tạo nó
 import DashboardLancer from './pages/Lancer/DashboardLancer'; // Đừng quên import trang Dashboard nếu bạn đã tạo nó
@@ -45,9 +45,9 @@ import ManagePosts from './pages/Admin/ManagePosts';
 import AdminReports from './pages/Admin/AdminReports';
 import ManageReports from './pages/Admin/ManageReports';
 import ManageReportDetail from './components/ReportDetailView';
-import BusinessProfileSettings from './pages/Business/BusinessProfileSettings'; // Đừng quên import trang BusinessProfileSettings nếu bạn đã tạo nó
-
-
+import BusinessProfileSettings from './pages/Business/BusinessProfileSettings'; 
+import AdminSkillManagement from './pages/Admin/AdminSkillManagement';
+import MyPortfolio from './pages/Lancer/MyPortfolio'; // Đừng quên import trang MyPortfolio nếu bạn đã tạo nó
 // --- 1. LAYOUT CHO USER (CÓ LOADING SCREEN) ---
 const MainLayout = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -87,6 +87,8 @@ const router = createBrowserRouter([
       { index: true, element: <Home /> },
       { path: 'cv-maker', element: <CVMaker /> },
       { path: 'portfolio', element: <Portfolio /> },
+      { path: 'portfolio/:id', element: <Portfolio /> },
+
       { path: 'businesses/business-profile', element: <BusinessProfile /> },
       { path: 'jobs', element: <Jobs /> },
       { path: 'businesses', element: <Businesses /> },
@@ -109,6 +111,7 @@ const router = createBrowserRouter([
       { path: 'register', element: <Register /> },
       { path: 'forgot-password', element: <ForgotPassword /> },
       { path: 'businesses/business-profile-settings', element: <BusinessProfileSettings /> },
+      { path: 'portfolio-manager', element: <MyPortfolio /> },
 
     ],
   },
@@ -120,9 +123,10 @@ const router = createBrowserRouter([
       { path: 'accounts', element: <ManageAccounts /> },
       { path: 'payments', element: <ManagePayments /> },
       { path: 'posts', element: <ManagePosts /> },
-      {path: 'reports', element: <AdminReports /> },
+      {   path: 'reports', element: <AdminReports /> },
       { path: 'manage-reports', element: <ManageReports /> },
       { path: 'report-detail', element: <ManageReportDetail /> },
+      { path: 'skills', element: <AdminSkillManagement /> },
 
     ]
   }

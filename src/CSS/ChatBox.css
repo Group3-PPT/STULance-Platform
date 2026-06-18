@@ -1,8 +1,8 @@
 .chat-wrapper {
     position: fixed;
-    bottom: 30px;
-    right: 30px;
-    z-index: 1000;
+      bottom: 100px !important; /* Tăng khoảng cách dưới đáy lên để né nút xanh */
+    right: 30px !important;
+    z-index: 9999 !important; /* Đảm bảo nó luôn nổi lên trên */
 }
 
 .chat-trigger {

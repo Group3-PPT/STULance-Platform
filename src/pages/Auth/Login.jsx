@@ -5,6 +5,8 @@ import { Mail, Lock, LogIn, ChevronLeft } from 'lucide-react';
 import { authService } from '../../services/authService'; 
 import '../../CSS/Login.css';
 
+
+
 const Login = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
@@ -27,21 +29,25 @@ const Login = () => {
       // Thông thường cấu trúc là res.data.data
       const result = res.data.data; 
 
-      if (result && result.token) {
-        // Lấy chính xác tên trường Role (Dựa vào Debug của bạn là STUDENT/ENTERPRISE)
-        // Thử lấy roleId, nếu không có thì lấy roleName, nếu không có thì lấy role
-        const roleValue = result.roleId || result.roleName || result.role;
+      if (result) {
+        // 1. Lấy token (Đảm bảo lấy đúng tên trường từ Server: có thể là .token hoặc .accessToken)
+        const tokenToSave = result.accessToken || result.token;
+        const refreshTokenToSave = result.refreshToken;
 
-        // 2. LƯU THÔNG TIN VÀO LOCALSTORAGE
-        localStorage.setItem('token', result.token);
-        localStorage.setItem('refreshToken', result.refreshToken || "");
+        // 2. LƯU THÔNG TIN VÀO LOCALSTORAGE (Dùng đúng key 'accessToken')
+        localStorage.setItem('accessToken', tokenToSave); 
+        localStorage.setItem('refreshToken', refreshTokenToSave || "");
+        
+        const roleValue = result.roleId || result.roleName || result.role;
         localStorage.setItem('userRole', roleValue); 
 
-        // 3. LOGIC ĐIỀU HƯỚNG (So sánh cả mã ID và Tên chữ in hoa)
+        window.dispatchEvent(new Event("local-storage-update"));
+        
+        // 3. ĐIỀU HƯỚNG
         if (roleValue === 'odl1dDNm' || roleValue === 'STUDENT') { 
-          alert("Đăng nhập thành công! \nChào mừng bạn, Sinh Viên");
-          navigate('/dashboardlancer');
-        } 
+          alert("Đăng nhập thành công!");
+          navigate('/dashboardlancer'); // Hoặc trang Portfolio của bạn
+        }
         else if (roleValue === 'Jx7ze2Kd' || roleValue === 'ENTERPRISE') { 
           alert("Đăng nhập thành công! \nChào mừng quý đối tác, Nhà tuyển dụng");
           navigate('/manage-jobs');
