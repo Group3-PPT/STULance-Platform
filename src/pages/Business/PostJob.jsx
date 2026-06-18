@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Container, Row, Col, Form, Button, Spinner } from 'react-bootstrap';
 import { Info, UserCheck, FileText, Save, Loader2, Send } from 'lucide-react';
-import { jobService } from '../../services/asd';
+import { jobService } from '../../services/jobservice';
 import '../../CSS/PostJob.css';
 
 const PostJob = () => {

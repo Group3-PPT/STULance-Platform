@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Container, Table, Badge, Button, Row, Col, Card } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import { Users, Edit3, Trash2, Plus, Loader2, BarChart3, Clock, CheckCircle } from 'lucide-react';
-import { jobService } from '../../services/asd';
+import { jobService } from '../../services/jobservice';
 import '../../CSS/ManageJobs.css';
 
 const ManageJobs = () => {
