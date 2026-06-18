@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Container, Row, Col, Form, Button, Spinner } from 'react-bootstrap';
 import { Info, UserCheck, FileText, Save, Loader2, Send } from 'lucide-react';
-import { jobService } from '../../services/jobservice';
+import { jobservice } from '../../services/jobservice-temp';
 import '../../CSS/PostJob.css';
 
 const PostJob = () => {
@@ -46,7 +46,7 @@ const PostJob = () => {
         deadline: new Date(formData.deadline).toISOString(),
       };
 
-      await jobService.postJob(payload);
+      await jobservice.postJob(payload);
       alert("🎉 Tin tuyển dụng đã được đăng thành công!");
       // Reset form hoặc điều hướng
     } catch (err) {

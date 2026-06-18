@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Container, Table, Badge, Button, Row, Col, Card } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import { Users, Edit3, Trash2, Plus, Loader2, BarChart3, Clock, CheckCircle } from 'lucide-react';
-import { jobService } from '../../services/jobservice';
+import { jobservice } from '../../services/jobservice-temp';
 import '../../CSS/ManageJobs.css';
 
 const ManageJobs = () => {
@@ -13,7 +13,7 @@ const ManageJobs = () => {
   const fetchMyJobs = async () => {
     setLoading(true);
     try {
-      const res = await jobService.getMyJobs();
+      const res = await jobservice.getMyJobs();
       if (res.success) {
         setJobs(res.data || []);
       }
@@ -30,7 +30,7 @@ const ManageJobs = () => {
   const handleDelete = async (id) => {
     if (!window.confirm('Bạn có chắc chắn muốn xóa bài tuyển dụng này?')) return;
     try {
-      await jobService.deleteJob(id);
+      await jobservice.deleteJob(id);
       setJobs(jobs.filter(j => j.jobId !== id));
       alert("Đã xóa tin tuyển dụng.");
     } catch (err) {

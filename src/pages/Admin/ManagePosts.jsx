@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Table, Badge, Spinner } from 'react-bootstrap';
 import { Search, CheckCircle, XCircle, Eye, Calendar, Loader2, Building2 } from 'lucide-react';
-import { jobService } from '../../services/jobservice';
+import { jobservice } from '../../services/jobservice-temp';
 import '../../CSS/ManagePosts.css';
 
 const ManagePosts = () => {
@@ -14,7 +14,7 @@ const ManagePosts = () => {
   const fetchPosts = async () => {
     setLoading(true);
     try {
-      const res = await jobService.adminGetAllJobs();
+      const res = await jobservice.adminGetAllJobs();
       if (res.success) {
         setPosts(res.data || []);
       }
@@ -35,7 +35,7 @@ const ManagePosts = () => {
     if (!window.confirm(`Bạn có chắc chắn muốn ${actionText} bài đăng này?`)) return;
 
     try {
-      await jobService.adminUpdateStatus(id, newStatus);
+      await jobservice.adminUpdateStatus(id, newStatus);
       alert("Cập nhật thành công!");
       fetchPosts(); // Tải lại danh sách sau khi cập nhật
     } catch (err) {
