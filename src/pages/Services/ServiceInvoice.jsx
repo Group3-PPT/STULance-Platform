@@ -1,142 +1,120 @@
-import React, { useState } from 'react';
-import { Container, Row, Col, Button, Badge, Form } from 'react-bootstrap';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Container, Row, Col, Button, Badge, Spinner } from 'react-bootstrap';
+import { useLocation, Link, useNavigate } from 'react-router-dom';
 import { 
-  FileText, ShieldCheck, CreditCard, Wallet, 
-  ChevronLeft, ArrowRight, Info, CheckCircle2 
+  FileText, ShieldCheck, Wallet, ChevronLeft, 
+  CheckCircle2, Loader2, ShoppingCart
 } from 'lucide-react';
+import { serviceOrderService } from '../../services/serviceorderservice';
+import { roleService } from '../../services/roleservice';
 import '../../CSS/ServiceInvoice.css';
 
 const ServiceInvoice = () => {
+  const location = useLocation();
   const navigate = useNavigate();
-  const [paymentMethod, setPaymentMethod] = useState('wallet');
+  const [isProcessing, setIsProcessing] = useState(false);
+  const service = location.state?.service;
 
-  // Dữ liệu giả lập từ bước trước truyền sang
-  const invoiceData = {
-    Thanh
+  // 1. Hàm định danh Role (STUDENT/ENTERPRISE)
+  const getStandardRoleName = async (currentRoleId) => {
+    if (['STUDENT', 'ENTERPRISE'].includes(currentRoleId)) return currentRoleId;
+    try {
+      const res = await roleService.getRegisterOptions();
+      const matchedRole = res.data?.find(r => r.roleId === currentRoleId);
+      return matchedRole ? matchedRole.roleName : null;
+    } catch (err) { return null; }
   };
 
-  const formatMoney = (val) => {
-    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val);
+  // 2. Xử lý Tạo Đơn Hàng (Không tạo hợp đồng tại đây)
+  const handleConfirmOrder = async () => {
+    if (!service) return;
+    setIsProcessing(true);
+    try {
+      const myRoleId = localStorage.getItem('userRole');
+      const buyerTypeName = await getStandardRoleName(myRoleId);
+
+      if (!buyerTypeName) throw new Error("Không thể xác định vai trò người mua.");
+
+      const payload = {
+        buyerType: buyerTypeName, 
+        requirements: "Đặt hàng qua hệ thống STULance" 
+      };
+
+      // GỌI API TẠO ĐƠN HÀNG (POST /v1/service-orders/services/{id})
+      const orderRes = await serviceOrderService.createOrder(service.serviceId, payload);
+      
+      if (orderRes.success) {
+        alert("🎉 Đã gửi đơn đặt hàng thành công! Vui lòng đợi người bán xác nhận.");
+        // Chuyển về Dashboard để xem trạng thái đơn hàng PENDING
+        navigate('/dashboardlancer'); 
+      }
+    } catch (err) {
+      const errorMsg = err.response?.data?.message || "Lỗi xử lý đơn hàng";
+      alert("Thất bại: " + errorMsg);
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
-  const handlePayment = () => {
-    alert("Thanh toán thành công! Hợp đồng đã được khởi tạo.");
-    navigate('/contract'); // Chuyển sang trang hợp đồng
-  };
+  if (!service) return <div className="text-white text-center py-5">Đơn hàng không hợp lệ.</div>;
 
   return (
-    <div className="invoice-page py-5">
+    <div className="invoice-page py-5 text-white animate-fade-in">
       <Container>
         <div className="mb-4">
-          <Link to="/service-detail" className="text-decoration-none text-primary d-flex align-items-center gap-2 small fw-bold">
-            <ChevronLeft size={18} /> QUAY LẠI CHI TIẾT
-          </Link>
+          <Button variant="link" className="text-primary p-0 text-decoration-none fw-bold" onClick={() => navigate(-1)}>
+            <ChevronLeft size={18} /> QUAY LẠI
+          </Button>
         </div>
 
         <Row className="g-4">
-          {/* CỘT TRÁI: CHI TIẾT HÓA ĐƠN */}
           <Col lg={8}>
-            <div className="glass-card p-4 mb-4">
-              <div className="d-flex justify-content-between align-items-center mb-4 border-bottom border-secondary pb-3">
-                <h4 className="text-white fw-bold mb-0 d-flex align-items-center gap-2">
-                  <FileText className="text-primary" /> Xác nhận thanh toán
-                </h4>
-                <span className="text-muted small">Mã đơn: {invoiceData.orderId}</span>
-              </div>
+            <div className="glass-card p-4">
+              <h4 className="fw-bold mb-4 d-flex align-items-center gap-2 border-bottom border-white border-opacity-10 pb-3 text-primary-glow">
+                <ShoppingCart className="text-primary" /> XÁC NHẬN ĐẶT HÀNG
+              </h4>
 
-              <div className="invoice-item-box glass-card p-3 mb-4">
-                <div className="d-flex justify-content-between">
-                  <div style={{ flex: 1 }}>
-                    <Badge bg="primary" className="mb-2">DỊCH VỤ SINH VIÊN</Badge>
-                    <h5 className="text-white fw-bold">{invoiceData.serviceTitle}</h5>
-                    <p className="text-muted small mb-0">Cung cấp bởi: <strong>{invoiceData.author}</strong></p>
-                    <p className="text-info x-small mt-2">Gói: {invoiceData.package}</p>
-                  </div>
-                  <div className="text-end">
-                    <div className="text-white fw-bold">{formatMoney(invoiceData.price)}</div>
-                  </div>
+              <div className="invoice-item-box glass-card p-3 mb-4 bg-white bg-opacity-5">
+                <Badge bg="primary" className="mb-2">DỊCH VỤ SINH VIÊN</Badge>
+                <h5 className="fw-bold text-white">{service.title}</h5>
+                <p className="small text-white-50">Người bán: <strong>{service.studentName}</strong></p>
+                <div className="text-end h4 fw-bold text-success">
+                  {service.price?.toLocaleString()}đ
                 </div>
               </div>
 
-              <div className="payment-method-selection">
-                <h6 className="text-white mb-3">Chọn nguồn thanh toán</h6>
-                <div 
-                  className={`method-row glass-card p-3 mb-2 ${paymentMethod === 'wallet' ? 'active' : ''}`}
-                  onClick={() => setPaymentMethod('wallet')}
-                >
-                  <div className="d-flex align-items-center gap-3">
-                    <Wallet className={paymentMethod === 'wallet' ? 'text-primary' : 'text-muted'} />
-                    <div className="flex-grow-1">
-                      <p className="mb-0 text-white small fw-bold">Ví StudentLance</p>
-                      <p className="mb-0 x-small text-muted">Số dư: {formatMoney(invoiceData.walletBalance)}</p>
-                    </div>
-                    {paymentMethod === 'wallet' && <CheckCircle2 size={20} className="text-primary" />}
-                  </div>
-                </div>
-
-                <div 
-                  className={`method-row glass-card p-3 ${paymentMethod === 'direct' ? 'active' : ''}`}
-                  onClick={() => setPaymentMethod('direct')}
-                >
-                  <div className="d-flex align-items-center gap-3">
-                    <CreditCard className={paymentMethod === 'direct' ? 'text-primary' : 'text-muted'} />
-                    <div className="flex-grow-1">
-                      <p className="mb-0 text-white small fw-bold">Thanh toán trực tiếp</p>
-                      <p className="mb-0 x-small text-muted">Visa, Master, Napas hoặc chuyển khoản QR</p>
-                    </div>
-                    {paymentMethod === 'direct' && <CheckCircle2 size={20} className="text-primary" />}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="escrow-notice glass-card p-3 d-flex gap-3 align-items-center">
-              <ShieldCheck size={40} className="text-success" />
-              <div>
-                <h6 className="text-white fw-bold mb-1">Thanh toán an toàn (Escrow)</h6>
-                <p className="x-small text-muted mb-0">
-                  Số dư sẽ được hệ thống giữ an toàn và chỉ chuyển cho sinh viên khi bạn xác nhận đã nhận được sản phẩm hoàn thiện.
-                </p>
+              <div className="p-3 bg-white bg-opacity-5 rounded-4 border-dashed-blue d-flex gap-3 align-items-center">
+                 <ShieldCheck size={32} className="text-success" />
+                 <p className="x-small mb-0 opacity-75">
+                    Đơn hàng sẽ được tạo ở trạng thái <strong>PENDING</strong>. Tiền chỉ được chuyển khi hai bên ký hợp đồng và hoàn thành dự án.
+                 </p>
               </div>
             </div>
           </Col>
 
-          {/* CỘT PHẢI: TỔNG KẾT CHI PHÍ */}
           <Col lg={4}>
-            <div className="glass-card p-4 sticky-top" style={{ top: '100px' }}>
-              <h5 className="text-white fw-bold mb-4">Tóm tắt chi phí</h5>
-              
-              <div className="d-flex justify-content-between mb-2 small text-muted">
+            <div className="glass-card p-4 sticky-top shadow-glow" style={{top: '100px'}}>
+              <h5 className="fw-bold mb-4">Tóm tắt thanh toán</h5>
+              <div className="d-flex justify-content-between mb-2 small text-white-50">
                 <span>Giá dịch vụ</span>
-                <span>{formatMoney(invoiceData.price)}</span>
+                <span>{service.price?.toLocaleString()}đ</span>
               </div>
-              <div className="d-flex justify-content-between mb-4 small text-muted">
-                <span>Phí giao dịch (5%)</span>
-                <span>{formatMoney(invoiceData.fee)}</span>
+              <div className="d-flex justify-content-between mb-4 small text-white-50">
+                <span>Phí dịch vụ (5%)</span>
+                <span>{(service.price * 0.05).toLocaleString()}đ</span>
               </div>
-
-              <div className="d-flex justify-content-between border-top border-secondary pt-3 mb-4">
-                <span className="text-white fw-bold">Tổng thanh toán</span>
-                <span className="text-primary-glow h4 fw-bold">{formatMoney(invoiceData.total)}</span>
+              <div className="d-flex justify-content-between border-top border-white border-opacity-10 pt-3 mb-5 h4 fw-bold text-primary-glow">
+                <span>Tổng cộng</span>
+                <span>{(service.price * 1.05).toLocaleString()}đ</span>
               </div>
 
               <Button 
-                variant="primary" 
-                className="w-100 py-3 fw-bold hub-btn-pay shadow-glow"
-                onClick={handlePayment}
+                variant="primary" className="w-100 py-3 fw-bold shadow-glow"
+                onClick={handleConfirmOrder} disabled={isProcessing}
               >
-                XÁC NHẬN THANH TOÁN
+                {isProcessing ? <Loader2 className="spinner me-2" /> : <CheckCircle2 className="me-2" size={18}/>}
+                GỬI YÊU CẦU ĐẶT HÀNG
               </Button>
-
-              <div className="mt-4 p-3 rounded-3 bg-dark-subtle border border-secondary">
-                <div className="d-flex gap-2 text-warning mb-2">
-                  <Info size={16} /> <strong className="x-small">Chính sách hủy đơn</strong>
-                </div>
-                <p className="x-small text-muted mb-0">
-                  Bạn có thể yêu cầu hoàn tiền 100% nếu sinh viên không giao hàng đúng hạn cam kết.
-                </p>
-              </div>
             </div>
           </Col>
         </Row>

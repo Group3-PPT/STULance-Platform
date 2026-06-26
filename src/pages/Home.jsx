@@ -1,22 +1,97 @@
-import React from 'react';
-import { Container, Row, Col, Form, Button, Badge } from 'react-bootstrap';
+import React, { useState, useEffect } from 'react';
+import { Container, Row, Col, Button, Badge, Spinner } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import { 
-  Search, Code, Layout, Briefcase, MapPin, 
-  Building2, Bookmark, ChevronRight, ChevronLeft,
-  UserPlus, MessagesSquare, FileText, CheckCircle2,
-  Calendar, Eye, Clock, Wallet, Sparkles, Database,GraduationCap
+  Search, Code, Layout, Briefcase, MapPin, Building2, Bookmark, 
+  ChevronRight, UserPlus, MessagesSquare, FileText, CheckCircle2,
+  Calendar, Eye, Clock, Wallet, Sparkles, Database, GraduationCap,
+  Heart, ExternalLink, Star, ShieldCheck, Loader2, Zap, TrendingUp,
+  ArrowRight, PlayCircle, Users, Award, School
 } from 'lucide-react';
+import { recommendationService } from '../services/recommendationservice';
+import { jobService } from '../services/jobservice';
+import { studentServiceService } from '../services/studentserviceservice';
 import '../CSS/Home.css';
 
 const Home = () => {
+  const [recommendations, setRecommendations] = useState({ jobs: [], studentServices: [] });
+  const [randomJobs, setRandomJobs] = useState([]);
+  const [randomServices, setRandomServices] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [userRole, setUserRole] = useState(null);
+
+  const token = localStorage.getItem('accessToken');
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        if (token) {
+          const res = await recommendationService.getMyRecommendations();
+          if (res.success && res.data) {
+            setRecommendations({ jobs: res.data.jobs || [], studentServices: res.data.studentServices || [] });
+            setUserRole(res.data.role);
+          }
+        } else {
+          const [jobsRes, servicesRes] = await Promise.allSettled([
+            jobService.getAllPublicJobs(),
+            studentServiceService.getAllPublic()
+          ]);
+          if (jobsRes.status === 'fulfilled') setRandomJobs((jobsRes.value?.data || []).slice(0, 6));
+          if (servicesRes.status === 'fulfilled') setRandomServices((servicesRes.value?.data || []).slice(0, 6));
+        }
+      } catch (err) {
+        console.error("Lỗi tải dữ liệu trang chủ:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
+  const topUniversities = [
+    { id: 1, name: "ĐH Bách Khoa Hà Nội", type: "Kỹ thuật", students: "15,000+", projects: 450, abbr: "BK", color: "#3b82f6" },
+    { id: 2, name: "ĐH Kinh tế Quốc dân", type: "Kinh tế", students: "12,000+", projects: 320, abbr: "NEU", color: "#10b981" },
+    { id: 3, name: "ĐH FPT", type: "CNTT", students: "20,000+", projects: 680, abbr: "FPT", color: "#f59e0b" },
+    { id: 4, name: "ĐH Ngoại thương", type: "Kinh tế", students: "15,000+", projects: 400, abbr: "FTU", color: "#8b5cf6" },
+  ];
+
+  const topBusinesses = [
+    { id: 1, name: "FPT Software", desc: "Tập đoàn công nghệ hàng đầu", jobs: 45, abbr: "FPT", color: "#3b82f6" },
+    { id: 2, name: "VinAI Research", desc: "Viện nghiên cứu AI hàng đầu", jobs: 8, abbr: "VIN", color: "#10b981" },
+    { id: 3, name: "TechNova Solutions", desc: "Giải pháp chuyển đổi số", jobs: 12, abbr: "TN", color: "#f59e0b" },
+    { id: 4, name: "Creative Lab VN", desc: "Agency Marketing sáng tạo", jobs: 5, abbr: "CL", color: "#8b5cf6" },
+  ];
+
+  const formatMoney = (val) => new Intl.NumberFormat('vi-VN').format(val || 0);
+  const timeAgo = (dateStr) => {
+    const diff = Date.now() - new Date(dateStr).getTime();
+    const mins = Math.floor(diff / 60000);
+    if (mins < 60) return `${mins} phút trước`;
+    const hours = Math.floor(mins / 60);
+    if (hours < 24) return `${hours} giờ trước`;
+    return `${Math.floor(hours / 24)} ngày trước`;
+  };
+
+  const displayJobs = token ? recommendations.jobs : randomJobs;
+  const displayServices = token ? recommendations.studentServices : randomServices;
+  const hasRecommendations = displayJobs.length > 0 || displayServices.length > 0;
+
   return (
     <div className="home-page">
-      
-      {/* --- PHẦN 1: BRANDING & HERO SEARCH --- */}
+
+      {/* --- HERO SEARCH --- */}
       <section className="hero-search-section text-center animate-fade-in">
         <Container>
+          <div className="hero-floating-shapes">
+            <div className="shape shape-1"></div>
+            <div className="shape shape-2"></div>
+            <div className="shape shape-3"></div>
+          </div>
           <div className="hero-branding mb-5">
+            <div className="hero-badge-inline mb-3">
+              <Zap size={14}/> NỀN TẢNG #1 SINH VIÊN FREELANCER
+            </div>
             <h1 className="main-title display-3 fw-bold text-white mb-3">
               STUDENT <span className="text-primary-glow">FREELANCE</span> PLATFORM
             </h1>
@@ -29,22 +104,42 @@ const Home = () => {
             </p>
           </div>
 
-          <div className="stats-info mb-3 text-white-50">
-            Số lượng dự án hiện tại: <span className="text-danger fw-bold">363.191</span> 
-            <small className="ms-2 opacity-50">| Cập nhật mới nhất hôm nay</small>
+          <div className="hero-quick-stats mb-4">
+            <div className="quick-stat-item">
+              <Users size={20} className="text-primary"/>
+              <span><strong className="text-white">2,500+</strong> Sinh viên</span>
+            </div>
+            <div className="quick-stat-divider"></div>
+            <div className="quick-stat-item">
+              <Briefcase size={20} className="text-success"/>
+              <span><strong className="text-white">800+</strong> Dự án</span>
+            </div>
+            <div className="quick-stat-divider"></div>
+            <div className="quick-stat-item">
+              <Building2 size={20} className="text-warning"/>
+              <span><strong className="text-white">150+</strong> Doanh nghiệp</span>
+            </div>
           </div>
           
           <div className="search-container glass-card mx-auto shadow-lg">
-            <div className="search-header text-uppercase">Tìm kiếm các dự án tự do</div>
+            <div className="search-header d-flex align-items-center justify-content-center gap-2">
+              <Search size={14}/> TÌM KIẾM DỰ ÁN PHÙ HỢP
+            </div>
             <div className="search-body p-3">
-              <Row className="g-2">
-                <Col md={3}><Form.Select className="hub-select"><option>Loại công việc</option></Form.Select></Col>
-                <Col md={3}><Form.Select className="hub-select"><option>Kỹ năng</option></Form.Select></Col>
-                <Col md={2}><Form.Select className="hub-select"><option>Ngân sách</option></Form.Select></Col>
-                <Col md={2}><Form.Select className="hub-select"><option>Khu vực</option></Form.Select></Col>
-                <Col md={2}>
-                  <Button variant="primary" className="w-100 h-100 fw-bold d-flex align-items-center justify-content-center gap-2">
-                    <Search size={18} /> TÌM KIẾM
+              <Row className="g-2 align-items-center">
+                <Col md={4}>
+                  <Button as={Link} to="/jobs" variant="primary" className="w-100 py-3 fw-bold d-flex align-items-center justify-content-center gap-2 hero-search-btn">
+                    <Briefcase size={18}/> TÌM VIỆC LÀM
+                  </Button>
+                </Col>
+                <Col md={4}>
+                  <Button as={Link} to="/services" variant="outline-primary" className="w-100 py-3 fw-bold d-flex align-items-center justify-content-center gap-2 hero-search-btn">
+                    <Sparkles size={18}/> KHÁM PHÁ DỊCH VỤ
+                  </Button>
+                </Col>
+                <Col md={4}>
+                  <Button as={Link} to="/services-list" variant="outline-light" className="w-100 py-3 fw-bold d-flex align-items-center justify-content-center gap-2 hero-search-btn">
+                    <Layout size={18}/> DANH MỤC
                   </Button>
                 </Col>
               </Row>
@@ -53,267 +148,327 @@ const Home = () => {
         </Container>
       </section>
 
-      {/* --- PHẦN 2: CATEGORY GRID --- */}
+      {/* --- RECOMMENDATIONS / RANDOM SECTION --- */}
+      {loading ? (
+        <section className="py-5">
+          <Container className="text-center">
+            <Loader2 className="spinner text-primary mb-3" size={36} />
+            <p className="text-muted">Đang tải đề xuất...</p>
+          </Container>
+        </section>
+      ) : hasRecommendations && (
+        <>
+          {/* JOB RECOMMENDATIONS */}
+          {displayJobs.length > 0 && (
+            <section className="recommendation-section py-5">
+              <Container>
+                <div className="section-header-wrap d-flex justify-content-between align-items-center mb-5">
+                  <div>
+                    <div className="section-badge mb-2">
+                      {token ? <><Sparkles size={14}/> ĐỀ XUẤT CHO BẠN</> : <><TrendingUp size={14}/> VIỆC LÀM NỔI BẬT</>}
+                    </div>
+                    <h2 className="text-white fw-bold mb-1">
+                      {token ? 'Việc làm phù hợp' : 'Việc làm mới nhất'}
+                    </h2>
+                    <p className="text-white-50 mb-0">Khám phá các dự án phù hợp với kỹ năng của bạn</p>
+                  </div>
+                  <Button as={Link} to="/jobs" variant="outline-primary" className="fw-bold px-4 d-none d-md-flex align-items-center gap-2">
+                    Xem tất cả <ArrowRight size={16}/>
+                  </Button>
+                </div>
+
+                <Row className="g-4">
+                  {displayJobs.slice(0, 6).map((job, index) => (
+                    <Col md={6} lg={4} key={job.jobId || index}>
+                      <div className="home-recommend-card glass-card h-100" style={{animationDelay: `${index * 0.08}s`}}>
+                        <div className="recommend-card-top">
+                          <div className="d-flex justify-content-between align-items-start mb-3">
+                            <Badge bg={job.jobType === 'FULL_TIME' ? 'primary' : job.jobType === 'PART_TIME' ? 'info' : 'secondary'} className="x-small-badge">
+                              {job.jobType || 'Freelance'}
+                            </Badge>
+                            <span className="x-small text-white-50">{timeAgo(job.createdAt)}</span>
+                          </div>
+                          <h5 className="fw-bold text-white mb-2 line-clamp-2">{job.title}</h5>
+                          <p className="text-white-50 small line-clamp-2 mb-3">{job.description || 'Mô tả chi tiết...'}</p>
+                        </div>
+                        <div className="recommend-card-bottom">
+                          <div className="d-flex align-items-center gap-2 mb-3">
+                            <div className="recommend-company-avatar">
+                              {job.enterpriseName?.[0] || 'E'}
+                            </div>
+                            <div>
+                              <div className="small fw-bold text-white">{job.enterpriseName || 'Doanh nghiệp'}</div>
+                              {job.location && <div className="x-small text-white-50"><MapPin size={10}/> {job.location}</div>}
+                            </div>
+                          </div>
+                          <div className="d-flex justify-content-between align-items-center">
+                            <div className="recommend-price">
+                              {job.salary > 0 ? <>{formatMoney(job.salary)}<small className="text-white-50"> VND</small></> : <span className="text-info">Thỏa thuận</span>}
+                            </div>
+                            <Button as={Link} to="/jobs" variant="primary" size="sm" className="fw-bold px-3">
+                              Ứng tuyển
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    </Col>
+                  ))}
+                </Row>
+                <div className="text-center mt-4 d-md-none">
+                  <Button as={Link} to="/jobs" variant="primary" className="fw-bold px-5">
+                    Xem tất cả việc làm <ArrowRight size={16} className="ms-1"/>
+                  </Button>
+                </div>
+              </Container>
+            </section>
+          )}
+
+          {/* SERVICE RECOMMENDATIONS */}
+          {displayServices.length > 0 && (
+            <section className="recommendation-section py-5">
+              <Container>
+                <div className="section-header-wrap d-flex justify-content-between align-items-center mb-5">
+                  <div>
+                    <div className="section-badge mb-2">
+                      {token ? <><Award size={14}/> DỊCH VỤ ĐỀ XUẤT</> : <><Star size={14}/> DỊCH VỤ NỔI BẬT</>}
+                    </div>
+                    <h2 className="text-white fw-bold mb-1">
+                      {token ? 'Dịch vụ dành cho bạn' : 'Dịch vụ sinh viên'}
+                    </h2>
+                    <p className="text-white-50 mb-0">Tìm kiếm dịch vụ chất lượng từ sinh viên tài năng</p>
+                  </div>
+                  <Button as={Link} to="/services" variant="outline-primary" className="fw-bold px-4 d-none d-md-flex align-items-center gap-2">
+                    Xem tất cả <ArrowRight size={16}/>
+                  </Button>
+                </div>
+
+                <Row className="g-4">
+                  {displayServices.slice(0, 6).map((svc, index) => (
+                    <Col md={6} lg={4} key={svc.serviceId || index}>
+                      <div className="home-service-card glass-card h-100" style={{animationDelay: `${index * 0.08}s`}}>
+                        <div className="service-card-img-wrapper">
+                          <img 
+                            src={svc.sampleImageUrl || 'https://via.placeholder.com/600x340/0f172a/3b82f6?text=Service'} 
+                            alt={svc.title} 
+                            className="service-card-img"
+                          />
+                          <div className="service-card-img-overlay">
+                            <Button as={Link} to={`/service-detail/${svc.serviceId}`} className="service-view-btn">
+                              <Eye size={16}/> Xem ngay
+                            </Button>
+                          </div>
+                          {svc.recommendationReason && (
+                            <div className="service-reason-badge">
+                              {svc.recommendationReason === 'ORDER_HISTORY' ? 'Đã đặt hàng' : 'Phù hợp'}
+                            </div>
+                          )}
+                        </div>
+                        <div className="p-4">
+                          <div className="d-flex align-items-center gap-2 mb-2">
+                            <Badge bg="primary" className="x-small-badge">{svc.category || 'Dịch vụ'}</Badge>
+                            {svc.isStudentVerified && (
+                              <Badge bg="success" className="x-small-badge d-flex align-items-center gap-1">
+                                <ShieldCheck size={10}/> Verified
+                              </Badge>
+                            )}
+                          </div>
+                          <h5 className="fw-bold text-white mb-2 line-clamp-1">{svc.title}</h5>
+                          <p className="text-white-50 small line-clamp-2 mb-3">{svc.description}</p>
+                          
+                          <div className="d-flex align-items-center gap-2 mb-3">
+                            <img src={svc.studentAvatarUrl || 'https://ui-avatars.com/api/?name=S&background=0D8ABC&color=fff'} alt="" className="recommend-student-avatar" />
+                            <span className="small text-white-50">{svc.studentName}</span>
+                            <span className="x-small text-white-50 ms-auto"><Eye size={12}/> {svc.viewsCount || 0}</span>
+                          </div>
+
+                          <div className="d-flex justify-content-between align-items-center pt-3 border-top border-white border-opacity-10">
+                            <div className="recommend-price">
+                              {formatMoney(svc.price)}<small className="text-white-50"> VND</small>
+                            </div>
+                            <div className="x-small text-white-50">
+                              <Clock size={12} className="me-1"/> {svc.deliveryDays} ngày
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </Col>
+                  ))}
+                </Row>
+                <div className="text-center mt-4 d-md-none">
+                  <Button as={Link} to="/services" variant="primary" className="fw-bold px-5">
+                    Xem tất cả dịch vụ <ArrowRight size={16} className="ms-1"/>
+                  </Button>
+                </div>
+              </Container>
+            </section>
+          )}
+        </>
+      )}
+
+      {/* --- CATEGORIES --- */}
       <section className="category-section py-5">
         <Container>
           <div className="section-header-wrap mb-5 text-center">
-            <h2 className="text-white fw-bold">Khám phá theo danh mục</h2>
-            <p className="text-white-50">Tìm kiếm công việc phù hợp với chuyên môn của bạn</p>
+            <div className="section-badge mb-2 mx-auto"><Layout size={14}/> KHÁM PHÁ</div>
+            <h2 className="text-white fw-bold">Danh mục phổ biến</h2>
+            <p className="text-white-50">Tìm kiếm theo lĩnh vực chuyên môn</p>
           </div>
-          <Row className="g-4">
+          <Row className="g-4 justify-content-center">
             {[
-              { icon: <Code size={32} />, title: "Lập trình & IT", count: "12,450", color: "#3b82f6" },
-              { icon: <Layout size={32} />, title: "Thiết kế Đồ họa", count: "8,210", color: "#ec4899" },
-              { icon: <Briefcase size={32} />, title: "Marketing & SEO", count: "5,340", color: "#10b981" },
-              { icon: <Bookmark size={32} />, title: "Viết lách & Dịch", count: "3,120", color: "#f59e0b" },
-              { icon: <MapPin size={32} />, title: "Dịch vụ địa phương", count: "1,200", color: "#ef4444" },
-              { icon: <Building2 size={32} />, title: "Kinh doanh & Tư vấn", count: "2,450", color: "#8b5cf6" },
+              { icon: <Code size={28} />, title: "Lập trình & IT", color: "#3b82f6", link: "/services" },
+              { icon: <Layout size={28} />, title: "Thiết kế Đồ họa", color: "#ec4899", link: "/services" },
+              { icon: <Briefcase size={28} />, title: "Marketing & SEO", color: "#10b981", link: "/services" },
+              { icon: <FileText size={28} />, title: "Viết lách & Dịch thuật", color: "#f59e0b", link: "/services" },
+              { icon: <Building2 size={28} />, title: "Kinh doanh & Tư vấn", color: "#8b5cf6", link: "/services" },
+              { icon: <Database size={28} />, title: "Data & AI", color: "#06b6d4", link: "/services" },
             ].map((item, index) => (
-              <Col xs={12} sm={6} md={4} lg={2} key={index}>
-                <div className="cat-card glass-card h-100" style={{"--border-color": item.color}}>
-                  <div className="cat-icon-wrapper" style={{color: item.color, backgroundColor: `${item.color}15`}}>{item.icon}</div>
-                  <div className="cat-content mt-3 text-center">
-                    <h5 className="cat-title text-white">{item.title}</h5>
-                    <div className="cat-stats"><span className="count-num" style={{color: item.color}}>{item.count}</span> <span className="text-white-50 ms-1">Dự án</span></div>
+              <Col xs={6} sm={4} md={3} lg={2} key={index}>
+                <Link to={item.link} className="text-decoration-none">
+                  <div className="cat-card glass-card h-100" style={{"--border-color": item.color}}>
+                    <div className="cat-icon-wrapper" style={{color: item.color, backgroundColor: `${item.color}15`}}>{item.icon}</div>
+                    <div className="cat-content mt-3 text-center">
+                      <h6 className="cat-title text-white fw-bold">{item.title}</h6>
+                    </div>
                   </div>
-                </div>
+                </Link>
               </Col>
             ))}
           </Row>
         </Container>
       </section>
 
-      {/* --- PHẦN 3: ĐỐI TÁC TIÊU BIỂU (4 CỘT) --- */}
-      <section className="agency-section py-5">
+      {/* --- UNIVERSITIES --- */}
+      <section className="partner-section py-5">
         <Container>
-          <div className="text-center mb-5">
-            <h2 className="fw-bold text-white">Đối tác tuyển dụng tiêu biểu</h2>
-          </div>
-          <div className="position-relative">
-            <Row className="g-4">
-              {[
-                { name: "Levatech Freelance", projects: "98,325", desc: "Đơn vị cung cấp nhân sự tự do hàng đầu trong ngành IT.", logo: "L" },
-                { name: "Findy Freelance", projects: "2,269", desc: "Nền tảng môi giới dành riêng cho các kỹ sư tài năng.", logo: "F" },
-                { name: "Coconala Tech", projects: "6,346", desc: "Dịch vụ giới thiệu dự án lớn nhất với hơn 30.000 đầu việc.", logo: "C" },
-                { name: "Global Hub", projects: "1,150", desc: "Kết nối sinh viên với các dự án outsourcing quốc tế.", logo: "G" }
-              ].map((agency, i) => (
-                <Col md={6} lg={3} key={i}>
-                  <div className="agency-card glass-card p-4 h-100 text-center">
-                    <div className="agency-logo-wrapper mx-auto mb-3">{agency.logo}</div>
-                    <h5 className="text-white fw-bold">{agency.name}</h5>
-                    <div className="text-primary small mb-3"><Briefcase size={14} className="me-1"/> {agency.projects} dự án</div>
-                    <p className="text-white-50 small mb-4 line-clamp-2">{agency.desc}</p>
-                    <div className="d-flex gap-2">
-                      <Button variant="outline-primary" size="sm" className="flex-grow-1">Xem tin</Button>
-                      <Button variant="primary" size="sm" className="flex-grow-1">Chi tiết</Button>
-                    </div>
-                  </div>
-                </Col>
-              ))}
-            </Row>
-          </div>
-        </Container>
-      </section>
-      {/* --- PHẦN 4: MẠNG LƯỚI TRƯỜNG LIÊN KẾT (4 CỘT) --- */}
-<section className="university-section py-5">
-  <Container>
-    <div className="text-center mb-5">
-      <h2 className="fw-bold text-white">Mạng lưới trường học đối tác</h2>
-      <p className="text-white-50">StudentLance tự hào đồng hành cùng các đơn vị đào tạo hàng đầu</p>
-    </div>
-    <Row className="g-4">
-      {[
-        { 
-          name: "ĐH Bách Khoa Hà Nội", 
-          type: "Kỹ thuật & Công nghệ", 
-          stats: "15,000+ SV", 
-          logo: "https://upload.wikimedia.org/wikipedia/vi/1/1b/Logo_Đại_học_Bách_Khoa_Hà_Nội.png" 
-        },
-        { 
-          name: "ĐH Kinh tế Quốc dân", 
-          type: "Kinh tế & Quản lý", 
-          stats: "12,000+ SV", 
-          logo: "https://upload.wikimedia.org/wikipedia/vi/8/82/Logo_Đại_học_Kinh_tế_Quốc_dân.svg" 
-        },
-        { 
-          name: "Đại học FPT", 
-          type: "CNTT & Mỹ thuật số", 
-          stats: "20,000+ SV", 
-          logo: "https://upload.wikimedia.org/wikipedia/commons/1/11/FPT_logo.svg" 
-        },
-        { 
-          name: "ĐH Ngoại thương", 
-          type: "Kinh tế & Đối ngoại", 
-          stats: "10,000+ SV", 
-          logo: "https://upload.wikimedia.org/wikipedia/vi/a/a2/Logo_Đại_học_Ngoại_thương.png" 
-        }
-      ].map((uni, i) => (
-        <Col md={6} lg={3} key={i}>
-          <div className="uni-card-home glass-card p-4 h-100 text-center">
-            {/* Logo Wrapper với hiệu ứng Grayscale */}
-            <div className="uni-logo-box mx-auto mb-3">
-              <img src={uni.logo} alt={uni.name} className="uni-logo-img" />
+          <div className="section-header-wrap d-flex justify-content-between align-items-center mb-5">
+            <div>
+              <div className="section-badge mb-2"><GraduationCap size={14}/> ĐỐI TÁC HỌC THUẬT</div>
+              <h2 className="text-white fw-bold mb-1">Trường đại học đối tác</h2>
+              <p className="text-white-50 mb-0">Nguồn nhân lực chất lượng cao từ các trường hàng đầu</p>
             </div>
-            
-            <h6 className="text-white fw-bold mb-2" style={{minHeight: '40px'}}>{uni.name}</h6>
-            
-            <div className="d-flex flex-column gap-1 mb-3">
-               <span className="x-small text-primary-glow fw-bold">{uni.type}</span>
-               <span className="x-small text-white-50"><GraduationCap size={12} className="me-1"/> {uni.stats} tham gia</span>
-            </div>
-
-            <Button as={Link} to="/universities" variant="outline-light" size="sm" className="w-100 py-2 btn-uni-more">
-              XEM CHI TIẾT <ChevronRight size={14} className="ms-1"/>
+            <Button as={Link} to="/universities" variant="outline-primary" className="fw-bold px-4 d-none d-md-flex align-items-center gap-2">
+              Xem tất cả <ArrowRight size={16}/>
             </Button>
           </div>
-        </Col>
-      ))}
-    </Row>
-  </Container>
-</section>
-
-      {/* --- PHẦN 5: DỰ ÁN MỚI (4 CỘT - NỘI DUNG THEO YÊU CẦU) --- */}
-      <section className="new-listings py-5">
-        <Container>
-          <div className="text-center mb-5">
-            <h2 className="fw-bold text-white">Dự án mới đăng tải</h2>
-          </div>
           <Row className="g-4">
-            {[
-              {
-                tag: "SV HỖ TRỢ",
-                tagColor: "info",
-                title: "[SV Hỗ Trợ] Hướng dẫn & Fix lỗi Đồ án Tốt nghiệp ngành IT",
-                location: "Online / Thủ Đức",
-                price: "250.000đ",
-                unit: "gói",
-                icon: <Sparkles size={16}/>
-              },
-              {
-                tag: "VIỆC LÀM NHANH",
-                tagColor: "success",
-                title: "Tuyển cộng tác viên nhập liệu Data sản phẩm TMĐT",
-                location: "Làm việc từ xa",
-                price: "10.000đ",
-                unit: "giờ",
-                icon: <Database size={16}/>
-              },
-              {
-                tag: "SV HỖ TRỢ",
-                tagColor: "info",
-                title: "[Gấp] Hỗ trợ vẽ CAD & làm báo cáo Đồ án cơ khí",
-                location: "Quận 9, TP. HCM",
-                price: "300.000đ",
-                unit: "dự án",
-                icon: <Layout size={16}/>
-              },
-              {
-                tag: "DATA ENTRY",
-                tagColor: "warning",
-                title: "Xử lý số liệu thô và dán nhãn dữ liệu AI (Data Labeling)",
-                location: "Làm việc từ xa",
-                price: "10.000đ",
-                unit: "giờ",
-                icon: <FileText size={16}/>
-              }
-            ].map((project, index) => (
-              <Col md={6} lg={3} key={index}>
-                <div className="project-card-detail glass-card p-4 h-100 d-flex flex-column">
-                  <Badge bg={project.tagColor} className="mb-3 text-dark w-fit-content py-2 px-3">
-                    {project.tag}
-                  </Badge>
-                  <h6 className="text-primary fw-bold mb-3 line-clamp-2" style={{minHeight: '44px'}}>
-                    {project.title}
-                  </h6>
-                  <ul className="project-meta-list list-unstyled mb-4 flex-grow-1">
-                    <li className="text-white-50 small mb-2"><Clock size={14}/> Vừa xong</li>
-                    <li className="text-white-50 small mb-2"><MapPin size={14}/> {project.location}</li>
-                    <li className="mt-3">
-                      <div className="text-danger fw-bold h5 mb-0">
-                        {project.price} <small className="text-white-50 fw-light fs-6">/{project.unit}</small>
-                      </div>
-                    </li>
-                  </ul>
-                  <div className="d-flex gap-2">
-                    <Button variant="outline-light" className="px-2"><Bookmark size={18}/></Button>
-                    <Button as={Link} to="/jobs" variant="primary" className="w-100 fw-bold">Chi tiết</Button>
+            {topUniversities.map((uni, index) => (
+              <Col lg={3} md={6} key={uni.id}>
+                <div className="home-partner-card glass-card h-100 p-4" style={{animationDelay: `${index * 0.08}s`}}>
+                  <div className="partner-logo-wrap mb-3" style={{background: `${uni.color}15`, color: uni.color}}>
+                    <GraduationCap size={28} />
+                  </div>
+                  <h6 className="text-white fw-bold mb-1">{uni.name}</h6>
+                  <p className="x-small text-primary fw-bold mb-3 uppercase-tracking">{uni.type}</p>
+                  <div className="d-flex justify-content-between align-items-center pt-3 border-top border-white border-opacity-10">
+                    <div className="text-center">
+                      <div className="fw-bold text-white small">{uni.students}</div>
+                      <div className="x-small text-white-50">Sinh viên</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="fw-bold text-primary small">{uni.projects}</div>
+                      <div className="x-small text-white-50">Dự án</div>
+                    </div>
                   </div>
                 </div>
               </Col>
             ))}
           </Row>
+          <div className="text-center mt-4 d-md-none">
+            <Button as={Link} to="/universities" variant="primary" className="fw-bold px-5">
+              Xem tất cả trường <ArrowRight size={16} className="ms-1"/>
+            </Button>
+          </div>
         </Container>
       </section>
 
-      {/* --- PHẦN 6: NỘI DUNG PHỔ BIẾN & MỚI --- */}
-      <section className="blog-section py-5">
+      {/* --- BUSINESSES --- */}
+      <section className="partner-section py-5">
         <Container>
-          <Row className="g-5">
-            <Col lg={8}>
-              <h4 className="text-white fw-bold mb-4 border-start border-primary border-4 ps-3">Nội dung phổ biến</h4>
-              <Row className="g-3">
-                <Col md={6}>
-                  <div className="blog-item big glass-card overflow-hidden">
-                    <img src="https://images.unsplash.com/photo-1498050108023-c5249f4df085" alt="blog" className="w-100" />
-                    <div className="blog-overlay p-4">
-                      <h6 className="text-white fw-bold mb-2">Làm việc tự do là gì? Hướng dẫn cho sinh viên</h6>
-                      <p className="blog-item-desc small text-white-50">Khám phá định nghĩa Freelance và lộ trình bắt đầu công việc.</p>
+          <div className="section-header-wrap d-flex justify-content-between align-items-center mb-5">
+            <div>
+              <div className="section-badge mb-2"><Building2 size={14}/> ĐỐI TÁC DOANH NGHIỆP</div>
+              <h2 className="text-white fw-bold mb-1">Doanh nghiệp hàng đầu</h2>
+              <p className="text-white-50 mb-0">Kết nối với các doanh nghiệp uy tín đang tìm kiếm nhân sự</p>
+            </div>
+            <Button as={Link} to="/businesses" variant="outline-primary" className="fw-bold px-4 d-none d-md-flex align-items-center gap-2">
+              Xem tất cả <ArrowRight size={16}/>
+            </Button>
+          </div>
+          <Row className="g-4">
+            {topBusinesses.map((biz, index) => (
+              <Col lg={3} md={6} key={biz.id}>
+                <div className="home-partner-card glass-card h-100 p-4 text-center" style={{animationDelay: `${index * 0.08}s`}}>
+                  <div className="partner-logo-wrap mb-3 mx-auto" style={{background: `${biz.color}15`, color: biz.color}}>
+                    <Building2 size={28} />
+                  </div>
+                  <h6 className="text-white fw-bold mb-2">{biz.name}</h6>
+                  <p className="x-small text-white-50 mb-3 line-clamp-2">{biz.desc}</p>
+                  <div className="d-flex justify-content-center align-items-center pt-3 border-top border-white border-opacity-10">
+                    <div className="text-center">
+                      <div className="fw-bold text-primary small">{biz.jobs}</div>
+                      <div className="x-small text-white-50">Việc làm</div>
                     </div>
                   </div>
-                </Col>
-                <Col md={6}>
-                  <div className="blog-item big glass-card overflow-hidden">
-                    <img src="https://images.unsplash.com/photo-1519389950473-47ba0277781c" alt="blog" className="w-100" />
-                    <div className="blog-overlay p-4">
-                      <h6 className="text-white fw-bold mb-2">5 bước để trở thành một Freelancer thành công</h6>
-                      <p className="blog-item-desc small text-white-50">Bí quyết xây dựng thương hiệu cá nhân chuyên nghiệp.</p>
-                    </div>
-                  </div>
-                </Col>
-              </Row>
-            </Col>
-            <Col lg={4}>
-              <h4 className="text-white fw-bold mb-4 border-start border-primary border-4 ps-3">Tin tức mới</h4>
-              <div className="new-content-list">
-                {[1, 2, 3].map(i => (
-                  <div key={i} className="new-content-item d-flex gap-3 mb-4">
-                    <div className="small-thumb glass-card flex-shrink-0 d-flex align-items-center justify-content-center" style={{width: '50px', height: '50px'}}><Code size={20} className="text-primary"/></div>
-                    <div>
-                      <h6 className="text-white small fw-bold mb-1 line-clamp-2">Nâng cao kiến thức lập trình hệ thống cho sinh viên năm cuối</h6>
-                      <div className="text-white-50 x-small"><Calendar size={10}/> 22/05/2024</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </Col>
+                </div>
+              </Col>
+            ))}
           </Row>
+          <div className="text-center mt-4 d-md-none">
+            <Button as={Link} to="/businesses" variant="primary" className="fw-bold px-5">
+              Xem tất cả doanh nghiệp <ArrowRight size={16} className="ms-1"/>
+            </Button>
+          </div>
         </Container>
       </section>
 
-      {/* --- PHẦN 7: HƯỚNG DẪN SỬ DỤNG (4 CỘT) --- */}
+      {/* --- HOW IT WORKS --- */}
       <section className="how-to-use-section py-5 mb-5">
         <Container>
           <div className="text-center mb-5">
-            <h2 className="guide-title fw-bold text-white">Hướng dẫn sử dụng Platform</h2>
-            <div className="guide-underline mx-auto"></div>
+            <div className="section-badge mb-2 mx-auto"><PlayCircle size={14}/> CÁCH THỨC</div>
+            <h2 className="guide-title fw-bold text-white">Bắt đầu trong 4 bước</h2>
           </div>
           <div className="steps-wrapper">
             <Row className="g-4">
               {[
-                { step: 1, title: "Tìm việc", desc: "Duyệt qua hàng ngàn dự án phù hợp với kỹ năng của bạn." },
-                { step: 2, title: "Ứng tuyển", desc: "Gửi đề xuất và trao đổi trực tiếp với người đăng tin." },
-                { step: 3, title: "Làm việc", desc: "Thực hiện dự án và báo cáo tiến độ qua hệ thống." },
-                { step: 4, title: "Nhận tiền", desc: "Nhận thanh toán an toàn sau khi hoàn thành công việc." }
+                { step: 1, title: "Tạo tài khoản", desc: "Đăng ký miễn phí và hoàn thiện hồ sơ cá nhân.", icon: <UserPlus size={24}/> },
+                { step: 2, title: "Tìm dự án", desc: "Duyệt qua hàng ngàn dự án phù hợp với kỹ năng.", icon: <Search size={24}/> },
+                { step: 3, title: "Làm việc", desc: "Thực hiện dự án và báo cáo tiến độ qua hệ thống.", icon: <MessagesSquare size={24}/> },
+                { step: 4, title: "Nhận tiền", desc: "Nhận thanh toán an toàn sau khi hoàn thành.", icon: <Wallet size={24}/> }
               ].map((item, index) => (
                 <Col lg={3} md={6} key={index} className="step-item text-center"> 
                   <div className="guide-step-card p-4 h-100 glass-card">
+                    <div className="step-icon-wrapper mx-auto mb-3">{item.icon}</div>
                     <div className="step-number-circle mx-auto mb-3">{item.step}</div>
-                    <h5 className="step-heading text-white fw-bold mb-3">{item.title}</h5>
+                    <h5 className="step-heading text-white fw-bold mb-2">{item.title}</h5>
                     <p className="step-description text-white-50 small mb-0">{item.desc}</p>
                   </div>
                 </Col>
               ))}
             </Row>
+          </div>
+        </Container>
+      </section>
+
+      {/* --- CTA --- */}
+      <section className="cta-section py-5 mb-5">
+        <Container>
+          <div className="cta-card glass-card p-5 text-center position-relative overflow-hidden">
+            <div className="cta-bg-glow"></div>
+            <div className="position-relative">
+              <h2 className="fw-bold text-white display-6 mb-3">Sẵn sàng bắt đầu?</h2>
+              <p className="text-white-50 mb-4 mx-auto" style={{maxWidth: '500px'}}>
+                Tham gia cộng đồng sinh viên freelancer lớn nhất Việt Nam ngay hôm nay.
+              </p>
+              <div className="d-flex gap-3 justify-content-center">
+                <Button as={Link} to={token ? "/jobs" : "/register"} variant="primary" size="lg" className="px-5 fw-bold shadow-glow">
+                  {token ? "TÌM VIỆC NGAY" : "ĐĂNG KÝ MIỄN PHÍ"}
+                </Button>
+                <Button as={Link} to="/services" variant="outline-light" size="lg" className="px-5 fw-bold">
+                  KHÁM PHÁ DỊCH VỤ
+                </Button>
+              </div>
+            </div>
           </div>
         </Container>
       </section>

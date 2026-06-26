@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Badge, Spinner } from 'react-bootstrap';
-import { Search, CheckCircle, XCircle, Eye, Calendar, Loader2, Building2 } from 'lucide-react';
-import { jobService } from "../../services/jobservice"; 
+import { Table, Badge, Form, Spinner, Dropdown } from 'react-bootstrap';
+import { Search, MoreVertical, Eye, Calendar, Loader2, Building2, ShieldAlert, CheckCircle, XCircle, PauseCircle, Lock, Archive, RefreshCw } from 'lucide-react';
+import { jobService } from "../../services/jobservice";
 import '../../CSS/ManagePosts.css';
 
 const ManagePosts = () => {
@@ -10,170 +10,163 @@ const ManagePosts = () => {
   const [filter, setFilter] = useState("Tất cả");
   const [searchTerm, setSearchTerm] = useState("");
 
-  // 1. Tải dữ liệu từ API Admin
   const fetchPosts = async () => {
     setLoading(true);
     try {
       const res = await jobService.adminGetAllJobs();
-      if (res.success) {
-        setPosts(res.data || []);
-      }
-    } catch (err) {
-      console.error("Lỗi tải bài đăng:", err);
-    } finally {
-      setLoading(false);
-    }
+      if (res.success) setPosts(res.data || []);
+    } catch (err) { console.error("Lỗi tải bài đăng:", err); } 
+    finally { setLoading(false); }
   };
 
-  useEffect(() => {
-    fetchPosts();
-  }, []);
+  useEffect(() => { fetchPosts(); }, []);
 
-  // 2. Xử lý Duyệt hoặc Từ chối bài đăng
-  const handleAction = async (id, newStatus) => {
-    const actionText = newStatus === 'APPROVED' ? "duyệt" : "từ chối/đánh dấu vi phạm";
-    if (!window.confirm(`Bạn có chắc chắn muốn ${actionText} bài đăng này?`)) return;
+  const handleStatusChange = async (id, newStatus) => {
+    const statusLabels = {
+        'OPEN': 'Mở công khai (Duyệt)',
+        'REJECTED': 'Từ chối bài đăng',
+        'PAUSED': 'Tạm dừng bài đăng',
+        'BLOCKED': 'KHÓA (Vi phạm)',
+        'CLOSED': 'Đóng bài đăng'
+    };
+
+    if (!window.confirm(`Xác nhận chuyển bài đăng sang trạng thái: ${statusLabels[newStatus]}?`)) return;
 
     try {
-      await jobservice.adminUpdateStatus(id, newStatus);
-      alert("Cập nhật thành công!");
-      fetchPosts(); // Tải lại danh sách sau khi cập nhật
+      const res = await jobService.adminUpdateStatus(id, newStatus);
+      if (res.success) {
+        fetchPosts();
+      }
     } catch (err) {
-      alert("Lỗi khi cập nhật trạng thái bài đăng.");
+      alert("Lỗi: " + (err.response?.data?.message || "Không thể cập nhật"));
     }
   };
 
-  // 3. Logic lọc dữ liệu
-  const filteredPosts = posts.filter(p => {
-    const statusMatch = 
-        filter === "Tất cả" || 
-        (filter === "Chờ duyệt" && p.status === "PENDING") ||
-        (filter === "Đang hiển thị" && p.status === "APPROVED") ||
-        (filter === "Vi phạm" && p.status === "REJECTED");
-    
-    const searchMatch = 
-        p.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        p.jobId.toLowerCase().includes(searchTerm.toLowerCase());
+  const renderStatusBadge = (status) => {
+    switch (status) {
+      case 'OPEN': return <Badge bg="success" className="adm-status-pill">Đang hiển thị</Badge>;
+      case 'PENDING': return <Badge bg="warning" className="adm-status-pill text-dark">Chờ duyệt</Badge>;
+      case 'REJECTED': return <Badge bg="danger" className="adm-status-pill">Đã từ chối</Badge>;
+      case 'PAUSED': return <Badge bg="info" className="adm-status-pill">Tạm dừng</Badge>;
+      case 'BLOCKED': return <Badge bg="dark" className="adm-status-pill"><ShieldAlert size={10} className="me-1"/> Bị khóa</Badge>;
+      case 'CLOSED': return <Badge bg="secondary" className="adm-status-pill">Đã đóng</Badge>;
+      case 'DRAFT': return <Badge bg="light" className="adm-status-pill text-dark border">Bản nháp</Badge>;
+      default: return <Badge bg="primary">{status}</Badge>;
+    }
+  };
 
-    return statusMatch && searchMatch;
+  const filteredPosts = posts.filter(p => {
+    const statusMatch = filter === "Tất cả" || 
+      (filter === "Chờ duyệt" && p.status === "PENDING") ||
+      (filter === "Đang hiển thị" && p.status === "OPEN") ||
+      (filter === "Vi phạm/Khác" && ["REJECTED", "BLOCKED", "PAUSED"].includes(p.status));
+    return statusMatch && (p.title?.toLowerCase() || "").includes(searchTerm.toLowerCase());
   });
+
+  const pendingCount = posts.filter(p => p.status === "PENDING").length;
+  const activeCount = posts.filter(p => p.status === "OPEN").length;
 
   return (
     <div className="adm-page-content animate-fade-in text-white py-4">
-      {/* HEADER */}
-      <div className="d-flex justify-content-between align-items-end mb-4">
+      <div className="d-flex justify-content-between align-items-center mb-4">
         <div>
-          <h2 className="text-white fw-bold mb-1">Quản lý <span className="text-primary-glow">Bài đăng</span></h2>
-          <p className="text-muted small mb-0">Hệ thống kiểm duyệt nội dung tin tuyển dụng toàn sàn.</p>
+          <h2 className="fw-bold mb-1">Kiểm duyệt <span className="text-primary-glow">Việc làm</span></h2>
+          <p className="text-white-50 small mb-0">DRAFT → PENDING → OPEN | Kiểm soát vi phạm.</p>
         </div>
-        
-        <div className="d-flex gap-2">
-            <div className="adm-search-wrapper" style={{ width: '320px', height: '45px', position: 'relative' }}>
-                <Search size={18} className="text-muted" style={{ position:'absolute', left:'15px', top:'13px' }}/>
-                <input 
-                    type="text" 
-                    placeholder="Tìm tiêu đề hoặc Mã ID..." 
-                    className="w-100 h-100 bg-dark-input text-white border-0 rounded-3 ps-5"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                />
+        <div className="d-flex gap-3 align-items-center">
+          <div className="d-flex gap-3">
+            <div className="glass-card px-3 py-2 text-center">
+              <div className="x-small text-white-50 uppercase-tracking">Chờ duyệt</div>
+              <div className="fw-bold text-warning">{pendingCount}</div>
             </div>
+            <div className="glass-card px-3 py-2 text-center">
+              <div className="x-small text-white-50 uppercase-tracking">Đang hiển thị</div>
+              <div className="fw-bold text-success">{activeCount}</div>
+            </div>
+          </div>
+          <div className="adm-search-wrapper" style={{ width: '280px', position: 'relative' }}>
+            <Search size={16} className="text-white-50" style={{ position:'absolute', left:'12px', top:'11px' }}/>
+            <input type="text" placeholder="Tìm tiêu đề..." className="w-100 bg-dark-input text-white border-0 rounded-3 ps-4 py-2" style={{fontSize: '13px'}} onChange={e => setSearchTerm(e.target.value)} />
+          </div>
+          <button className="btn-icon-table text-white-50" title="Làm mới" onClick={fetchPosts}><RefreshCw size={18}/></button>
         </div>
       </div>
 
-      {/* FILTER TABS */}
       <div className="post-filter-tabs glass-card p-2 mb-4 d-flex gap-2">
-        {["Tất cả", "Chờ duyệt", "Đang hiển thị", "Vi phạm"].map(status => (
-          <button 
-            key={status}
-            className={`post-tab-btn ${filter === status ? 'active' : ''}`}
-            onClick={() => setFilter(status)}
-          >
-            {status}
-          </button>
+        {["Tất cả", "Chờ duyệt", "Đang hiển thị", "Vi phạm/Khác"].map(t => (
+          <button key={t} className={`post-tab-btn ${filter === t ? 'active' : ''}`} onClick={() => setFilter(t)}>{t}</button>
         ))}
       </div>
 
-      {/* DATA TABLE */}
       <div className="glass-card overflow-hidden shadow-lg border-0 min-vh-50">
-        {loading ? (
-            <div className="text-center py-5"><Loader2 className="spinner text-primary" size={40}/></div>
-        ) : (
-            <Table responsive variant="dark" className="mb-0 adm-custom-table align-middle">
+        {loading ? <div className="text-center py-5"><Loader2 className="spinner text-primary" size={40}/></div> : (
+          <Table responsive variant="dark" className="mb-0 adm-custom-table align-middle">
             <thead>
-                <tr>
-                <th className="ps-4">Mã bài đăng</th>
-                <th>Tiêu đề bài đăng</th>
-                <th>Doanh nghiệp</th>
-                <th>Lương</th>
-                <th>Trạng thái</th>
-                <th className="text-center">Thao tác</th>
-                </tr>
+              <tr className="text-white-50 x-small uppercase-tracking">
+                <th className="ps-4 py-3">MÃ ID / LOẠI</th>
+                <th>TIÊU ĐỀ TUYỂN DỤNG</th>
+                <th>NGƯỜI ĐĂNG</th>
+                <th>TRẠNG THÁI</th>
+                <th className="text-end pe-4">THAO TÁC ADMIN</th>
+              </tr>
             </thead>
             <tbody>
-                {filteredPosts.map((post) => (
-                <tr key={post.jobId} className="adm-table-row">
-                    <td className="ps-4">
-                        <div className="text-primary-glow fw-bold small">{post.jobId.substring(0, 8)}</div>
-                        <Badge bg="primary" className="x-small mt-1">Việc làm</Badge>
-                    </td>
-                    <td>
-                        <div className="fw-bold text-white small line-clamp-1" title={post.title}>{post.title}</div>
-                        <div className="x-small text-muted">
-                            <Calendar size={10} className="me-1"/>
-                            {new Date(post.createdAt).toLocaleDateString('vi-VN')}
-                        </div>
-                    </td>
-                    <td>
-                        <div className="small d-flex align-items-center gap-2">
-                            <Building2 size={14} className="text-info"/>
-                            {post.enterpriseName || 'N/A'}
-                        </div>
-                    </td>
-                    <td className="fw-bold text-warning small">
-                        {post.salary > 0 ? `${post.salary.toLocaleString()}đ` : 'Thỏa thuận'}
-                    </td>
-                    <td>
-                    <Badge 
-                        className={`adm-status-pill ${
-                        post.status === 'APPROVED' ? 'bg-success' : 
-                        post.status === 'REJECTED' ? 'bg-danger' : 'bg-warning text-dark'
-                        }`}
-                    >
-                        {post.status === 'APPROVED' ? 'Đang hiển thị' : post.status === 'PENDING' ? 'Chờ duyệt' : 'Vi phạm'}
-                    </Badge>
-                    </td>
-                    <td>
-                    <div className="d-flex justify-content-center gap-2">
-                        <button className="adm-btn-action text-info" title="Xem chi tiết"><Eye size={18}/></button>
-                        
-                        {post.status === 'PENDING' && (
-                            <>
-                                <button 
-                                    className="adm-btn-action text-success" 
-                                    title="Duyệt bài" 
-                                    onClick={() => handleAction(post.jobId, "APPROVED")}
-                                >
-                                    <CheckCircle size={18}/>
-                                </button>
-                                <button 
-                                    className="adm-btn-action text-danger" 
-                                    title="Đánh dấu vi phạm" 
-                                    onClick={() => handleAction(post.jobId, "REJECTED")}
-                                >
-                                    <XCircle size={18}/>
-                                </button>
-                            </>
-                        )}
+              {filteredPosts.map((post) => (
+                <tr key={post.jobId} className="border-bottom border-white border-opacity-5">
+                  <td className="ps-4">
+                    <div className="text-primary-glow fw-bold small">{post.jobId?.substring(0, 8)}</div>
+                    <Badge bg="primary" style={{fontSize: '9px'}} className="opacity-75">{post.jobType || 'Dự án'}</Badge>
+                  </td>
+                  <td>
+                    <div className="fw-bold text-white small mb-1">{post.title}</div>
+                    <div className="x-small text-white-50"><Calendar size={10} className="me-1"/>{new Date(post.createdAt).toLocaleDateString('vi-VN')}</div>
+                  </td>
+                  <td>
+                    <div className="small d-flex align-items-center gap-2 text-white-80">
+                      <Building2 size={14} className="text-info"/> {post.enterpriseName || 'N/A'}
                     </div>
-                    </td>
+                  </td>
+                  <td>{renderStatusBadge(post.status)}</td>
+                  <td className="text-end pe-4">
+                    <div className="d-flex justify-content-end gap-2">
+                      <button className="btn-icon-table text-info" title="Xem chi tiết"><Eye size={16}/></button>
+                      
+                      <Dropdown>
+                        <Dropdown.Toggle variant="link" className="text-white p-0 no-caret btn-icon-table" style={{background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)'}}>
+                          <MoreVertical size={16}/>
+                        </Dropdown.Toggle>
+                        <Dropdown.Menu variant="dark" className="glass-card border-secondary shadow-lg">
+                          {post.status === 'PENDING' && (
+                            <>
+                              <Dropdown.Item onClick={() => handleStatusChange(post.jobId, 'OPEN')} className="text-success fw-bold"><CheckCircle size={16} className="me-2"/> DUYỆT BÀI</Dropdown.Item>
+                              <Dropdown.Item onClick={() => handleStatusChange(post.jobId, 'REJECTED')} className="text-danger"><XCircle size={16} className="me-2"/> TỪ CHỐI</Dropdown.Item>
+                            </>
+                          )}
+
+                          {post.status === 'OPEN' && (
+                            <>
+                              <Dropdown.Item onClick={() => handleStatusChange(post.jobId, 'PAUSED')} className="text-warning"><PauseCircle size={16} className="me-2"/> TẠM DỪNG</Dropdown.Item>
+                              <Dropdown.Item onClick={() => handleStatusChange(post.jobId, 'BLOCKED')} className="text-danger fw-bold"><Lock size={16} className="me-2"/> KHÓA VI PHẠM</Dropdown.Item>
+                            </>
+                          )}
+
+                          {['BLOCKED', 'PAUSED', 'REJECTED'].includes(post.status) && (
+                             <Dropdown.Item onClick={() => handleStatusChange(post.jobId, 'OPEN')} className="text-info"><RefreshCw size={16} className="me-2"/> KHÔI PHỤC</Dropdown.Item>
+                          )}
+
+                          <Dropdown.Divider className="border-secondary" />
+                          <Dropdown.Item onClick={() => handleStatusChange(post.jobId, 'CLOSED')} className="text-white-50"><Archive size={16} className="me-2"/> ĐÓNG VĨNH VIỄN</Dropdown.Item>
+                        </Dropdown.Menu>
+                      </Dropdown>
+                    </div>
+                  </td>
                 </tr>
-                ))}
+              ))}
+              {filteredPosts.length === 0 && (
+                <tr><td colSpan="5" className="text-center py-5 text-white-50">Không tìm thấy bài đăng nào.</td></tr>
+              )}
             </tbody>
-            </Table>
-        )}
-        {!loading && filteredPosts.length === 0 && (
-            <div className="text-center py-5 text-muted italic">Không tìm thấy bài đăng nào khớp với bộ lọc.</div>
+          </Table>
         )}
       </div>
     </div>

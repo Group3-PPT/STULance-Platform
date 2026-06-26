@@ -1,4 +1,4 @@
-/* --- TRANG QUẢN LÝ TỐ CÁO --- */
+/* --- TRANG QUẢN LÝ TỐCÁO --- */
 .report-manage-container {
     padding: 10px;
     animation: reportSlideUp 0.7s ease-out;
@@ -9,22 +9,24 @@
     to { opacity: 1; transform: translateY(0); }
 }
 
-/* Tiêu đề rực đỏ cảnh báo */
 .text-danger-glow {
     color: #ef4444;
     text-shadow: 0 0 15px rgba(239, 68, 68, 0.5);
 }
 
-/* Tabs */
 .report-tab-btn {
     background: transparent;
     border: 1px solid transparent;
-    color: #94a3b8;
+    color: rgba(255, 255, 255, 0.5);
     padding: 8px 20px;
     border-radius: 10px;
     font-size: 13px;
     font-weight: 600;
     transition: 0.3s;
+}
+
+.report-tab-btn:hover {
+    color: white;
 }
 
 .report-tab-btn.active {
@@ -33,16 +35,15 @@
     border-color: rgba(239, 68, 68, 0.2);
 }
 
-/* Table Style */
 .report-table-glass {
     border-radius: 20px;
     overflow: hidden;
     background: rgba(255, 255, 255, 0.01);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .report-custom-table thead th {
-    background: rgba(239, 68, 68, 0.05) !important;
+    background: rgba(239, 68, 68, 0.04) !important;
     color: #f87171 !important;
     font-size: 12px;
     text-transform: uppercase;
@@ -60,7 +61,6 @@
     color: #ef4444;
 }
 
-/* Priority Tags */
 .priority-tag {
     font-size: 10px;
     font-weight: 900;
@@ -69,25 +69,19 @@
     text-transform: uppercase;
 }
 
-.pri-critical { background: #7f1d1d; color: #fecaca; }
-.pri-high { background: #450a0a; color: #f87171; }
-.pri-normal { background: #1e293b; color: #94a3b8; }
+.pri-critical { background: rgba(127, 29, 29, 0.5); color: #fecaca; }
+.pri-high { background: rgba(69, 10, 10, 0.5); color: #f87171; }
+.pri-normal { background: rgba(30, 41, 59, 0.5); color: rgba(255, 255, 255, 0.5); }
 
-/* Buttons */
 .report-action-btn {
     width: 34px; height: 34px;
     border-radius: 8px;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     color: #fff;
     transition: 0.3s;
 }
 
-.report-action-btn.view:hover { background: #3b82f6; border-color: #3b82f6; }
-.report-action-btn.ban:hover { background: #ef4444; border-color: #ef4444; }
-.report-action-btn.resolve:hover { background: #10b981; border-color: #10b981; }
-
-/* Utils */
-.text-white-80 { color: rgba(255, 255, 255, 0.8); }
-.italic { font-style: italic; }
-.x-small { font-size: 10px; }
+.report-action-btn.view:hover { background: rgba(59, 130, 246, 0.15); border-color: rgba(59, 130, 246, 0.4); }
+.report-action-btn.ban:hover { background: rgba(239, 68, 68, 0.15); border-color: rgba(239, 68, 68, 0.4); }
+.report-action-btn.resolve:hover { background: rgba(16, 185, 129, 0.15); border-color: rgba(16, 185, 129, 0.4); }

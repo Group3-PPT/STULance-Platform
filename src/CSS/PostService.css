@@ -4,9 +4,8 @@
     z-index: 10;
 }
 
-/* Upload Dropzone */
 .upload-dropzone {
-    border: 2px dashed rgba(255, 255, 255, 0.1);
+    border: 2px dashed rgba(255, 255, 255, 0.08);
     border-radius: 20px;
     background: rgba(255, 255, 255, 0.02);
     cursor: pointer;
@@ -20,8 +19,8 @@
 }
 
 .upload-dropzone:hover {
-    border-color: var(--primary-blue);
-    background: rgba(59, 130, 246, 0.05);
+    border-color: rgba(59, 130, 246, 0.4);
+    background: rgba(59, 130, 246, 0.04);
 }
 
 .img-preview-full {
@@ -32,7 +31,6 @@
     inset: 0;
 }
 
-/* Tier Switcher */
 .tier-switcher {
     background: rgba(0, 0, 0, 0.4);
     border-bottom: 1px solid var(--glass-border);
@@ -45,55 +43,53 @@
     cursor: pointer;
     font-weight: 800;
     font-size: 13px;
-    color: #64748b;
+    color: rgba(255, 255, 255, 0.3);
     text-transform: uppercase;
     transition: 0.3s;
 }
 
 .tier-btn.active {
     color: white;
-    background: rgba(59, 130, 246, 0.15);
+    background: rgba(59, 130, 246, 0.08);
     border-bottom: 3px solid var(--primary-blue);
 }
 
-/* Input Styles */
 .small-label {
     font-size: 12px;
     font-weight: 700;
-    color: #94a3b8;
+    color: rgba(255, 255, 255, 0.45);
     margin-bottom: 10px;
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
 
 .post-input {
-    background: rgba(255, 255, 255, 0.05) !important;
-    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    background: rgba(255, 255, 255, 0.04) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
     color: white !important;
     border-radius: 12px !important;
 }
 
 .post-input:focus {
     border-color: var(--primary-blue) !important;
-    box-shadow: 0 0 15px rgba(59, 130, 246, 0.2) !important;
+    box-shadow: 0 0 15px rgba(59, 130, 246, 0.15) !important;
 }
 
 .bg-dark-input {
     background: rgba(0, 0, 0, 0.2) !important;
 }
 
-/* Button & Badge */
 .hub-btn-pink {
-    background: #f02f5c !important;
+    background: linear-gradient(135deg, #f02f5c, #dc2626) !important;
     border: none !important;
+    border-radius: 12px !important;
+    box-shadow: 0 4px 15px rgba(240, 47, 92, 0.25);
 }
 
-.text-primary-glow {
-    color: var(--primary-blue);
-    text-shadow: 0 0 15px rgba(59, 130, 246, 0.6);
+.hub-btn-pink:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 6px 20px rgba(240, 47, 92, 0.35) !important;
 }
-
-.x-small { font-size: 11px; }
 
 @media (max-width: 991px) {
     .post-service-page { padding-top: 80px; }

@@ -4,20 +4,19 @@
     z-index: 10;
 }
 
-/* Thẻ Card Doanh nghiệp */
 .biz-card {
     transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border: 1px solid rgba(255, 255, 255, 0.06) !important;
+    background: rgba(15, 23, 42, 0.5) !important;
 }
 
 .biz-card:hover {
-    transform: translateY(-12px); /* Bay lên cao hơn một chút */
-    border-color: var(--primary-blue) !important;
-    background: rgba(255, 255, 255, 0.06);
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+    transform: translateY(-10px);
+    border-color: rgba(59, 130, 246, 0.3) !important;
+    background: rgba(255, 255, 255, 0.04) !important;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
 }
 
-/* Hiệu ứng Logo trắng rồi có màu */
 .biz-logo-wrapper {
     width: 90px;
     height: 90px;
@@ -36,7 +35,7 @@
     max-width: 100%;
     max-height: 100%;
     object-fit: contain;
-    filter: grayscale(1); /* Mặc định là xám */
+    filter: grayscale(1);
     transition: 0.4s;
 }
 
@@ -45,21 +44,54 @@
 }
 
 .biz-card:hover .biz-logo-wrapper img {
-    filter: grayscale(0); /* Hover vào hiện màu */
+    filter: grayscale(0);
 }
 
-/* Chữ phát sáng */
-.text-primary-glow {
-    color: var(--primary-blue);
-    text-shadow: 0 0 15px rgba(59, 130, 246, 0.6);
-}
-
-/* Thống kê */
 .stat-item span {
     font-size: 1.2rem;
 }
 
-/* Animation */
+/* --- STUDENT CARDS (FindStudents) --- */
+.stu-avatar-wrap {
+    position: relative;
+    width: 80px;
+    height: 80px;
+}
+
+.stu-avatar-img {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid rgba(59, 130, 246, 0.3);
+}
+
+.stu-avatar-placeholder {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.8rem;
+    font-weight: 700;
+}
+
+.stu-verified-badge {
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #0f172a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
 .animate-fade-in {
     animation: fadeIn 0.8s ease-out;
 }
@@ -69,10 +101,13 @@
     to { opacity: 1; transform: translateY(0); }
 }
 
-/* Responsive tinh chỉnh */
 @media (max-width: 768px) {
     .biz-logo-wrapper {
         width: 80px;
         height: 80px;
+    }
+    .stu-avatar-wrap, .stu-avatar-img, .stu-avatar-placeholder {
+        width: 70px;
+        height: 70px;
     }
 }

@@ -4,7 +4,7 @@
 .contract-paper {
     background: #fff;
     color: #000;
-    padding: 80px 70px; /* Padding lớn đúng kiểu in ấn */
+    padding: 80px 70px;
     font-family: "Times New Roman", Times, serif;
     line-height: 1.5;
     min-height: 1100px;
@@ -26,7 +26,7 @@
 
 .party-box p, .articles p {
     margin-bottom: 5px;
-    font-size: 14.5px; /* Size chữ chuẩn hợp đồng */
+    font-size: 14.5px;
 }
 
 .articles h6 {
@@ -42,7 +42,6 @@
     font-weight: bold;
 }
 
-/* Chữ ký & Con dấu */
 .signature-row { display: grid; grid-template-columns: 1fr 1fr; }
 
 .stamp-box {
@@ -73,16 +72,15 @@
     width: 150px;
 }
 
-/* UI Sidebar & Helpers */
 .sticky-sidebar { position: sticky; top: 100px; }
 .bg-white-5 { background: rgba(255, 255, 255, 0.05); }
-.border-white-10 { border: 1px solid rgba(255, 255, 255, 0.1); }
+.border-white-10 { border: 1px solid rgba(255, 255, 255, 0.08); }
 
 .alert-info-box {
-    background: rgba(245, 158, 11, 0.1);
+    background: rgba(245, 158, 11, 0.08);
     padding: 12px;
     border-radius: 10px;
-    border: 1px solid rgba(245, 158, 11, 0.2);
+    border: 1px solid rgba(245, 158, 11, 0.15);
 }
 
 .btn-back-link {
@@ -91,7 +89,6 @@
     font-weight: bold;
 }
 
-/* Print Settings */
 @media print {
     .navbar, .btn-back-link, .sticky-sidebar, #canvas-container, button {
         display: none !important;
@@ -103,4 +100,28 @@
         padding: 0 !important;
         margin: 0 !important;
     }
+}
+
+.sig-canvas-wrapper {
+    border: 2px solid rgba(59, 130, 246, 0.25);
+    cursor: crosshair;
+    transition: 0.3s;
+}
+
+.sig-canvas-wrapper:hover {
+    border-color: rgba(59, 130, 246, 0.5);
+}
+
+.sigCanvas {
+    width: 100%;
+    background-color: #ffffff;
+}
+
+.shadow-inner {
+    box-shadow: inset 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.signed-box img {
+    filter: brightness(0.8) contrast(1.2);
+    mix-blend-mode: multiply;
 }

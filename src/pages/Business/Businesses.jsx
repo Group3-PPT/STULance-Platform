@@ -1,10 +1,10 @@
 import React from 'react';
 import { Container, Row, Col, Button } from 'react-bootstrap';
+import { Link } from 'react-router-dom';
 import { Building2, Star, Briefcase, ChevronRight } from 'lucide-react';
-import '../../CSS/Businesses.css'; // Tuân thủ cấu trúc bạn yêu cầu
+import '../../CSS/Businesses.css';
 
 const Businesses = () => {
-    // Dữ liệu mẫu Doanh nghiệp
     const companies = [
         {
             id: 1,
@@ -43,7 +43,6 @@ const Businesses = () => {
     return (
         <div className="businesses-page py-5">
             <Container>
-                {/* Tiêu đề trang */}
                 <div className="text-center mb-5 animate-fade-in">
                     <h1 className="fw-bold text-white display-5">
                         Kết nối với <span className="text-primary-glow">Doanh nghiệp</span>
@@ -53,7 +52,6 @@ const Businesses = () => {
                     </p>
                 </div>
 
-                {/* Danh sách lưới */}
                 <Row className="g-4">
                     {companies.map(biz => (
                         <Col lg={4} md={6} key={biz.id}>
@@ -78,7 +76,7 @@ const Businesses = () => {
                                     </div>
                                 </div>
 
-                                <Button variant="primary"  href={`/businesses/business-profile/#${biz.id}`} className="w-100 mt-3 fw-bold py-2 shadow-glow">
+                                <Button as={Link} to="/businesses/business-profile" variant="primary" className="w-100 mt-3 fw-bold py-2 shadow-glow">
                                     XEM CHI TIẾT <ChevronRight size={16} className="ms-1" />
                                 </Button>
                             </div>

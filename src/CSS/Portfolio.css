@@ -1,155 +1,498 @@
-/* --- TRANG PORTFOLIO EDITABLE --- */
+/* ==========================================
+   PORTFOLIO PAGE - MODERN REDESIGN
+   ========================================== */
+
 .portfolio-page {
     position: relative;
     z-index: 10;
 }
 
-/* Nút chuyển đổi chế độ Edit */
-.btn-edit-toggle {
-    position: fixed;
-    bottom: 30px;
-    right: 30px;
-    z-index: 1050;
-    padding: 15px 30px !important;
-    border-radius: 50px !important;
-    font-weight: 800 !important;
+/* --- HERO SECTION (MyPortfolio) --- */
+.portfolio-hero-card {
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.95) 100%);
+    border: 1px solid rgba(59, 130, 246, 0.15);
+    border-radius: 20px !important;
 }
 
-/* Avatar Chỉnh sửa */
-.editable-avatar-container {
-    position: relative;
-    display: inline-block;
-}
-
-.profile-avatar {
-    width: 200px;
-    height: 200px;
-    object-fit: cover;
-    border-radius: 30px;
-    border: 5px solid var(--dark-bg);
-    transition: 0.3s;
-}
-
-.editable-avatar-container.editing .profile-avatar {
-    filter: brightness(0.5);
-}
-
-.camera-overlay {
+.hero-bg-pattern {
     position: absolute;
     inset: 0;
+    background: radial-gradient(circle at 80% 20%, rgba(59, 130, 246, 0.12) 0%, transparent 50%),
+                radial-gradient(circle at 20% 80%, rgba(139, 92, 246, 0.08) 0%, transparent 50%);
+    pointer-events: none;
+}
+
+.hero-icon-box {
+    width: 56px;
+    height: 56px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, var(--primary-blue), #8b5cf6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    flex-shrink: 0;
+}
+
+.hero-stat-box {
+    display: flex;
+    flex-direction: column;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 12px 24px;
+    min-width: 90px;
+}
+
+.hero-stat-number {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: var(--primary-blue);
+    line-height: 1;
+}
+
+.hero-stat-label {
+    font-size: 0.7rem;
+    color: rgba(255, 255, 255, 0.4);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-top: 4px;
+}
+
+/* --- MANAGE CARDS (MyPortfolio) --- */
+.portfolio-manage-card {
+    background: rgba(15, 23, 42, 0.6) !important;
+    border: 1px solid rgba(255, 255, 255, 0.06) !important;
+    border-radius: 16px !important;
+    transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    animation: fadeInUp 0.5s ease forwards;
+    opacity: 0;
+}
+
+.portfolio-manage-card:hover {
+    transform: translateY(-6px);
+    border-color: rgba(59, 130, 246, 0.3) !important;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3), 0 0 20px rgba(59, 130, 246, 0.1);
+}
+
+.portfolio-img-wrapper {
+    position: relative;
+    overflow: hidden;
+    height: 200px;
+}
+
+.portfolio-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+}
+
+.portfolio-manage-card:hover .portfolio-img {
+    transform: scale(1.08);
+}
+
+.portfolio-img-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(4px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.portfolio-manage-card:hover .portfolio-img-overlay {
+    opacity: 1;
+}
+
+.portfolio-action-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.portfolio-action-btn.edit {
+    background: var(--primary-blue);
+    color: white;
+}
+
+.portfolio-action-btn.delete {
+    background: #ef4444;
+    color: white;
+}
+
+.portfolio-action-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.portfolio-index-badge {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(8px);
+    color: white;
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* --- EMPTY STATE --- */
+.empty-portfolio-card {
+    background: rgba(15, 23, 42, 0.4) !important;
+    border: 2px dashed rgba(59, 130, 246, 0.2) !important;
+    border-radius: 20px !important;
+}
+
+.empty-icon-wrapper {
+    width: 80px;
+    height: 80px;
+    border-radius: 20px;
+    background: rgba(59, 130, 246, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+    color: var(--primary-blue);
+}
+
+/* --- MODAL --- */
+.portfolio-modal {
+    background: rgba(15, 23, 42, 0.98) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-radius: 20px !important;
+    backdrop-filter: blur(20px);
+}
+
+.portfolio-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 24px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.modal-icon-box {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--primary-blue), #8b5cf6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+}
+
+.portfolio-modal-footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+    padding: 16px 24px;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.portfolio-input {
+    background: rgba(255, 255, 255, 0.04) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    color: white !important;
+    border-radius: 12px !important;
+    padding: 12px 16px !important;
+    transition: all 0.2s !important;
+}
+
+.portfolio-input:focus {
+    border-color: var(--primary-blue) !important;
+    background: rgba(255, 255, 255, 0.06) !important;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+}
+
+.portfolio-input::placeholder {
+    color: rgba(255, 255, 255, 0.3) !important;
+}
+
+.portfolio-preview-box {
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    height: 140px;
+}
+
+.portfolio-preview-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.portfolio-preview-placeholder {
+    width: 100%;
+    height: 100%;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    color: white;
-    cursor: pointer;
+    background: rgba(255, 255, 255, 0.03);
 }
 
-.avatar-url-input {
-    width: 150px;
-    background: rgba(255,255,255,0.1);
-    border: 1px solid white;
-    font-size: 10px;
-    color: white;
-    border-radius: 5px;
+/* ==========================================
+   PORTFOLIO VIEW PAGE
+   ========================================== */
+
+.portfolio-profile-card {
+    background: rgba(15, 23, 42, 0.7) !important;
+    border: 1px solid rgba(255, 255, 255, 0.06) !important;
+    border-radius: 20px !important;
 }
 
-/* Form Styles */
-.bg-dark-input {
-    background: rgba(255, 255, 255, 0.05) !important;
-    border: 1px solid rgba(255, 255, 255, 0.1) !important;
-    color: white !important;
+.profile-hero-bg {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.08) 0%, rgba(139, 92, 246, 0.05) 50%, rgba(236, 72, 153, 0.05) 100%);
+    pointer-events: none;
 }
 
-.bg-dark-input:focus {
-    border-color: var(--primary-blue) !important;
-    background: rgba(255, 255, 255, 0.08) !important;
+.profile-avatar-wrapper {
+    position: relative;
+    display: inline-block;
 }
 
-.border-dashed-blue {
-    border: 1px dashed var(--primary-blue) !important;
-}
-
-/* Badge Kỹ năng */
-.skill-badge-edit {
-    display: flex;
-    align-items: center;
-    font-weight: 600 !important;
-}
-
-.pointer { cursor: pointer; }
-
-/* Thẻ dự án */
-.project-img-thumb {
-    height: 220px;
+.profile-avatar-lg {
+    width: 180px;
+    height: 180px;
     object-fit: cover;
+    border-radius: 24px;
+    border: 4px solid rgba(59, 130, 246, 0.3);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+    transition: transform 0.3s ease;
 }
 
-.project-edit-card {
-    transition: 0.3s;
+.profile-avatar-lg:hover {
+    transform: scale(1.03);
 }
 
-.text-secondary-cv {
-    color: #94a3b8;
-    line-height: 1.8;
+.avatar-status-dot {
+    position: absolute;
+    bottom: 8px;
+    right: 8px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #6b7280;
+    border: 3px solid rgba(15, 23, 42, 0.9);
 }
 
-.text-primary-glow {
-    color: var(--primary-blue);
-    text-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+.avatar-status-dot.verified {
+    background: #22c55e;
+    box-shadow: 0 0 10px rgba(34, 197, 94, 0.5);
 }
 
-/* Responsive */
-@media (max-width: 768px) {
-    .profile-avatar {
-        width: 150px;
-        height: 150px;
-    }
-    .btn-edit-toggle {
-        bottom: 20px;
-        right: 20px;
-        padding: 10px 20px !important;
-    }
+/* --- Sidebar Cards --- */
+.portfolio-sidebar-card {
+    background: rgba(15, 23, 42, 0.6) !important;
+    border: 1px solid rgba(255, 255, 255, 0.06) !important;
+    border-radius: 16px !important;
+    transition: all 0.3s ease;
 }
-.project-img-container {
+
+.portfolio-sidebar-card:hover {
+    border-color: rgba(59, 130, 246, 0.2) !important;
+}
+
+.portfolio-info-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.portfolio-info-label {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: rgba(255, 255, 255, 0.35);
+    font-weight: 600;
+}
+
+.portfolio-info-value {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: white;
+}
+
+.portfolio-skill-badge {
+    padding: 8px 16px !important;
+    font-size: 0.8rem !important;
+    font-weight: 600 !important;
+    border-radius: 10px !important;
+    background: rgba(59, 130, 246, 0.15) !important;
+    color: var(--primary-blue) !important;
+    border: 1px solid rgba(59, 130, 246, 0.2) !important;
+    transition: all 0.2s;
+}
+
+.portfolio-skill-badge:hover {
+    background: rgba(59, 130, 246, 0.25) !important;
+    transform: translateY(-1px);
+}
+
+/* --- Project View Cards --- */
+.portfolio-view-card {
+    background: rgba(15, 23, 42, 0.6) !important;
+    border: 1px solid rgba(255, 255, 255, 0.06) !important;
+    border-radius: 16px !important;
+    transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    animation: fadeInUp 0.5s ease forwards;
+    opacity: 0;
+}
+
+.portfolio-view-card:hover {
+    transform: translateY(-8px);
+    border-color: rgba(59, 130, 246, 0.3) !important;
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3), 0 0 30px rgba(59, 130, 246, 0.1);
+}
+
+.portfolio-view-img-wrapper {
     position: relative;
     overflow: hidden;
+    height: 200px;
 }
 
-.project-actions-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
+.portfolio-view-img {
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.6);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 15px;
-    opacity: 0;
-    transition: 0.3s ease;
+    object-fit: cover;
+    transition: transform 0.6s ease;
 }
 
-.project-img-container:hover .project-actions-overlay {
+.portfolio-view-card:hover .portfolio-view-img {
+    transform: scale(1.1);
+}
+
+.portfolio-view-img-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.8) 100%);
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding-bottom: 16px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.portfolio-view-card:hover .portfolio-view-img-overlay {
     opacity: 1;
 }
 
-.action-btn {
-    width: 40px;
-    height: 40px;
-    border-radius: 10px;
-    border: none;
+.portfolio-view-demo-btn {
     display: flex;
     align-items: center;
-    justify-content: center;
-    transition: 0.2s;
+    gap: 6px;
+    padding: 10px 24px;
+    background: var(--primary-blue);
+    color: white;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 0.8rem;
+    text-decoration: none;
+    transition: all 0.2s;
+    transform: translateY(10px);
 }
 
-.action-btn.edit { background: #3b82f6; color: white; }
-.action-btn.delete { background: #ef4444; color: white; }
-.action-btn:hover { transform: scale(1.1); }
+.portfolio-view-card:hover .portfolio-view-demo-btn {
+    transform: translateY(0);
+}
 
-.border-dashed-blue {
-    border: 2px dashed rgba(59, 130, 246, 0.3) !important;
+.portfolio-view-demo-btn:hover {
+    background: #2563eb;
+    color: white;
+    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+}
+
+.empty-portfolio-view {
+    background: rgba(15, 23, 42, 0.4) !important;
+    border: 2px dashed rgba(255, 255, 255, 0.08) !important;
+    border-radius: 16px !important;
+}
+
+/* --- Shared Utilities --- */
+.text-primary-glow {
+    color: var(--primary-blue);
+    text-shadow: 0 0 10px rgba(59, 130, 246, 0.4);
+}
+
+.hover-primary:hover {
+    color: #60a5fa !important;
+}
+
+.lead-sm {
+    font-size: 1rem;
+    line-height: 1.8;
+}
+
+.line-clamp-1 {
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* --- Responsive --- */
+@media (max-width: 768px) {
+    .profile-avatar-lg {
+        width: 140px;
+        height: 140px;
+    }
+    
+    .hero-stat-box {
+        padding: 8px 16px;
+        min-width: 70px;
+    }
+    
+    .hero-stat-number {
+        font-size: 1.4rem;
+    }
+    
+    .portfolio-img-wrapper,
+    .portfolio-view-img-wrapper {
+        height: 160px;
+    }
 }

@@ -1,34 +1,28 @@
-// src/services/optionsservice.js
 import api from './api';
 
 export const optionsService = {
-    /**
-     * Lấy danh sách các trạng thái của kỹ năng
-     * Trả về: [{ value: "PENDING", label: "Chờ duyệt" }, ...]
-     * Endpoint: GET /api/v1/options/skill-statuses
-     */
-    getSkillStatuses: async () => {
-        try {
-            const response = await api.get('/v1/options/skill-statuses');
-            return response.data;
-        } catch (error) {
-            console.error("Lỗi lấy skill statuses:", error);
-            throw error;
-        }
-    },
+    // 1. Nhóm Quyền & Người dùng
+    getSystemRoles: () => api.get('/v1/options/system-roles').then(res => res.data),
+    getUserStatuses: () => api.get('/v1/options/user-statuses').then(res => res.data),
+    getVerificationStatuses: () => api.get('/v1/options/verification-statuses').then(res => res.data),
 
-    /**
-     * Lấy danh sách các trạng thái xác minh sinh viên
-     * Trả về: [{ value: "VERIFIED", label: "Đã xác minh" }, ...]
-     * Endpoint: GET /api/v1/options/verification-statuses
-     */
-    getVerificationStatuses: async () => {
-        try {
-            const response = await api.get('/v1/options/verification-statuses');
-            return response.data;
-        } catch (error) {
-            console.error("Lỗi lấy verification statuses:", error);
-            throw error;
-        }
-    }
+    // 2. Nhóm Kỹ năng & Công việc
+    getSkillStatuses: () => api.get('/v1/options/skill-statuses').then(res => res.data),
+    getJobStatuses: () => api.get('/v1/options/job-statuses').then(res => res.data),
+    getJobRequesterTypes: () => api.get('/v1/options/job-requester-types').then(res => res.data),
+
+    // 3. Nhóm Đấu thầu & Hợp đồng
+    getBidStatuses: () => api.get('/v1/options/bid-statuses').then(res => res.data),
+    getContractStatuses: () => api.get('/v1/options/contract-statuses').then(res => res.data),
+    getContractSignerRoles: () => api.get('/v1/options/contract-signer-roles').then(res => res.data),
+    getContractDisputeResolutions: () => api.get('/v1/options/contract-dispute-resolutions').then(res => res.data),
+
+    // 4. Nhóm Dịch vụ & Đơn hàng
+    getStudentServiceStatuses: () => api.get('/v1/options/student-service-statuses').then(res => res.data),
+    getServiceOrderStatuses: () => api.get('/v1/options/service-order-statuses').then(res => res.data),
+    getServiceOrderBuyerTypes: () => api.get('/v1/options/service-orderbuyer-types').then(res => res.data),
+
+    // 5. Nhóm Thanh toán
+    getPaymentStatuses: () => api.get('/v1/options/payment-statuses').then(res => res.data),
+    getPaymentMethods: () => api.get('/v1/options/payment-methods').then(res => res.data),
 };

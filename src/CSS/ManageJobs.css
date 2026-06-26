@@ -4,7 +4,6 @@
     z-index: 10;
 }
 
-/* Nút Đăng tin kiểu Gradient */
 .btn-post-job {
     background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
     color: white;
@@ -24,7 +23,6 @@
     box-shadow: 0 10px 25px rgba(59, 130, 246, 0.4);
 }
 
-/* Table Design Custom */
 .job-management-table {
     background: transparent !important;
 }
@@ -49,7 +47,6 @@
     background: rgba(255, 255, 255, 0.02) !important;
 }
 
-/* Status Badges */
 .status-pill-badge {
     padding: 6px 12px !important;
     border-radius: 50px !important;
@@ -59,16 +56,15 @@
     letter-spacing: 0.5px;
 }
 
-.status-active { background: rgba(16, 185, 129, 0.2); color: #10b981; }
-.status-pending { background: rgba(245, 158, 11, 0.2); color: #f59e0b; }
-.status-expired { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
+.status-active { background: rgba(16, 185, 129, 0.15); color: #10b981; }
+.status-pending { background: rgba(245, 158, 11, 0.15); color: #f59e0b; }
+.status-expired { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
 
-/* Candidate Count Box */
 .candidate-badge {
     width: 50px;
     height: 50px;
     background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.06);
     border-radius: 12px;
     display: flex;
     flex-direction: column;
@@ -82,14 +78,13 @@
     color: var(--primary-blue);
 }
 
-/* Action Buttons */
 .action-icon-btn {
     width: 36px;
     height: 36px;
     border-radius: 10px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    background: rgba(255, 255, 255, 0.05);
-    color: #94a3b8;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.04);
+    color: rgba(255, 255, 255, 0.5);
     cursor: pointer;
     transition: 0.3s;
     display: flex;
@@ -98,43 +93,35 @@
 }
 
 .action-icon-btn:hover {
-    background: var(--primary-blue);
-    color: white;
-    border-color: var(--primary-blue);
+    background: rgba(59, 130, 246, 0.15);
+    color: #60a5fa;
+    border-color: rgba(59, 130, 246, 0.3);
 }
 
 .action-icon-btn.delete:hover {
-    background: #ef4444;
-    border-color: #ef4444;
+    background: rgba(239, 68, 68, 0.15);
+    border-color: rgba(239, 68, 68, 0.3);
+    color: #ef4444;
 }
 
-/* Tái sử dụng btn-auth của bạn cho các Tab */
 .btn-auth {
     padding: 10px 24px;
     border-radius: 12px;
     font-weight: 600;
     font-size: 13px;
-    color: #94a3b8;
+    color: rgba(255, 255, 255, 0.5);
     background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.06);
     backdrop-filter: blur(5px);
     transition: 0.3s;
 }
 
 .btn-auth:hover, .btn-auth.active {
     background: rgba(59, 130, 246, 0.1);
-    border-color: var(--primary-blue);
-    color: white;
+    border-color: rgba(59, 130, 246, 0.3);
+    color: #60a5fa;
 }
 
-.text-primary-glow {
-    color: var(--primary-blue);
-    text-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
-}
-
-.x-small { font-size: 11px; }
-
-/* Responsive */
 @media (max-width: 991px) {
     .filter-tabs {
         overflow-x: auto;

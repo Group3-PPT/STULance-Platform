@@ -4,12 +4,6 @@
     z-index: 10;
 }
 
-/* Hero & Banner Section */
-.uni-hero {
-    position: relative;
-    padding-bottom: 80px;
-}
-
 .uni-banner-wrap {
     height: 400px;
     width: 100%;
@@ -21,14 +15,14 @@
     content: '';
     position: absolute;
     inset: 0;
-    background: linear-gradient(to bottom, rgba(3, 7, 18, 0.4), var(--dark-bg));
+    background: linear-gradient(to bottom, rgba(2, 6, 23, 0.3), var(--dark-bg));
 }
 
 .uni-banner-img {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    opacity: 0.4;
+    opacity: 0.35;
     filter: blur(2px);
 }
 
@@ -38,35 +32,36 @@
     z-index: 30;
 }
 
-/* Search Pill */
 .uni-search-pill {
     max-width: 750px;
     border-radius: 60px !important;
-    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
     padding: 10px !important;
 }
 
-/* Stats Bar */
 .stats-bar-uni {
-    margin-top: -60px; /* Đè lên Hero */
+    margin-top: -60px;
     border-radius: 24px !important;
-    border: 1px solid var(--primary-blue) !important;
+    border: 1px solid rgba(59, 130, 246, 0.25) !important;
+    background: rgba(15, 23, 42, 0.7) !important;
+    backdrop-filter: blur(16px);
 }
 
 .border-end-gray {
-    border-right: 1px solid rgba(255, 255, 255, 0.1);
+    border-right: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-/* School Cards */
 .school-card {
     transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border: 1px solid rgba(255, 255, 255, 0.06) !important;
+    background: rgba(15, 23, 42, 0.5) !important;
 }
 
 .school-card:hover {
-    transform: translateY(-12px);
-    border-color: var(--primary-blue) !important;
-    background: rgba(255, 255, 255, 0.06);
+    transform: translateY(-10px);
+    border-color: rgba(59, 130, 246, 0.3) !important;
+    background: rgba(255, 255, 255, 0.04) !important;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
 }
 
 .school-logo-bg {
@@ -76,7 +71,7 @@
     border-radius: 20px;
     padding: 12px;
     position: relative;
-    box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.2);
     transition: 0.3s;
 }
 
@@ -88,12 +83,12 @@
     width: 100%;
     height: 100%;
     object-fit: contain;
-    filter: grayscale(1); /* Chuyển xám giống trang Business */
+    filter: grayscale(1);
     transition: 0.4s;
 }
 
 .school-card:hover .school-logo-img {
-    filter: grayscale(0); /* Hiện màu khi hover */
+    filter: grayscale(0);
 }
 
 .verify-badge-uni {
@@ -103,7 +98,6 @@
     z-index: 5;
 }
 
-/* Stats Grid inside card */
 .school-data-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -111,31 +105,20 @@
     text-align: center;
 }
 
-.uppercase-tracking {
-    letter-spacing: 1px;
-    font-size: 10px;
-}
-
-/* Helpers */
-.text-primary-glow {
-    color: var(--primary-blue);
-    text-shadow: 0 0 15px rgba(59, 130, 246, 0.6);
-}
-
 .btn-view-school {
-    border: 1px solid rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.08);
     transition: 0.3s;
+    border-radius: 10px;
 }
 
 .btn-view-school:hover {
-    background: var(--primary-blue) !important;
-    border-color: var(--primary-blue) !important;
-    color: white !important;
+    background: rgba(59, 130, 246, 0.15) !important;
+    border-color: rgba(59, 130, 246, 0.4) !important;
+    color: #60a5fa !important;
 }
 
-/* Mobile Responsive */
 @media (max-width: 768px) {
     .uni-hero-content { margin-top: -200px; }
-    .border-end-gray { border-right: none; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 15px; }
+    .border-end-gray { border-right: none; border-bottom: 1px solid rgba(255,255,255,0.06); padding-bottom: 15px; }
     .stats-bar-uni { margin-top: -30px; }
 }

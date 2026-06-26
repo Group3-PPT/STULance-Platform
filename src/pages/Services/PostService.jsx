@@ -1,172 +1,192 @@
 import React, { useState } from 'react';
-import { Container, Row, Col, Form, Button, Badge, InputGroup } from 'react-bootstrap';
-import { 
-  Plus, Image as ImageIcon, DollarSign, Clock, 
-  Settings, Info, CheckCircle2, Layout, Sparkles 
-} from 'lucide-react';
-import '../../CSS/PostService.css'; // Tuân thủ cấu trúc import bạn yêu cầu
-const PostService = () => {
-  const [activeTier, setActiveTier] = useState('basic'); // 'basic' hoặc 'premium'
-  const [previewImage, setPreviewImage] = useState(null);
+import { Container, Row, Col, Form, Button, InputGroup, Spinner } from 'react-bootstrap';
+import { Image as ImageIcon, DollarSign, Clock, Layout, Loader2, Send, ListChecks } from 'lucide-react';
+import { studentServiceService } from '../../services/studentserviceservice';
+import '../../CSS/PostService.css';
 
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setPreviewImage(URL.createObjectURL(file));
+const PostService = () => {
+  const [isSaving, setIsSaving] = useState(false);
+
+  const [formData, setFormData] = useState({
+    Title: '',
+    Category: '',
+    Description: '',
+    Price: 0,
+    DeliveryDays: 1,
+    Features: '',
+    SampleImageFile: '',
+    SaveAsDraft: false
+  });
+
+  const handleInputChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setFormData({ 
+      ...formData, 
+      [name]: type === 'checkbox' ? checked : value 
+    });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!formData.SampleImageFile) return alert("Vui lòng nhập URL hình ảnh mẫu cho dịch vụ!");
+
+    setIsSaving(true);
+
+    const payload = {
+      Title: formData.Title,
+      Category: formData.Category,
+      Description: formData.Description,
+      Price: Number(formData.Price),
+      DeliveryDays: parseInt(formData.DeliveryDays),
+      Features: formData.Features,
+      SampleImageFile: formData.SampleImageFile,
+      SaveAsDraft: formData.SaveAsDraft
+    };
+
+    try {
+      await studentServiceService.createService(payload);
+      alert(formData.SaveAsDraft ? "Đã lưu bản nháp thành công!" : "🎉 Dịch vụ đã được đăng và đang chờ duyệt!");
+    } catch (err) {
+      alert("Lỗi: " + (err.response?.data?.message || "Không thể xử lý yêu cầu"));
+    } finally {
+      setIsSaving(false);
     }
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    alert("Dịch vụ của bạn đã được gửi và đang chờ kiểm duyệt!");
-  };
-
   return (
-    <div className="post-service-page py-5">
+    <div className="post-service-page py-5 text-white animate-fade-in">
       <Container>
-        <div className="text-center mb-5 animate-fade-in">
-          <h1 className="fw-bold text-white display-6">Đăng <span className="text-primary-glow">Gói Dịch Vụ</span></h1>
-          <p className="text-muted">Chia sẻ kỹ năng của bạn và bắt đầu thu nhập ngay hôm nay</p>
+        <div className="text-center mb-5">
+          <h1 className="fw-bold display-6">Cung cấp <span className="text-primary-glow">Dịch Vụ</span></h1>
+          <p className="text-muted small uppercase-tracking">Thiết lập gói dịch vụ chuyên nghiệp của riêng bạn</p>
         </div>
 
         <Form onSubmit={handleSubmit}>
           <Row className="g-4">
-            {/* CỘT TRÁI: THÔNG TIN CHI TIẾT */}
+            {/* CỘT TRÁI: NỘI DUNG CHÍNH */}
             <Col lg={8}>
               <div className="glass-card p-4 mb-4">
-                <h5 className="text-white fw-bold mb-4 d-flex align-items-center gap-2">
-                  <Layout size={20} className="text-primary" /> 1. Thông tin chung
+                <h5 className="text-primary-glow mb-4 d-flex align-items-center gap-2">
+                  <Layout size={20} /> 1. Nội dung hiển thị
                 </h5>
                 
                 <Form.Group className="mb-4">
-                  <Form.Label className="small-label">Tiêu đề dịch vụ</Form.Label>
+                  <Form.Label className="small-label">TIÊU ĐỀ DỊCH VỤ</Form.Label>
                   <Form.Control 
-                    as="textarea" 
-                    rows={2} 
+                    as="textarea" rows={2} name="Title" required
                     className="post-input" 
-                    placeholder="Ví dụ: Tôi sẽ thiết kế bộ nhận diện thương hiệu chuyên nghiệp..."
-                    required
+                    placeholder="VD: Tôi sẽ vẽ minh họa 2D phong cách Anime..."
+                    value={formData.Title} onChange={handleInputChange}
                   />
-                  <small className="text-muted x-small italic">Gợi ý: Bắt đầu bằng 'Tôi sẽ...' để thu hút khách hàng.</small>
                 </Form.Group>
 
-                <Row>
-                  <Col md={6}>
-                    <Form.Group className="mb-4">
-                      <Form.Label className="small-label">Danh mục</Form.Label>
-                      <Form.Select className="post-input" required>
-                        <option value="">Chọn lĩnh vực</option>
-                        <option>Thiết kế Đồ họa</option>
-                        <option>Lập trình Web</option>
-                        <option>Video & Âm nhạc</option>
-                        <option>Dịch thuật & Viết lách</option>
-                      </Form.Select>
-                    </Form.Group>
-                  </Col>
-                  <Col md={6}>
-                    <Form.Group className="mb-4">
-                      <Form.Label className="small-label">Từ khóa (Tags)</Form.Label>
-                      <Form.Control className="post-input" placeholder="Ví dụ: Logo, Figma, Web3" />
-                    </Form.Group>
-                  </Col>
-                </Row>
+                <Form.Group className="mb-4">
+                  <Form.Label className="small-label">DANH MỤC</Form.Label>
+                  <Form.Select 
+                    name="Category" required className="post-input"
+                    value={formData.Category} onChange={handleInputChange}
+                  >
+                    <option value="">-- Chọn lĩnh vực --</option>
+                    <option>Thiết kế Đồ họa</option>
+                    <option>Lập trình & Tech</option>
+                    <option>Viết lách & Dịch thuật</option>
+                    <option>Video & Âm thanh</option>
+                  </Form.Select>
+                </Form.Group>
+
+                <Form.Group className="mb-4">
+                  <Form.Label className="small-label">MÔ TẢ CHI TIẾT</Form.Label>
+                  <Form.Control 
+                    as="textarea" rows={6} name="Description" required
+                    className="post-input" 
+                    placeholder="Giới thiệu chi tiết về quy trình và chất lượng sản phẩm..."
+                    value={formData.Description} onChange={handleInputChange}
+                  />
+                </Form.Group>
+
+                <Form.Group>
+                  <Form.Label className="small-label"><ListChecks size={16} className="me-2"/>CÁC TÍNH NĂNG ĐI KÈM</Form.Label>
+                  <Form.Control 
+                    as="textarea" rows={3} name="Features"
+                    className="post-input" 
+                    placeholder="VD: Cung cấp file gốc, Hỗ trợ sửa đổi 3 lần, Chất lượng 4K..."
+                    value={formData.Features} onChange={handleInputChange}
+                  />
+                </Form.Group>
               </div>
 
               <div className="glass-card p-4">
-                <h5 className="text-white fw-bold mb-4 d-flex align-items-center gap-2">
-                  <ImageIcon size={20} className="text-primary" /> 2. Hình ảnh sản phẩm mẫu
+                <h5 className="text-primary-glow mb-4 d-flex align-items-center gap-2">
+                  <ImageIcon size={20} /> 2. Ảnh mẫu (URL)
                 </h5>
-                <div 
-                  className="upload-dropzone"
-                  onClick={() => document.getElementById('img-upload').click()}
-                >
-                  {previewImage ? (
-                    <img src={previewImage} alt="Preview" className="img-preview-full" />
-                  ) : (
-                    <div className="text-center py-5">
-                      <Plus size={40} className="text-muted mb-2" />
-                      <p className="mb-0 text-muted">Nhấn để tải lên ảnh đại diện dịch vụ</p>
-                      <small className="x-small text-white-50">Kích thước khuyến nghị: 1280 x 720 (16:9)</small>
-                    </div>
-                  )}
-                  <input type="file" id="img-upload" hidden onChange={handleImageChange} accept="image/*" />
-                </div>
+                <Form.Group>
+                  <Form.Control 
+                    name="SampleImageFile"
+                    className="post-input" 
+                    placeholder="https://example.com/image.jpg"
+                    value={formData.SampleImageFile} 
+                    onChange={handleInputChange}
+                  />
+                </Form.Group>
+                {formData.SampleImageFile && (
+                  <div className="mt-3 rounded-4 overflow-hidden border border-white border-opacity-10">
+                    <img 
+                      src={formData.SampleImageFile} 
+                      alt="Preview" 
+                      className="w-100" 
+                      style={{maxHeight: '300px', objectFit: 'cover'}}
+                      onError={(e) => { e.target.style.display = 'none'; }}
+                    />
+                  </div>
+                )}
               </div>
             </Col>
 
-            {/* CỘT PHẢI: THIẾT LẬP GÓI GIÁ (TIERS) */}
+            {/* CỘT PHẢI: THIẾT LẬP GIÁ */}
             <Col lg={4}>
-              <div className="glass-card overflow-hidden sticky-top" style={{ top: '100px' }}>
-                <div className="tier-switcher d-flex">
-                  <div 
-                    className={`tier-btn ${activeTier === 'basic' ? 'active' : ''}`}
-                    onClick={() => setActiveTier('basic')}
-                  >Cơ bản</div>
-                  <div 
-                    className={`tier-btn ${activeTier === 'premium' ? 'active' : ''}`}
-                    onClick={() => setActiveTier('premium')}
-                  >Cao cấp</div>
-                </div>
-
-                <div className="p-4">
-                  <Form.Group className="mb-4">
-                    <Form.Label className="small-label">Giá dịch vụ (VND)</Form.Label>
-                    <InputGroup>
-                      <InputGroup.Text className="bg-dark-input border-0 text-white">
-                        <DollarSign size={16} />
-                      </InputGroup.Text>
-                      <Form.Control type="number" className="post-input border-start-0" placeholder="500,000" />
-                    </InputGroup>
-                  </Form.Group>
-
-                  <Form.Group className="mb-4">
-                    <Form.Label className="small-label">Thời gian bàn giao</Form.Label>
-                    <InputGroup>
-                      <InputGroup.Text className="bg-dark-input border-0 text-white">
-                        <Clock size={16} />
-                      </InputGroup.Text>
-                      <Form.Select className="post-input border-start-0">
-                        <option>1 ngày</option>
-                        <option>3 ngày</option>
-                        <option>5 ngày</option>
-                        <option>7 ngày</option>
-                      </Form.Select>
-                    </InputGroup>
-                  </Form.Group>
-
-                  <Form.Group className="mb-4">
-                    <Form.Label className="small-label">Mô tả gói ({activeTier})</Form.Label>
+              <div className="glass-card p-4 sticky-top shadow-glow" style={{ top: '100px' }}>
+                <h5 className="text-primary-glow mb-4 uppercase-tracking">Gói thanh toán</h5>
+                
+                <Form.Group className="mb-4">
+                  <Form.Label className="small-label">GIÁ (VND)</Form.Label>
+                  <InputGroup>
+                    <InputGroup.Text className="bg-dark-input border-0 text-white"><DollarSign size={16} /></InputGroup.Text>
                     <Form.Control 
-                      as="textarea" 
-                      rows={3} 
-                      className="post-input" 
-                      placeholder="Gói này bao gồm những gì?..."
+                        type="number" name="Price" required
+                        className="post-input border-start-0" 
+                        value={formData.Price} onChange={handleInputChange}
                     />
-                  </Form.Group>
+                  </InputGroup>
+                </Form.Group>
 
-                  <div className="service-features mb-4">
-                     <p className="small-label">Tính năng bao gồm</p>
-                     <div className="feature-check-item d-flex align-items-center gap-2 mb-2">
-                        <input type="checkbox" id="f1" /> <label htmlFor="f1" className="small text-white-50">File gốc gốc (AI/PSD)</label>
-                     </div>
-                     <div className="feature-check-item d-flex align-items-center gap-2 mb-2">
-                        <input type="checkbox" id="f2" /> <label htmlFor="f2" className="small text-white-50">Sử dụng thương mại</label>
-                     </div>
-                  </div>
+                <Form.Group className="mb-5">
+                  <Form.Label className="small-label">BÀN GIAO TRONG (NGÀY)</Form.Label>
+                  <InputGroup>
+                    <InputGroup.Text className="bg-dark-input border-0 text-white"><Clock size={16} /></InputGroup.Text>
+                    <Form.Control 
+                        type="number" name="DeliveryDays" required min="1"
+                        className="post-input border-start-0"
+                        value={formData.DeliveryDays} onChange={handleInputChange}
+                    />
+                  </InputGroup>
+                </Form.Group>
 
-                  <Button type="submit" variant="primary" className="w-100 py-3 fw-bold hub-btn-pink shadow-glow">
-                    XUẤT BẢN DỊCH VỤ
-                  </Button>
+                <div className="mb-4">
+                    <Form.Check 
+                      type="switch"
+                      id="draft-switch"
+                      label="Lưu dưới dạng bản nháp"
+                      name="SaveAsDraft"
+                      checked={formData.SaveAsDraft}
+                      onChange={handleInputChange}
+                      className="x-small text-muted"
+                    />
                 </div>
-              </div>
-              
-              <div className="glass-card p-3 mt-3">
-                <h6 className="text-warning small fw-bold mb-2 d-flex align-items-center gap-2">
-                  <Info size={14} /> Mẹo đăng bài
-                </h6>
-                <p className="x-small text-muted mb-0">
-                  Sử dụng hình ảnh thực tế bạn đã làm để tăng tỷ lệ được thuê lên 80%.
-                </p>
+
+                <Button type="submit" variant="primary" className="w-100 py-3 fw-bold shadow-glow d-flex align-items-center justify-content-center gap-2" disabled={isSaving}>
+                  {isSaving ? <Loader2 className="spinner" /> : <Send size={18} />}
+                  {formData.SaveAsDraft ? 'LƯU BẢN NHÁP' : 'XUẤT BẢN NGAY'}
+                </Button>
               </div>
             </Col>
           </Row>

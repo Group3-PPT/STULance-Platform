@@ -2,7 +2,7 @@
     position: fixed;
     inset: 0;
     background: #020617;
-    z-index: 9999; /* Luôn trên cùng */
+    z-index: 9999;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -15,7 +15,6 @@
     z-index: 10;
 }
 
-/* Logo Loading */
 .loader-logo {
     font-size: 3rem;
     font-weight: 800;
@@ -29,14 +28,14 @@
     text-shadow: 0 0 20px rgba(59, 130, 246, 0.8);
 }
 
-/* Thanh Progress */
 .progress-container-loader {
     width: 300px;
     height: 2px;
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.08);
     margin: 20px auto;
     position: relative;
     overflow: hidden;
+    border-radius: 2px;
 }
 
 .progress-fill {
@@ -44,12 +43,12 @@
     background: #3b82f6;
     box-shadow: 0 0 15px #3b82f6;
     transition: width 0.1s ease-out;
+    border-radius: 2px;
 }
 
-/* Text bên dưới */
 .percent-text {
     font-size: 10px;
-    color: #94a3b8;
+    color: rgba(255, 255, 255, 0.35);
     letter-spacing: 2px;
     font-family: monospace;
 }
@@ -59,7 +58,6 @@
     font-weight: bold;
 }
 
-/* Hiệu ứng tia quét ngang */
 .scan-line {
     position: absolute;
     width: 100%;
@@ -68,20 +66,19 @@
     left: 0;
     background: linear-gradient(to bottom, 
         transparent 50%, 
-        rgba(59, 130, 246, 0.05) 50.5%, 
+        rgba(59, 130, 246, 0.04) 50.5%, 
         transparent 51%);
     background-size: 100% 4px;
     pointer-events: none;
     animation: scan 4s linear infinite;
 }
 
-/* Nền lưới Grid ảo diệu */
 .bg-grid {
     position: absolute;
     inset: 0;
     background-image: 
-        linear-gradient(rgba(59, 130, 246, 0.05) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(59, 130, 246, 0.05) 1px, transparent 1px);
+        linear-gradient(rgba(59, 130, 246, 0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(59, 130, 246, 0.04) 1px, transparent 1px);
     background-size: 50px 50px;
     perspective: 1000px;
     transform: rotateX(60deg) translateY(-100px);

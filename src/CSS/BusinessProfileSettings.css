@@ -4,13 +4,12 @@
     z-index: 10;
 }
 
-/* Sidebar Nav */
 .biz-nav-item {
     display: flex;
     align-items: center;
     gap: 15px;
     padding: 14px 20px;
-    color: #94a3b8;
+    color: rgba(255, 255, 255, 0.5);
     border-radius: 14px;
     cursor: pointer;
     font-weight: 600;
@@ -20,17 +19,15 @@
 }
 
 .biz-nav-item:hover {
-    background: rgba(255, 255, 255, 0.03);
+    background: rgba(255, 255, 255, 0.04);
     color: white;
 }
 
 .biz-nav-item.active {
-    background: var(--primary-blue);
-    color: white;
-    box-shadow: 0 5px 15px rgba(59, 130, 246, 0.3);
+    background: rgba(59, 130, 246, 0.15);
+    color: #60a5fa;
 }
 
-/* Banner & Logo Upload Area */
 .settings-banner-area {
     height: 220px;
     position: relative;
@@ -41,7 +38,7 @@
     width: 100%;
     height: 100%;
     object-fit: cover;
-    opacity: 0.5;
+    opacity: 0.4;
 }
 
 .btn-change-banner {
@@ -54,8 +51,8 @@
     border-radius: 8px;
     font-size: 12px;
     cursor: pointer;
-    backdrop-filter: blur(5px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
 }
 
 .settings-logo-overlap {
@@ -93,18 +90,17 @@
     border: 3px solid var(--dark-bg);
 }
 
-/* Inputs */
 .biz-label {
     font-size: 11px;
     font-weight: 800;
-    color: #64748b;
+    color: rgba(255, 255, 255, 0.35);
     margin-bottom: 10px;
     letter-spacing: 1px;
 }
 
 .biz-input {
     background: rgba(255, 255, 255, 0.04) !important;
-    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
     color: white !important;
     padding: 12px 18px !important;
     border-radius: 12px !important;
@@ -113,8 +109,8 @@
 
 .biz-input:focus {
     border-color: var(--primary-blue) !important;
-    background: rgba(255, 255, 255, 0.08) !important;
-    box-shadow: 0 0 20px rgba(59, 130, 246, 0.2) !important;
+    background: rgba(255, 255, 255, 0.06) !important;
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.15) !important;
 }
 
 .biz-input option {
@@ -122,12 +118,6 @@
     color: white;
 }
 
-.text-primary-glow {
-    color: var(--primary-blue);
-    text-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
-}
-
-/* Animation */
 .animate-fade-in {
     animation: bizSettingsFade 0.8s ease-out;
 }

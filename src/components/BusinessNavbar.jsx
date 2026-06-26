@@ -65,7 +65,7 @@ const BusinessNavbar = () => {
         <Navbar.Toggle aria-controls="business-navbar" />
         <Navbar.Collapse id="business-navbar">
           <Nav className="mx-auto nav-links-gap">
-            <Nav.Link as={Link} to="/businesses">Tìm Ứng Viên</Nav.Link>
+            <Nav.Link as={Link} to="/find-students">Tìm Ứng Viên</Nav.Link>
             <Nav.Link as={Link} to="/manage-jobs">Dự Án Đã Đăng</Nav.Link>
             <Nav.Link as={Link} to="/services-list">Dịch Vụ SV</Nav.Link>
             <Nav.Link as={Link} to="/businesses/business-profile">Hồ Sơ Công Ty</Nav.Link>

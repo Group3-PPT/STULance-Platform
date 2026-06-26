@@ -7,31 +7,30 @@
 .title-underline {
     width: 50px;
     height: 3px;
-    background: #2ecc71; /* Màu xanh lá như trong ảnh mẫu */
+    background: var(--primary-blue);
     margin-top: 15px;
     border-radius: 10px;
 }
 
-/* Card chứa nhóm danh mục */
 .category-group-card {
     padding: 25px;
     height: 100%;
-    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border: 1px solid rgba(255, 255, 255, 0.06) !important;
+    background: rgba(15, 23, 42, 0.5) !important;
     transition: all 0.3s ease;
 }
 
 .category-group-card:hover {
-    border-color: #2ecc71 !important;
-    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(59, 130, 246, 0.3) !important;
+    background: rgba(255, 255, 255, 0.03) !important;
     transform: translateY(-5px);
 }
 
-/* Icon hình tròn xanh */
 .cat-icon-box {
     width: 40px;
     height: 40px;
-    background: #2ecc71;
-    color: white;
+    background: rgba(59, 130, 246, 0.15);
+    color: #60a5fa;
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -42,10 +41,9 @@
 .total-count {
     font-size: 14px;
     font-weight: 400;
-    color: #94a3b8;
+    color: rgba(255, 255, 255, 0.45);
 }
 
-/* Danh sách con */
 .sub-cat-list {
     list-style: none;
     padding: 0;
@@ -58,25 +56,45 @@
 
 .sub-cat-link {
     text-decoration: none;
-    color: #cbd5e1;
+    color: rgba(255, 255, 255, 0.6);
     font-size: 14px;
     transition: 0.2s;
     display: inline-block;
 }
 
 .sub-cat-link:hover {
-    color: #2ecc71;
+    color: #60a5fa;
     padding-left: 5px;
 }
 
 .sub-count {
-    color: #64748b;
+    color: rgba(255, 255, 255, 0.3);
     font-size: 13px;
 }
 
-/* Responsive */
 @media (max-width: 991px) {
     .category-group-card {
         padding: 20px;
     }
+}
+
+.all-cats-highlight {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.12) 0%, rgba(37, 99, 235, 0.06) 100%) !important;
+    border: 1px solid rgba(59, 130, 246, 0.25) !important;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.all-cats-highlight:hover {
+    transform: translateY(-8px);
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(37, 99, 235, 0.12) 100%) !important;
+    border-color: rgba(59, 130, 246, 0.4) !important;
+    box-shadow: 0 10px 30px rgba(59, 130, 246, 0.15);
+}
+
+.bg-primary-glow {
+    background: rgba(59, 130, 246, 0.15);
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+    border-radius: 12px;
+    padding: 12px;
 }

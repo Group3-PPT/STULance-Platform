@@ -1,7 +1,6 @@
-/* --- CONTAINER & ENTRANCE ANIMATION --- */
+/* --- TRANG QUẢN LÝ BÀI ĐĂNG --- */
 .post-manage-container {
     padding: 10px;
-    
     animation: postFadeIn 0.7s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
     z-index: 1;
@@ -12,7 +11,6 @@
     to { opacity: 1; transform: translateY(0); }
 }
 
-/* --- TIÊU ĐỀ TRANG --- */
 .post-title {
     color: #ffffff;
     font-weight: 800;
@@ -25,7 +23,6 @@
     text-shadow: 0 0 15px rgba(59, 130, 246, 0.5);
 }
 
-/* --- THANH TABS LỌC TRẠNG THÁI --- */
 .post-filter-tabs {
     display: flex;
     gap: 10px;
@@ -36,8 +33,8 @@
 
 .post-tab-btn {
     background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    color: #94a3b8;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    color: rgba(255, 255, 255, 0.5);
     padding: 8px 18px;
     border-radius: 10px;
     font-size: 13px;
@@ -46,29 +43,27 @@
 }
 
 .post-tab-btn:hover {
-    background: rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.06);
     color: #fff;
 }
 
 .post-tab-btn.active {
-    background: #3b82f6;
-    color: #fff;
-    border-color: #3b82f6;
-    box-shadow: 0 5px 15px rgba(59, 130, 246, 0.3);
+    background: rgba(59, 130, 246, 0.15);
+    color: #60a5fa;
+    border-color: rgba(59, 130, 246, 0.3);
 }
 
-/* --- BẢNG DỮ LIỆU GLASSMORPHISM --- */
 .post-table-glass {
     border-radius: 20px;
     overflow: hidden;
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.06);
     background: rgba(255, 255, 255, 0.01);
     backdrop-filter: blur(10px);
 }
 
 .post-custom-table thead th {
     background: rgba(15, 23, 42, 0.8) !important;
-    color: #3b82f6 !important;
+    color: #60a5fa !important;
     font-size: 12px;
     text-transform: uppercase;
     letter-spacing: 1px;
@@ -86,7 +81,6 @@
     background: rgba(255, 255, 255, 0.03);
 }
 
-/* --- ĐỊNH DẠNG TEXT TRONG BẢNG --- */
 .post-id-tag {
     font-family: 'JetBrains Mono', monospace;
     color: #60a5fa;
@@ -103,7 +97,7 @@
 }
 
 .post-author-info {
-    color: #64748b;
+    color: rgba(255, 255, 255, 0.35);
     font-size: 11px;
     display: flex;
     align-items: center;
@@ -111,11 +105,10 @@
 }
 
 .post-budget-text {
-    color: #f59e0b; /* Màu vàng cam cho ngân sách */
+    color: #f59e0b;
     font-weight: 800;
 }
 
-/* --- NHÃN TRẠNG THÁI (BADGES) --- */
 .post-status-pill {
     font-size: 10px !important;
     font-weight: 800 !important;
@@ -124,7 +117,6 @@
     text-transform: uppercase;
 }
 
-/* --- NÚT THAO TÁC (ACTIONS) --- */
 .post-action-group {
     display: flex;
     gap: 8px;
@@ -135,8 +127,8 @@
     width: 34px;
     height: 34px;
     border-radius: 8px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.04);
     color: #fff;
     display: flex;
     align-items: center;
@@ -149,30 +141,29 @@
 }
 
 .post-btn-action.approve:hover {
-    background: #10b981;
-    border-color: #10b981;
-    box-shadow: 0 0 15px rgba(16, 185, 129, 0.4);
+    background: rgba(16, 185, 129, 0.15);
+    border-color: rgba(16, 185, 129, 0.4);
+    color: #10b981;
 }
 
 .post-btn-action.reject:hover {
-    background: #ef4444;
-    border-color: #ef4444;
-    box-shadow: 0 0 15px rgba(239, 68, 68, 0.4);
+    background: rgba(239, 68, 68, 0.15);
+    border-color: rgba(239, 68, 68, 0.4);
+    color: #ef4444;
 }
 
 .post-btn-action.view:hover {
-    background: #3b82f6;
-    border-color: #3b82f6;
+    background: rgba(59, 130, 246, 0.15);
+    border-color: rgba(59, 130, 246, 0.4);
+    color: #60a5fa;
 }
 
-/* --- PHÂN TRANG (PAGINATION) --- */
 .post-pagination {
     margin-top: 20px;
-    color: #64748b;
+    color: rgba(255, 255, 255, 0.4);
     font-size: 12px;
 }
 
-/* --- TIỆN ÍCH --- */
 .line-clamp {
     display: -webkit-box;
     -webkit-line-clamp: 1;

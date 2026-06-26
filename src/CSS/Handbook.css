@@ -4,11 +4,10 @@
     z-index: 10;
 }
 
-/* Category Filter */
 .cat-pill {
     background: rgba(255, 255, 255, 0.03) !important;
-    border: 1px solid rgba(255, 255, 255, 0.08) !important;
-    color: #94a3b8 !important;
+    border: 1px solid rgba(255, 255, 255, 0.06) !important;
+    color: rgba(255, 255, 255, 0.55) !important;
     padding: 8px 25px !important;
     border-radius: 50px !important;
     font-weight: 600 !important;
@@ -16,24 +15,23 @@
 }
 
 .cat-pill:hover, .cat-pill.active {
-    background: var(--primary-blue) !important;
-    color: white !important;
-    border-color: var(--primary-blue) !important;
-    box-shadow: 0 0 15px rgba(59, 130, 246, 0.4);
+    background: rgba(59, 130, 246, 0.15) !important;
+    color: #60a5fa !important;
+    border-color: rgba(59, 130, 246, 0.3) !important;
 }
 
-/* Blog Card New Style */
 .blog-card-new {
-    border-radius: 25px !important;
+    border-radius: 20px !important;
     overflow: hidden;
     transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border: 1px solid rgba(255, 255, 255, 0.06) !important;
+    background: rgba(15, 23, 42, 0.5) !important;
 }
 
 .blog-card-new:hover {
-    transform: translateY(-12px);
-    border-color: var(--primary-blue) !important;
-    background: rgba(255, 255, 255, 0.05);
+    transform: translateY(-10px);
+    border-color: rgba(59, 130, 246, 0.3) !important;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
 }
 
 .blog-img-box {
@@ -57,7 +55,7 @@
     position: absolute;
     top: 15px;
     right: 15px;
-    background: var(--primary-blue);
+    background: rgba(59, 130, 246, 0.9);
     color: white;
     padding: 4px 15px;
     border-radius: 50px;
@@ -66,24 +64,23 @@
     letter-spacing: 1px;
 }
 
-/* Typography */
 .blog-title {
     line-height: 1.5;
     transition: 0.3s;
 }
 
 .blog-card-new:hover .blog-title {
-    color: var(--primary-blue) !important;
+    color: #60a5fa !important;
 }
 
 .blog-meta-top {
     font-size: 11px;
-    color: #64748b;
+    color: rgba(255, 255, 255, 0.35);
     font-weight: 600;
 }
 
 .text-muted-cv {
-    color: #94a3b8;
+    color: rgba(255, 255, 255, 0.45);
     line-height: 1.6;
 }
 
@@ -98,14 +95,13 @@
 }
 
 .read-more-link:hover {
-    gap: 15px !important; /* Hiệu ứng icon mũi tên đẩy ra xa */
+    gap: 15px !important;
 }
 
-/* Nút xem thêm */
 .btn-load-more {
     background: transparent;
-    border: 2px solid var(--primary-blue);
-    color: var(--primary-blue);
+    border: 2px solid rgba(59, 130, 246, 0.3);
+    color: #60a5fa;
     padding: 12px 40px;
     border-radius: 50px;
     font-weight: 800;
@@ -113,16 +109,11 @@
 }
 
 .btn-load-more:hover {
-    background: var(--primary-blue);
-    color: white;
+    background: rgba(59, 130, 246, 0.15);
+    border-color: rgba(59, 130, 246, 0.5);
+    color: #93c5fd;
 }
 
-.text-primary-glow {
-    color: var(--primary-blue);
-    text-shadow: 0 0 15px rgba(59, 130, 246, 0.6);
-}
-
-/* Animation */
 .animate-fade-in {
     animation: fadeInPage 0.8s ease-out;
 }

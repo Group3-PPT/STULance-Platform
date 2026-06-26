@@ -9,7 +9,6 @@
     to { opacity: 1; transform: scale(1); }
 }
 
-/* Tiêu đề trang */
 .rep-title {
     font-size: 28px;
     letter-spacing: -0.5px;
@@ -20,42 +19,31 @@
     text-shadow: 0 0 15px rgba(59, 130, 246, 0.5);
 }
 
-/* Tùy chỉnh biểu đồ Recharts */
 .recharts-cartesian-grid line {
-    stroke: rgba(255, 255, 255, 0.05);
+    stroke: rgba(255, 255, 255, 0.04);
 }
 
 .recharts-legend-item-text {
-    color: #94a3b8 !important;
+    color: rgba(255, 255, 255, 0.5) !important;
     font-size: 12px;
 }
 
-/* Thẻ báo cáo phát sáng */
 .border-primary-glow {
-    border: 1px solid rgba(59, 130, 246, 0.3) !important;
-    box-shadow: 0 0 30px rgba(59, 130, 246, 0.1);
+    border: 1px solid rgba(59, 130, 246, 0.25) !important;
+    box-shadow: 0 0 30px rgba(59, 130, 246, 0.08);
 }
 
-/* Chữ phát sáng */
-.text-primary-glow {
-    color: #3b82f6;
-    text-shadow: 0 0 10px rgba(59, 130, 246, 0.4);
-}
-
-/* Divider dọc */
 .vr {
     width: 1px;
-    background-color: white;
+    background-color: rgba(255, 255, 255, 0.08);
     height: 50px;
     align-self: center;
 }
 
-/* Tiện ích */
 .shadow-glow {
-    box-shadow: 0 5px 20px rgba(59, 130, 246, 0.4);
+    box-shadow: 0 5px 20px rgba(59, 130, 246, 0.3);
 }
 
-/* Responsive */
 @media (max-width: 991px) {
     .rep-title { font-size: 22px; }
 }

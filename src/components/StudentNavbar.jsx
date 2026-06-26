@@ -79,6 +79,7 @@ const StudentNavbar = () => {
         <Navbar.Collapse id="student-navbar">
           <Nav className="mx-auto nav-links-gap">
             <Nav.Link as={Link} to="/jobs">Việc Làm</Nav.Link>
+            <Nav.Link as={Link} to="/find-enterprises">Tìm DN</Nav.Link>
             <Nav.Link as={Link} to="/services-list">Gói Dịch Vụ</Nav.Link>
             <Nav.Link as={Link} to="/handbook">Cẩm Nang</Nav.Link>
             <Nav.Link as={Link} to="/cv-maker">Tạo CV</Nav.Link>
@@ -123,9 +124,6 @@ const StudentNavbar = () => {
               </NavDropdown.Item>
               <NavDropdown.Item as={Link} to="/profile-settings">
                 <User size={18} className="me-3 text-primary" /> Hồ sơ cá nhân
-              </NavDropdown.Item>
-              <NavDropdown.Item as={Link} to="/payment">
-                <History size={18} className="me-3 text-primary" /> Ví của tôi
               </NavDropdown.Item>
               <NavDropdown.Divider />
               <NavDropdown.Item onClick={handleLogout} className="text-danger fw-bold">

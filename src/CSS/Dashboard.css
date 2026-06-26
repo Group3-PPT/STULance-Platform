@@ -1,108 +1,114 @@
-/* --- TRANG BẢNG ĐIỀU KHIỂN --- */
-.dashboard-page {
-    position: relative;
-    z-index: 10;
+.hover-edit {
+    cursor: pointer;
+    transition: all 0.2s ease;
 }
 
-/* CV Icons */
-.cv-icon-bg {
-    width: 42px;
-    height: 42px;
-    background: rgba(59, 130, 246, 0.1);
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--primary-blue);
+.hover-edit:hover {
+    background: rgba(59, 130, 246, 0.08) !important;
+    border-color: rgba(59, 130, 246, 0.4) !important;
+    transform: scale(1.01);
 }
 
-.cv-item-box {
-    border: 1px solid rgba(255, 255, 255, 0.05) !important;
-    background: rgba(255, 255, 255, 0.02) !important;
-    transition: 0.3s;
-}
-
-.cv-item-box:hover {
-    border-color: var(--primary-blue) !important;
-    background: rgba(255, 255, 255, 0.05) !important;
-    transform: translateX(5px);
-}
-
-.icon-btn-sm {
-    background: none;
-    border: none;
-    color: #94a3b8;
-    padding: 5px;
+.btn-withdraw {
     transition: 0.2s;
 }
 
-.icon-btn-sm:hover {
-    color: white;
-    transform: scale(1.2);
+.btn-withdraw:hover {
+    color: #ef4444 !important;
+    text-decoration: underline !important;
 }
 
-/* Progress Bars */
-.custom-progress {
-    height: 8px !important;
-    background-color: rgba(255, 255, 255, 0.05) !important;
+.border-white-10 { border: 1px solid rgba(255, 255, 255, 0.08) !important; }
+.border-white-5 { border: 1px solid rgba(255, 255, 255, 0.05) !important; }
+
+.btn-create-new {
+    background: linear-gradient(135deg, #2563eb, #1d4ed8) !important;
+    border: none !important;
+    font-size: 11px !important;
     border-radius: 10px !important;
+    padding: 8px 18px !important;
+    font-weight: 600 !important;
+    transition: all 0.2s ease !important;
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25);
 }
 
-.custom-progress .progress-bar {
-    background-color: var(--primary-blue) !important;
-    box-shadow: 0 0 10px var(--primary-blue);
+.btn-create-new:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
 }
 
-.custom-progress-sm {
-    height: 5px !important;
-    background-color: rgba(255, 255, 255, 0.05) !important;
+.btn-post-service {
+    background: transparent !important;
+    border: 1px solid rgba(59, 130, 246, 0.3) !important;
+    color: #60a5fa !important;
+    font-size: 11px !important;
+    border-radius: 8px !important;
+    font-weight: 600 !important;
+    transition: all 0.2s ease !important;
 }
 
-/* Contract Cards */
-.contract-card-item {
-    border: 1px solid rgba(255, 255, 255, 0.05) !important;
-    background: rgba(255, 255, 255, 0.01) !important;
+.btn-post-service:hover {
+    background: rgba(59, 130, 246, 0.08) !important;
+    border-color: rgba(59, 130, 246, 0.5) !important;
+}
+
+.service-mini-item {
+    background: rgba(255, 255, 255, 0.02);
     transition: 0.3s;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
-.contract-card-item:hover {
-    border-color: var(--primary-blue) !important;
-    background: rgba(255, 255, 255, 0.03) !important;
+.service-mini-item:hover {
+    background: rgba(255, 255, 255, 0.04);
+    border-color: rgba(255, 255, 255, 0.1);
 }
 
-/* Typography & Badges */
-.text-primary-glow {
-    color: var(--primary-blue);
-    text-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
-}
-
-.x-small-badge {
+.status-active-sm {
     font-size: 9px !important;
-    padding: 4px 8px !important;
+    background-color: rgba(16, 185, 129, 0.12) !important;
+    color: #34d399 !important;
+    border: 1px solid rgba(16, 185, 129, 0.2);
+    border-radius: 6px !important;
+    padding: 3px 8px !important;
+    font-weight: 600 !important;
 }
 
-.uppercase-tracking {
-    text-transform: uppercase;
-    letter-spacing: 1px;
+.btn-find-jobs {
+    background: transparent !important;
+    border: 1px solid rgba(59, 130, 246, 0.3) !important;
+    color: #60a5fa !important;
+    border-radius: 50px !important;
+    padding: 10px 40px !important;
+    font-size: 14px;
+    transition: all 0.3s ease !important;
 }
 
-.bg-white-5 { background: rgba(255, 255, 255, 0.03); }
-.border-white-10 { border: 1px solid rgba(255, 255, 255, 0.08); }
-
-.x-small { font-size: 11px; }
-
-/* Animations */
-.animate-fade-in {
-    animation: fadeInDash 0.8s ease-out;
+.btn-find-jobs:hover {
+    background: rgba(59, 130, 246, 0.08) !important;
+    border-color: rgba(59, 130, 246, 0.5) !important;
+    color: #93c5fd !important;
 }
 
-@keyframes fadeInDash {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
+.custom-pagination .page-link {
+    background: transparent !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    color: rgba(255, 255, 255, 0.5) !important;
+    margin: 0 3px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    transition: all 0.2s ease;
 }
 
-@media (max-width: 991px) {
-    .dashboard-page {
-        padding-top: 80px;
-    }
+.custom-pagination .page-link:hover {
+    background: rgba(59, 130, 246, 0.08) !important;
+    border-color: rgba(59, 130, 246, 0.3) !important;
+    color: #60a5fa !important;
+}
+
+.custom-pagination .page-item.active .page-link {
+    background: rgba(59, 130, 246, 0.15) !important;
+    border-color: rgba(59, 130, 246, 0.4) !important;
+    color: #60a5fa !important;
 }

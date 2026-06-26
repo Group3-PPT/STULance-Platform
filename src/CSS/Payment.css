@@ -4,7 +4,6 @@
     z-index: 10;
 }
 
-/* Thẻ Ví Gradient */
 .wallet-card-bg {
     background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
     border-radius: 24px;
@@ -12,7 +11,7 @@
     color: white;
     position: relative;
     overflow: hidden;
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.15);
 }
 
 .wallet-card-bg::after {
@@ -22,17 +21,10 @@
     top: -40px;
     width: 120px;
     height: 120px;
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.08);
     border-radius: 50%;
 }
 
-.uppercase-tracking {
-    text-transform: uppercase;
-    letter-spacing: 1.5px;
-    font-weight: 600;
-}
-
-/* Form Nạp Tiền */
 .topup-input {
     background: rgba(255, 255, 255, 0.05) !important;
     border: 1px solid rgba(255, 255, 255, 0.1) !important;
@@ -50,7 +42,7 @@
 }
 
 .method-box {
-    border: 2px solid rgba(255, 255, 255, 0.1);
+    border: 2px solid rgba(255, 255, 255, 0.06);
     padding: 15px 10px;
     border-radius: 16px;
     text-align: center;
@@ -60,7 +52,7 @@
     flex-direction: column;
     align-items: center;
     gap: 8px;
-    color: #94a3b8;
+    color: rgba(255, 255, 255, 0.5);
 }
 
 .method-box span {
@@ -69,12 +61,11 @@
 }
 
 .method-box.active {
-    border-color: var(--primary-blue);
-    background: rgba(59, 130, 246, 0.1);
+    border-color: rgba(59, 130, 246, 0.4);
+    background: rgba(59, 130, 246, 0.08);
     color: white;
 }
 
-/* QR Section */
 .qr-inner {
     width: 210px;
     box-shadow: 0 10px 30px rgba(0,0,0,0.5);
@@ -85,9 +76,8 @@
     height: auto;
 }
 
-/* Lịch sử giao dịch */
 .history-item {
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
 }
 
 .history-item:last-child {
@@ -103,17 +93,16 @@
     justify-content: center;
 }
 
-.icon-box.plus { background: rgba(16, 185, 129, 0.15); color: #10b981; }
-.icon-box.minus { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
+.icon-box.plus { background: rgba(16, 185, 129, 0.12); color: #10b981; }
+.icon-box.minus { background: rgba(239, 68, 68, 0.12); color: #ef4444; }
 
 .amount-text { font-weight: 800; font-size: 15px; }
 .amount-text.plus { color: #10b981; }
 .amount-text.minus { color: #ef4444; }
 
 .bg-white-5 { background: rgba(255, 255, 255, 0.03); }
-.border-white-10 { border: 1px solid rgba(255, 255, 255, 0.1); }
+.border-white-10 { border: 1px solid rgba(255, 255, 255, 0.08); }
 
-/* Animation */
 .animate-fade-in {
     animation: fadeIn 0.5s ease-out;
 }
@@ -124,5 +113,5 @@
 }
 
 @media (max-width: 767px) {
-    .border-end-md { border-right: none !important; border-bottom: 1px solid rgba(255,255,255,0.1); }
+    .border-end-md { border-right: none !important; border-bottom: 1px solid rgba(255,255,255,0.06); }
 }

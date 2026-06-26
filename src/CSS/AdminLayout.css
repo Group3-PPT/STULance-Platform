@@ -13,7 +13,6 @@
     background: var(--adm-bg);
 }
 
-/* --- SIDEBAR --- */
 .adm-sidebar {
     width: var(--adm-sidebar-width);
     height: 100vh;
@@ -22,7 +21,7 @@
     left: 0;
     top: 0;
     display: flex;
-    flex-direction: column; /* Quan trọng để xếp menu hàng dọc */
+    flex-direction: column;
     border-right: 1px solid var(--adm-border);
     z-index: 1000;
     padding: 0;
@@ -31,11 +30,6 @@
 .adm-logo-section {
     padding: 35px 20px;
     text-align: center;
-}
-
-.text-primary-glow {
-    color: var(--adm-primary);
-    text-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
 }
 
 .adm-tag {
@@ -62,7 +56,7 @@
     align-items: center;
     justify-content: space-between;
     padding: 14px 18px;
-    color: #94a3b8;
+    color: rgba(255, 255, 255, 0.5);
     text-decoration: none !important;
     font-size: 14.5px;
     font-weight: 600;
@@ -77,9 +71,8 @@
 }
 
 .adm-nav-link.active {
-    background: var(--adm-primary) !important;
-    color: #fff !important;
-    box-shadow: 0 10px 20px rgba(59, 130, 246, 0.3);
+    background: rgba(59, 130, 246, 0.15) !important;
+    color: #60a5fa !important;
 }
 
 .adm-pro-badge {
@@ -96,7 +89,6 @@
     border-top: 1px solid var(--adm-border);
 }
 
-/* --- MAIN & TOPBAR --- */
 .adm-main {
     flex: 1;
     margin-left: var(--adm-sidebar-width);
@@ -106,8 +98,8 @@
 
 .adm-topbar {
     height: 70px;
-    background: rgba(2, 6, 23, 0.8);
-    backdrop-filter: blur(10px);
+    background: rgba(2, 6, 23, 0.85);
+    backdrop-filter: blur(16px);
     border-bottom: 1px solid var(--adm-border);
     position: sticky;
     top: 0;
@@ -163,7 +155,6 @@
     border: 2px solid var(--adm-bg);
 }
 
-/* --- RESPONSIVE --- */
 @media (max-width: 991px) {
     .adm-sidebar {
         width: 80px;

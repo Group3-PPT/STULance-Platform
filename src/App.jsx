@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
-import { createBrowserRouter, RouterProvider, Outlet } from 'react-router-dom';
+import { useEffect } from 'react'; // Đảm bảo dòng này có tồn tại
+import { authService } from './services/authService';
+import { createBrowserRouter, RouterProvider, Outlet, useSearchParams } from 'react-router-dom';
+
 import NavbarComp from './components/NavbarComp';
 import AuthNavbar from './components/AuthNavbar';
 import BusinessNavbar from './components/BusinessNavbar';
@@ -21,6 +24,8 @@ import Portfolio from './pages/Lancer/Portfolio';
 import BusinessProfile from './pages/Business/BusinessProfile';
 import Jobs from './pages/Jobs'; // Đừng quên import trang Jobs nếu bạn đã tạo nó
 import Businesses from './pages/Business/Businesses'; // Đừng quên import trang Businesses nếu bạn đã tạo nó
+import FindStudents from './pages/Business/FindStudents';
+import FindEnterprises from './pages/Business/FindEnterprises';
 import Services from './pages/Services/Services'; // Đừng quên import trang Services nếu bạn đã tạo nó
 import ServicesList from './pages/Services/ServicesList'; // Đừng quên import trang ServicesList nếu bạn đã tạo nó
 import ServiceDetail from './pages/Services/ServiceDetail'; // Đừng quên import trang ServiceDetail nếu bạn đã tạo nó
@@ -37,7 +42,6 @@ import Privacy from './pages/Privacy'; // Đừng quên import trang Privacy n�
 import JobPayment from './pages/JobPayment'; // Đừng quên import trang JobPayment nếu bạn đã tạo nó
 import Universities from './pages/Universities'; // Đừng quên import trang Universities nếu bạn đã tạo nó
 import AdminDashboard from './pages/Admin/AdminDashboard'; // Đừng quên import trang AdminDashboard nếu bạn đã tạo nó
-import ManageUsers from './pages/Admin/ManageAccounts'; // Đừng quên import trang ManageUsers nếu bạn đã tạo nó
 import ManageAccounts from './pages/Admin/ManageAccounts';
 import ManagePayments from './pages/Admin/ManagePayments';
 import AdminLayout from './pages/Admin/AdminLayout';
@@ -48,6 +52,10 @@ import ManageReportDetail from './components/ReportDetailView';
 import BusinessProfileSettings from './pages/Business/BusinessProfileSettings'; 
 import AdminSkillManagement from './pages/Admin/AdminSkillManagement';
 import MyPortfolio from './pages/Lancer/MyPortfolio'; // Đừng quên import trang MyPortfolio nếu bạn đã tạo nó
+import ManageStudentServices from './pages/Admin/ManageStudentServices'; // Đừng quên import trang ManageStudentServices nếu bạn đã tạo nó
+import ApplyJob from './pages/Lancer/ApplyJob'; // Đừng quên import trang ApplyJob nếu bạn đã tạo nó
+import SignContract from './pages/SignContract';
+import { paymentService } from './services/paymentservice';
 // --- 1. LAYOUT CHO USER (CÓ LOADING SCREEN) ---
 const MainLayout = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -78,41 +86,75 @@ const MainLayout = () => {
   );
 };
 
+const PaymentReturn = () => {
+    const [searchParams] = useSearchParams();
+    
+    useEffect(() => {
+        const params = Object.fromEntries([...searchParams]);
+        paymentService.handleVnpayReturn(params).then(res => {
+            if (res.success) alert("Nạp tiền thành công!");
+            window.location.href = "/payment";
+        });
+    }, []);
+
+    return <div className="text-center py-5 text-white">Đang xử lý kết quả thanh toán...</div>;
+};
+
 // --- 2. CẤU HÌNH ROUTER TỔNG ---
 const router = createBrowserRouter([
   {
-    path: '/',
-    element: <MainLayout />, // User side: CÓ Loading
+   path: '/',
+    element: <MainLayout />, 
     children: [
       { index: true, element: <Home /> },
-      { path: 'cv-maker', element: <CVMaker /> },
-      { path: 'portfolio', element: <Portfolio /> },
-      { path: 'portfolio/:id', element: <Portfolio /> },
-
-      { path: 'businesses/business-profile', element: <BusinessProfile /> },
-      { path: 'jobs', element: <Jobs /> },
-      { path: 'businesses', element: <Businesses /> },
-      { path: 'services-list', element: <ServicesList /> },
-      { path: 'services', element: <Services /> },
-      { path: 'service-detail', element: <ServiceDetail /> },
-      { path: 'payment', element: <Payment /> },
-      { path: 'service-invoice', element: <ServiceInvoice /> },
-      { path: 'contract', element: <Contract /> },
-      { path: 'profile-settings', element: <ProfileSettings /> },
-      { path: 'post-job', element: <PostJob /> },
-      { path: 'manage-jobs', element: <ManageJobs /> },
-      { path: 'post-service', element: <PostService /> },
-      { path: 'dashboardlancer', element: <DashboardLancer /> }, 
-      { path: 'handbook', element: <Handbook /> },
-      { path: 'privacy', element: <Privacy /> },
-      { path: 'JobPayment', element: <JobPayment /> },
-      { path: 'universities', element: <Universities /> },
       { path: 'login', element: <Login /> },
       { path: 'register', element: <Register /> },
       { path: 'forgot-password', element: <ForgotPassword /> },
-      { path: 'businesses/business-profile-settings', element: <BusinessProfileSettings /> },
-      { path: 'portfolio-manager', element: <MyPortfolio /> },
 
+      // --- PHẦN SINH VIÊN & PORTFOLIO ---
+      { path: 'dashboardlancer', element: <DashboardLancer /> }, 
+      { path: 'cv-maker', element: <CVMaker /> },
+      { path: 'profile-settings', element: <ProfileSettings /> },
+      
+      // Xem Portfolio của mình hoặc của người khác theo ID
+      { path: 'portfolio', element: <Portfolio /> },
+      { path: 'portfolio/:id', element: <Portfolio /> }, 
+      
+      // Quản lý danh sách dự án cá nhân
+      { path: 'portfolio-manager', element: <MyPortfolio /> }, 
+
+      // --- PHẦN DỊCH VỤ (SERVICES) ---
+      { path: 'services-list', element: <ServicesList /> }, // Danh mục lớn
+      { path: 'services', element: <Services /> },          // Danh sách TikTok Style
+      
+      // CHI TIẾT DỊCH VỤ: Bắt buộc thêm /:id để lấy dữ liệu từ Azure
+      { path: 'service-detail/:id', element: <ServiceDetail /> }, 
+      
+      { path: 'service-invoice', element: <ServiceInvoice /> },
+      { path: 'post-service', element: <PostService /> },
+
+      // --- PHẦN DOANH NGHIỆP & VIỆC LÀM ---
+      { path: 'businesses', element: <Businesses /> },
+      { path: 'find-students', element: <FindStudents /> },
+      { path: 'find-enterprises', element: <FindEnterprises /> },
+      { path: 'businesses/business-profile', element: <BusinessProfile /> },
+      { path: 'businesses/business-profile-settings', element: <BusinessProfileSettings /> },
+      { path: 'jobs', element: <Jobs /> },
+      { path: 'post-job', element: <PostJob /> },
+      { path: 'manage-jobs', element: <ManageJobs /> },
+      { path: 'jobs/apply/:jobId', element: <ApplyJob /> },
+
+      // --- THANH TOÁN & HỢP ĐỒNG ---
+      { path: 'payment', element: <Payment /> },
+      { path: 'payment/return', element: <PaymentReturn /> },
+      { path: 'JobPayment', element: <JobPayment /> },
+      { path: 'contract/:id', element: <Contract /> },
+      { path: 'contract/sign/:id', element: <SignContract /> },
+      // --- THÔNG TIN KHÁC ---
+      { path: 'handbook', element: <Handbook /> },
+      { path: 'privacy', element: <Privacy /> },
+      { path: 'universities', element: <Universities /> },
+      { path: 'post-service/:id', element: <PostService /> },
     ],
   },
   {
@@ -127,13 +169,20 @@ const router = createBrowserRouter([
       { path: 'manage-reports', element: <ManageReports /> },
       { path: 'report-detail', element: <ManageReportDetail /> },
       { path: 'skills', element: <AdminSkillManagement /> },
+      { path: 'student-services', element: <ManageStudentServices /> },
 
     ]
   }
 ]);
 
 function App() {
+  // Logic khởi chạy khi ứng dụng bắt đầu
+  useEffect(() => {
+    // 1. Khôi phục chu kỳ refresh token nếu đang có session
+    // 2. Tự động đổi token mới ngay lập tức để kiểm tra tính hợp lệ
+    authService.initAuth();
+  }, []);
+
   return <RouterProvider router={router} />;
 }
-
 export default App;

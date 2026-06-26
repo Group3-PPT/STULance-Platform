@@ -17,20 +17,19 @@
 
 .last-updated {
     font-style: italic;
-    color: #64748b;
+    color: rgba(255, 255, 255, 0.3);
     font-size: 13.5px;
     display: flex;
     align-items: center;
 }
 
-/* Nội dung văn bản */
 .privacy-content {
     line-height: 1.8;
 }
 
 .lead-text {
     font-size: 16px;
-    color: #cbd5e1;
+    color: rgba(255, 255, 255, 0.6);
     margin-bottom: 40px;
     text-align: justify;
 }
@@ -51,12 +50,11 @@
 }
 
 .policy-section p {
-    color: #e2e8f0;
+    color: rgba(255, 255, 255, 0.7);
     margin-bottom: 15px;
     text-align: justify;
 }
 
-/* Danh sách chính sách */
 .policy-list {
     padding-left: 20px;
     list-style: none;
@@ -65,13 +63,13 @@
 .policy-list li {
     position: relative;
     margin-bottom: 12px;
-    color: #94a3b8;
+    color: rgba(255, 255, 255, 0.5);
     padding-left: 25px;
     font-size: 15px;
 }
 
 .policy-list li::before {
-    content: "✓";
+    content: "\2713";
     position: absolute;
     left: 0;
     color: var(--primary-blue);
@@ -82,18 +80,11 @@
     color: #f8fafc;
 }
 
-/* Helpers */
-.text-primary-glow {
-    color: var(--primary-blue);
-    filter: drop-shadow(0 0 10px rgba(59, 130, 246, 0.5));
-}
-
 .bg-white-5 {
     background: rgba(255, 255, 255, 0.03);
     border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
-/* Animation */
 .animate-fade-in {
     animation: privacyFadeIn 0.8s ease-out;
 }
@@ -103,7 +94,6 @@
     to { opacity: 1; transform: translateY(0); }
 }
 
-/* Responsive */
 @media (max-width: 991px) {
     .privacy-container {
         padding: 40px 25px !important;

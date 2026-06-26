@@ -4,7 +4,6 @@
     z-index: 10;
 }
 
-/* Hero & Banner */
 .biz-hero {
     position: relative;
     padding-bottom: 40px;
@@ -29,10 +28,9 @@
     width: 100%;
     height: 100%;
     object-fit: cover;
-    opacity: 0.5;
+    opacity: 0.4;
 }
 
-/* Logo Overlap */
 .biz-main-info-row {
     display: flex;
     align-items: flex-end;
@@ -58,7 +56,6 @@
     object-fit: contain;
 }
 
-/* Stats */
 .biz-stats-bar {
     padding: 25px !important;
     border-radius: 24px !important;
@@ -69,7 +66,6 @@
     font-size: 26px;
 }
 
-/* Sidebar Contact Styles */
 .contact-icon-bg {
     width: 36px;
     height: 36px;
@@ -82,28 +78,25 @@
     flex-shrink: 0;
 }
 
-/* Hiring List */
 .job-hiring-item {
     background: rgba(255, 255, 255, 0.02) !important;
-    border: 1px solid rgba(255, 255, 255, 0.06) !important;
+    border: 1px solid rgba(255, 255, 255, 0.05) !important;
     transition: 0.3s;
 }
 
 .job-hiring-item:hover {
-    border-color: var(--primary-blue) !important;
-    background: rgba(255, 255, 255, 0.05) !important;
+    border-color: rgba(59, 130, 246, 0.3) !important;
+    background: rgba(255, 255, 255, 0.04) !important;
     transform: translateX(8px);
 }
 
-.text-accent { color: var(--accent); }
-.text-secondary-cv { color: #cbd5e1; line-height: 1.8; font-size: 15px; text-align: justify; }
-
-.text-primary-glow {
-    color: var(--primary-blue);
-    text-shadow: 0 0 15px rgba(59, 130, 246, 0.6);
+.text-secondary-cv {
+    color: rgba(255, 255, 255, 0.65);
+    line-height: 1.8;
+    font-size: 15px;
+    text-align: justify;
 }
 
-/* Responsive */
 @media (max-width: 991px) {
     .biz-main-info-row {
         flex-direction: column;
@@ -114,7 +107,7 @@
     
     .border-end-md {
         border-right: none !important;
-        border-bottom: 1px solid var(--border);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
         padding-bottom: 15px;
         margin-bottom: 15px;
     }
