@@ -151,3 +151,16 @@
 @media (max-width: 991px) {
     .adm-fab-settings { bottom: 20px; right: 20px; }
 }
+
+@media (max-width: 768px) {
+    .adm-dashboard-content .glass-card { padding: 16px !important; }
+    .adm-dashboard-content h2 { font-size: 1.3rem !important; }
+    .adm-dashboard-content h5 { font-size: 1rem !important; }
+    .admin-table-clean { font-size: 0.75rem; }
+    .admin-table-clean thead th { font-size: 9px !important; padding: 10px 6px !important; }
+    .admin-table-clean tbody td { padding: 10px 6px !important; }
+    .calendar-grid { gap: 2px; }
+    .cal-date { font-size: 10px; }
+    .adm-icon-box { width: 36px; height: 36px; border-radius: 8px; }
+    .adm-icon-box svg { width: 16px; height: 16px; }
+}

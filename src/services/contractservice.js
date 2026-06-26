@@ -6,10 +6,10 @@ export const contractService = {
     // ==========================================
     
     /** Tạo hợp đồng từ một đơn thầu đã chọn */
-    createFromBid: (bidId) => api.post(`/v1/contracts/from-bid/${bidId}`).then(res => res.data),
+    createFromBid: (bidId) => api.post(`/v1/contracts/from-bid/${bidId}`, {}).then(res => res.data),
 
     /** Tạo hợp đồng từ một đơn đặt hàng dịch vụ sinh viên */
-    createFromServiceOrder: (orderId) => api.post(`/v1/contracts/from-service-order/${orderId}`).then(res => res.data),
+    createFromServiceOrder: (orderId) => api.post(`/v1/contracts/from-service-order/${orderId}`, {}).then(res => res.data),
 
 
     // ==========================================

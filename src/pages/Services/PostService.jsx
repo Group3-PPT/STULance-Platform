@@ -6,6 +6,8 @@ import '../../CSS/PostService.css';
 
 const PostService = () => {
   const [isSaving, setIsSaving] = useState(false);
+  const [errors, setErrors] = useState({});
+  const [touched, setTouched] = useState({});
 
   const [formData, setFormData] = useState({
     Title: '',
@@ -18,17 +20,60 @@ const PostService = () => {
     SaveAsDraft: false
   });
 
+  const validate = (field, value) => {
+    const newErrors = { ...errors };
+    switch (field) {
+      case 'Title':
+        if (!value || value.trim().length < 10) newErrors.Title = 'Tiêu đề phải có ít nhất 10 ký tự';
+        else if (value.length > 300) newErrors.Title = 'Tiêu đề không quá 300 ký tự';
+        else delete newErrors.Title;
+        break;
+      case 'Category':
+        if (!value) newErrors.Category = 'Vui lòng chọn danh mục';
+        else delete newErrors.Category;
+        break;
+      case 'Description':
+        if (!value || value.trim().length < 20) newErrors.Description = 'Mô tả phải có ít nhất 20 ký tự';
+        else delete newErrors.Description;
+        break;
+      case 'Price':
+        if (!value || Number(value) < 50000) newErrors.Price = 'Giá tối thiểu 50,000 VND';
+        else delete newErrors.Price;
+        break;
+      case 'DeliveryDays':
+        if (!value || Number(value) < 1) newErrors.DeliveryDays = 'Tối thiểu 1 ngày';
+        else delete newErrors.DeliveryDays;
+        break;
+      case 'SampleImageFile':
+        if (!value) newErrors.SampleImageFile = 'Vui lòng nhập URL ảnh mẫu';
+        else if (!/^https?:\/\/.+/.test(value)) newErrors.SampleImageFile = 'URL không hợp lệ (bắt đầu bằng http:// hoặc https://)';
+        else delete newErrors.SampleImageFile;
+        break;
+      default: break;
+    }
+    setErrors(newErrors);
+  };
+
+  const handleBlur = (field) => {
+    setTouched(prev => ({ ...prev, [field]: true }));
+    validate(field, formData[field]);
+  };
+
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setFormData({ 
-      ...formData, 
-      [name]: type === 'checkbox' ? checked : value 
-    });
+    const newVal = type === 'checkbox' ? checked : value;
+    setFormData(prev => ({ ...prev, [name]: newVal }));
+    if (touched[name]) validate(name, newVal);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.SampleImageFile) return alert("Vui lòng nhập URL hình ảnh mẫu cho dịch vụ!");
+    
+    ['Title', 'Category', 'Description', 'Price', 'DeliveryDays', 'SampleImageFile'].forEach(f => validate(f, formData[f]));
+    if (Object.keys(errors).length > 0) {
+      setTouched({ Title: true, Category: true, Description: true, Price: true, DeliveryDays: true, SampleImageFile: true });
+      return;
+    }
 
     setIsSaving(true);
 
@@ -74,17 +119,18 @@ const PostService = () => {
                   <Form.Label className="small-label">TIÊU ĐỀ DỊCH VỤ</Form.Label>
                   <Form.Control 
                     as="textarea" rows={2} name="Title" required
-                    className="post-input" 
+                    className={`post-input ${touched.Title && errors.Title ? 'is-invalid' : ''}`}
                     placeholder="VD: Tôi sẽ vẽ minh họa 2D phong cách Anime..."
-                    value={formData.Title} onChange={handleInputChange}
+                    value={formData.Title} onChange={handleInputChange} onBlur={() => handleBlur('Title')}
                   />
+                  {touched.Title && errors.Title && <div className="invalid-feedback d-block">{errors.Title}</div>}
                 </Form.Group>
 
                 <Form.Group className="mb-4">
                   <Form.Label className="small-label">DANH MỤC</Form.Label>
                   <Form.Select 
-                    name="Category" required className="post-input"
-                    value={formData.Category} onChange={handleInputChange}
+                    name="Category" required className={`post-input ${touched.Category && errors.Category ? 'is-invalid' : ''}`}
+                    value={formData.Category} onChange={handleInputChange} onBlur={() => handleBlur('Category')}
                   >
                     <option value="">-- Chọn lĩnh vực --</option>
                     <option>Thiết kế Đồ họa</option>
@@ -92,16 +138,18 @@ const PostService = () => {
                     <option>Viết lách & Dịch thuật</option>
                     <option>Video & Âm thanh</option>
                   </Form.Select>
+                  {touched.Category && errors.Category && <div className="invalid-feedback d-block">{errors.Category}</div>}
                 </Form.Group>
 
                 <Form.Group className="mb-4">
                   <Form.Label className="small-label">MÔ TẢ CHI TIẾT</Form.Label>
                   <Form.Control 
                     as="textarea" rows={6} name="Description" required
-                    className="post-input" 
+                    className={`post-input ${touched.Description && errors.Description ? 'is-invalid' : ''}`}
                     placeholder="Giới thiệu chi tiết về quy trình và chất lượng sản phẩm..."
-                    value={formData.Description} onChange={handleInputChange}
+                    value={formData.Description} onChange={handleInputChange} onBlur={() => handleBlur('Description')}
                   />
+                  {touched.Description && errors.Description && <div className="invalid-feedback d-block">{errors.Description}</div>}
                 </Form.Group>
 
                 <Form.Group>
@@ -122,11 +170,12 @@ const PostService = () => {
                 <Form.Group>
                   <Form.Control 
                     name="SampleImageFile"
-                    className="post-input" 
+                    className={`post-input ${touched.SampleImageFile && errors.SampleImageFile ? 'is-invalid' : ''}`}
                     placeholder="https://example.com/image.jpg"
                     value={formData.SampleImageFile} 
-                    onChange={handleInputChange}
+                    onChange={handleInputChange} onBlur={() => handleBlur('SampleImageFile')}
                   />
+                  {touched.SampleImageFile && errors.SampleImageFile && <div className="invalid-feedback d-block">{errors.SampleImageFile}</div>}
                 </Form.Group>
                 {formData.SampleImageFile && (
                   <div className="mt-3 rounded-4 overflow-hidden border border-white border-opacity-10">
@@ -153,10 +202,11 @@ const PostService = () => {
                     <InputGroup.Text className="bg-dark-input border-0 text-white"><DollarSign size={16} /></InputGroup.Text>
                     <Form.Control 
                         type="number" name="Price" required
-                        className="post-input border-start-0" 
-                        value={formData.Price} onChange={handleInputChange}
+                        className={`post-input border-start-0 ${touched.Price && errors.Price ? 'is-invalid' : ''}`}
+                        value={formData.Price} onChange={handleInputChange} onBlur={() => handleBlur('Price')}
                     />
                   </InputGroup>
+                  {touched.Price && errors.Price && <div className="text-danger small mt-1">{errors.Price}</div>}
                 </Form.Group>
 
                 <Form.Group className="mb-5">
@@ -165,10 +215,11 @@ const PostService = () => {
                     <InputGroup.Text className="bg-dark-input border-0 text-white"><Clock size={16} /></InputGroup.Text>
                     <Form.Control 
                         type="number" name="DeliveryDays" required min="1"
-                        className="post-input border-start-0"
-                        value={formData.DeliveryDays} onChange={handleInputChange}
+                        className={`post-input border-start-0 ${touched.DeliveryDays && errors.DeliveryDays ? 'is-invalid' : ''}`}
+                        value={formData.DeliveryDays} onChange={handleInputChange} onBlur={() => handleBlur('DeliveryDays')}
                     />
                   </InputGroup>
+                  {touched.DeliveryDays && errors.DeliveryDays && <div className="text-danger small mt-1">{errors.DeliveryDays}</div>}
                 </Form.Group>
 
                 <div className="mb-4">

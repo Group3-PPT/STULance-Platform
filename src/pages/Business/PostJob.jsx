@@ -7,8 +7,9 @@ import '../../CSS/PostJob.css';
 const PostJob = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [salaryType, setSalaryType] = useState('deal');
+  const [errors, setErrors] = useState({});
+  const [touched, setTouched] = useState({});
 
-  // State khớp 100% với Schema Swagger
   const [formData, setFormData] = useState({
     title: '',
     jobType: 'Freelance',
@@ -23,16 +24,65 @@ const PostJob = () => {
     saveAsDraft: false
   });
 
+  const validate = (field, value) => {
+    const newErrors = { ...errors };
+    
+    switch (field) {
+      case 'title':
+        if (!value || value.trim().length < 5) newErrors.title = 'Tiêu đề phải có ít nhất 5 ký tự';
+        else if (value.length > 200) newErrors.title = 'Tiêu đề không quá 200 ký tự';
+        else delete newErrors.title;
+        break;
+      case 'deadline':
+        if (!value) newErrors.deadline = 'Vui lòng chọn hạn chót';
+        else if (new Date(value) < new Date()) newErrors.deadline = 'Hạn chót phải sau ngày hôm nay';
+        else delete newErrors.deadline;
+        break;
+      case 'description':
+        if (!value || value.trim().length < 20) newErrors.description = 'Mô tả phải có ít nhất 20 ký tự';
+        else delete newErrors.description;
+        break;
+      case 'contactName':
+        if (!value || value.trim().length < 2) newErrors.contactName = 'Tên liên hệ phải có ít nhất 2 ký tự';
+        else delete newErrors.contactName;
+        break;
+      case 'contactInfo':
+        if (!value || value.trim().length < 3) newErrors.contactInfo = 'Email/SĐT không hợp lệ';
+        else delete newErrors.contactInfo;
+        break;
+      case 'salary':
+        if (salaryType === 'fixed' && (!value || Number(value) < 100000)) newErrors.salary = 'Lương tối thiểu 100,000 VND';
+        else delete newErrors.salary;
+        break;
+      default: break;
+    }
+    setErrors(newErrors);
+  };
+
+  const handleBlur = (field) => {
+    setTouched(prev => ({ ...prev, [field]: true }));
+    validate(field, formData[field]);
+  };
+
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setFormData({
-      ...formData,
-      [name]: type === 'checkbox' || type === 'switch' ? checked : value
-    });
+    const newVal = type === 'checkbox' || type === 'switch' ? checked : value;
+    setFormData(prev => ({ ...prev, [name]: newVal }));
+    if (touched[name]) validate(name, newVal);
   };
 
   const handleSubmit = async (e) => {
   e.preventDefault();
+  
+  // Validate all fields
+  ['title', 'deadline', 'description', 'contactName', 'contactInfo'].forEach(f => validate(f, formData[f]));
+  if (salaryType === 'fixed') validate('salary', formData.salary);
+  
+  if (Object.keys(errors).length > 0) {
+    setTouched({ title: true, deadline: true, description: true, contactName: true, contactInfo: true, salary: true });
+    return;
+  }
+
   setIsSaving(true);
 
   try {
@@ -83,10 +133,11 @@ const PostJob = () => {
               <Form.Group className="mb-4">
                 <Form.Label className="small-label">TIÊU ĐỀ TUYỂN DỤNG <span className="text-danger">*</span></Form.Label>
                 <Form.Control 
-                  name="title" required className="post-input" 
+                  name="title" required className={`post-input ${touched.title && errors.title ? 'is-invalid' : ''}`}
                   placeholder="Ví dụ: Tuyển thực tập sinh Thiết kế UI/UX"
-                  value={formData.title} onChange={handleChange}
+                  value={formData.title} onChange={handleChange} onBlur={() => handleBlur('title')}
                 />
+                {touched.title && errors.title && <div className="invalid-feedback d-block">{errors.title}</div>}
               </Form.Group>
 
               <Row className="g-4">
@@ -104,7 +155,11 @@ const PostJob = () => {
                 <Col md={3}>
                   <Form.Group>
                     <Form.Label className="small-label">HÌNH THỨC LƯƠNG</Form.Label>
-                    <Form.Select className="post-input" value={salaryType} onChange={(e) => setSalaryType(e.target.value)}>
+                    <Form.Select className="post-input" value={salaryType} onChange={(e) => {
+                      setSalaryType(e.target.value);
+                      if (e.target.value === 'fixed') validate('salary', formData.salary);
+                      else { const e2 = { ...errors }; delete e2.salary; setErrors(e2); }
+                    }}>
                       <option value="deal">Thỏa thuận</option>
                       <option value="fixed">Cố định (VND)</option>
                     </Form.Select>
@@ -114,10 +169,11 @@ const PostJob = () => {
                   <Form.Group>
                     <Form.Label className="small-label">SỐ TIỀN</Form.Label>
                     <Form.Control 
-                      name="salary" type="number" className="post-input" 
+                      name="salary" type="number" className={`post-input ${touched.salary && errors.salary ? 'is-invalid' : ''}`}
                       disabled={salaryType === 'deal'}
-                      value={formData.salary} onChange={handleChange}
+                      value={formData.salary} onChange={handleChange} onBlur={() => handleBlur('salary')}
                     />
+                    {touched.salary && errors.salary && <div className="invalid-feedback d-block">{errors.salary}</div>}
                   </Form.Group>
                 </Col>
               </Row>
@@ -138,7 +194,8 @@ const PostJob = () => {
                 <Col md={8}>
                   <Form.Group>
                     <Form.Label className="small-label">HẠN CHÓT NỘP HỒ SƠ <span className="text-danger">*</span></Form.Label>
-                    <Form.Control name="deadline" type="date" required className="post-input" value={formData.deadline} onChange={handleChange} />
+                    <Form.Control name="deadline" type="date" required className={`post-input ${touched.deadline && errors.deadline ? 'is-invalid' : ''}`} value={formData.deadline} onChange={handleChange} onBlur={() => handleBlur('deadline')} />
+                    {touched.deadline && errors.deadline && <div className="invalid-feedback d-block">{errors.deadline}</div>}
                   </Form.Group>
                 </Col>
               </Row>
@@ -151,7 +208,8 @@ const PostJob = () => {
               </div>
               <Form.Group className="mb-4">
                 <Form.Label className="small-label">MÔ TẢ CÔNG VIỆC</Form.Label>
-                <Form.Control as="textarea" rows={4} name="description" required className="post-input" placeholder="Viết chi tiết các task cần làm..." value={formData.description} onChange={handleChange} />
+                <Form.Control as="textarea" rows={4} name="description" required className={`post-input ${touched.description && errors.description ? 'is-invalid' : ''}`} placeholder="Viết chi tiết các task cần làm..." value={formData.description} onChange={handleChange} onBlur={() => handleBlur('description')} />
+                {touched.description && errors.description && <div className="invalid-feedback d-block">{errors.description}</div>}
               </Form.Group>
               <Form.Group className="mb-4">
                 <Form.Label className="small-label">YÊU CẦU ỨNG VIÊN</Form.Label>
@@ -170,13 +228,15 @@ const PostJob = () => {
                 <Col md={6}>
                   <Form.Group>
                     <Form.Label className="small-label">TÊN NGƯỜI LIÊN HỆ</Form.Label>
-                    <Form.Control name="contactName" required className="post-input" value={formData.contactName} onChange={handleChange} />
+                    <Form.Control name="contactName" required className={`post-input ${touched.contactName && errors.contactName ? 'is-invalid' : ''}`} value={formData.contactName} onChange={handleChange} onBlur={() => handleBlur('contactName')} />
+                    {touched.contactName && errors.contactName && <div className="invalid-feedback d-block">{errors.contactName}</div>}
                   </Form.Group>
                 </Col>
                 <Col md={6}>
                   <Form.Group>
                     <Form.Label className="small-label">EMAIL/SĐT NHẬN CV</Form.Label>
-                    <Form.Control name="contactInfo" required className="post-input" value={formData.contactInfo} onChange={handleChange} />
+                    <Form.Control name="contactInfo" required className={`post-input ${touched.contactInfo && errors.contactInfo ? 'is-invalid' : ''}`} value={formData.contactInfo} onChange={handleChange} onBlur={() => handleBlur('contactInfo')} />
+                    {touched.contactInfo && errors.contactInfo && <div className="invalid-feedback d-block">{errors.contactInfo}</div>}
                   </Form.Group>
                 </Col>
               </Row>

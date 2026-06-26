@@ -478,21 +478,63 @@
 /* --- Responsive --- */
 @media (max-width: 768px) {
     .profile-avatar-lg {
-        width: 140px;
-        height: 140px;
+        width: 120px;
+        height: 120px;
+        border-radius: 16px;
     }
     
     .hero-stat-box {
-        padding: 8px 16px;
-        min-width: 70px;
+        padding: 8px 12px;
+        min-width: 60px;
     }
     
     .hero-stat-number {
-        font-size: 1.4rem;
+        font-size: 1.2rem;
+    }
+    
+    .hero-stat-label {
+        font-size: 0.6rem;
     }
     
     .portfolio-img-wrapper,
     .portfolio-view-img-wrapper {
         height: 160px;
+    }
+    
+    .portfolio-manage-card:hover {
+        transform: none;
+    }
+    
+    .portfolio-view-card:hover {
+        transform: translateY(-4px);
+    }
+    
+    .portfolio-modal {
+        margin: 10px;
+        border-radius: 16px !important;
+    }
+    
+    .portfolio-modal-header {
+        padding: 16px;
+    }
+    
+    .portfolio-modal-footer {
+        padding: 12px 16px;
+        flex-wrap: wrap;
+    }
+    
+    .portfolio-action-btn {
+        padding: 8px 14px;
+        font-size: 0.75rem;
+    }
+    
+    .hero-icon-box {
+        width: 44px;
+        height: 44px;
+    }
+    
+    .portfolio-skill-badge {
+        padding: 6px 12px !important;
+        font-size: 0.7rem !important;
     }
 }

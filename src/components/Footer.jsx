@@ -81,7 +81,7 @@ const FooterComp = () => {
               </div>
               <div className="d-flex align-items-start gap-3 text-white-50">
                 <div className="contact-circle mt-1"><MapPin size={14}/></div>
-                <span>Số 1 Đại Cồ Việt, Bách Khoa, Hai Bà Trưng, Hà Nội</span>
+                <span>180 Cao Lỗ,Phường 4, Quận 8, TP. HCM</span>
               </div>
             </div>
           </Col>

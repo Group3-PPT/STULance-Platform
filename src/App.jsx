@@ -13,6 +13,7 @@ import ThreeBg from './components/Threebg'; // Sửa chữ B thành b cho đúng
 import JobCardSidebar from './components/JobCardSidebar';
 import JobDetailView from './components/JobDetailView';
 import LoadingScreen from './components/LoadingScreen';
+import { ToastProvider } from './components/Toast';
 
 // IMPORT CÁC TRANG - Hãy kiểm tra kỹ đường dẫn file (components hay pages?)
 import Home from './pages/Home'; 
@@ -183,6 +184,10 @@ function App() {
     authService.initAuth();
   }, []);
 
-  return <RouterProvider router={router} />;
+  return (
+    <ToastProvider>
+      <RouterProvider router={router} />
+    </ToastProvider>
+  );
 }
 export default App;
