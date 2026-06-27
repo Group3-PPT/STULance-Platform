@@ -104,6 +104,44 @@
     color: #ef4444;
 }
 
+.modal-dark .modal-content {
+    background: #0f1117 !important;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+}
+
+.modal-dark .modal-header {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.modal-dark .modal-header .btn-close {
+    filter: invert(1);
+}
+
+.bid-card {
+    background: rgba(255, 255, 255, 0.03) !important;
+    border: 1px solid rgba(255, 255, 255, 0.06) !important;
+    border-radius: 14px !important;
+    transition: 0.3s;
+}
+
+.bid-card:hover {
+    border-color: rgba(59, 130, 246, 0.2) !important;
+    background: rgba(255, 255, 255, 0.05) !important;
+}
+
+.bid-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: rgba(59, 130, 246, 0.1);
+    border: 1px solid rgba(59, 130, 246, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
 .btn-auth {
     padding: 10px 24px;
     border-radius: 12px;
