@@ -3,6 +3,10 @@
     {
       "source": "/api/:path*",
       "destination": "https://stulance-platform-eccxame4gff9hhgp.southeastasia-01.azurewebsites.net/api/:path*"
+    },
+    {
+      "source": "/((?!assets/|.*\\..*).*)",
+      "destination": "/index.html"
     }
   ]
 }

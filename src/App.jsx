@@ -1,5 +1,4 @@
-import React, { useState } from 'react';
-import { useEffect } from 'react'; // Đảm bảo dòng này có tồn tại
+import React, { useState, useEffect } from 'react';
 import { authService } from './services/authService';
 import { createBrowserRouter, RouterProvider, Outlet, useSearchParams } from 'react-router-dom';
 
@@ -56,6 +55,7 @@ import MyPortfolio from './pages/Lancer/MyPortfolio'; // Đừng quên import tr
 import ManageStudentServices from './pages/Admin/ManageStudentServices'; // Đừng quên import trang ManageStudentServices nếu bạn đã tạo nó
 import ApplyJob from './pages/Lancer/ApplyJob'; // Đừng quên import trang ApplyJob nếu bạn đã tạo nó
 import SignContract from './pages/SignContract';
+import NotFound from './pages/NotFound';
 import { paymentService } from './services/paymentservice';
 // --- 1. LAYOUT CHO USER (CÓ LOADING SCREEN) ---
 const MainLayout = () => {
@@ -156,6 +156,7 @@ const router = createBrowserRouter([
       { path: 'privacy', element: <Privacy /> },
       { path: 'universities', element: <Universities /> },
       { path: 'post-service/:id', element: <PostService /> },
+      { path: '*', element: <NotFound /> },
     ],
   },
   {
@@ -166,12 +167,12 @@ const router = createBrowserRouter([
       { path: 'accounts', element: <ManageAccounts /> },
       { path: 'payments', element: <ManagePayments /> },
       { path: 'posts', element: <ManagePosts /> },
-      {   path: 'reports', element: <AdminReports /> },
+      { path: 'reports', element: <AdminReports /> },
       { path: 'manage-reports', element: <ManageReports /> },
       { path: 'report-detail', element: <ManageReportDetail /> },
       { path: 'skills', element: <AdminSkillManagement /> },
       { path: 'student-services', element: <ManageStudentServices /> },
-
+      { path: '*', element: <NotFound /> },
     ]
   }
 ]);
