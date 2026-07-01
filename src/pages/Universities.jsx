@@ -170,7 +170,7 @@ const Universities = () => {
                   </div>
                 </div>
 
-                <Button variant="outline-primary" className="w-100 mt-4 rounded-pill fw-bold btn-view-school">
+                <Button variant="outline-primary" className="w-100 mt-4 rounded-pill fw-bold btn-view-school" onClick={() => alert(`Xem chi tiết ${school.name}\n\nChức năng đang được phát triển.`)}>
                   XEM CHI TIẾT TRƯỜNG <ExternalLink size={14} className="ms-2" />
                 </Button>
               </div>

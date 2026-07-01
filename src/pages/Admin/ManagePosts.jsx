@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Badge, Form, Spinner, Dropdown } from 'react-bootstrap';
-import { Search, MoreVertical, Eye, Calendar, Loader2, Building2, ShieldAlert, CheckCircle, XCircle, PauseCircle, Lock, Archive, RefreshCw } from 'lucide-react';
+import { Table, Badge, Form, Spinner, Dropdown, Modal, Row, Col } from 'react-bootstrap';
+import { Search, MoreVertical, Eye, Calendar, Loader2, Building2, ShieldAlert, CheckCircle, XCircle, PauseCircle, Lock, Archive, RefreshCw, Clock, DollarSign, Users, MapPin } from 'lucide-react';
 import { jobService } from "../../services/jobservice";
 import '../../CSS/ManagePosts.css';
 
@@ -9,6 +9,8 @@ const ManagePosts = () => {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("Tất cả");
   const [searchTerm, setSearchTerm] = useState("");
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [selectedPost, setSelectedPost] = useState(null);
 
   const fetchPosts = async () => {
     setLoading(true);
@@ -20,6 +22,11 @@ const ManagePosts = () => {
   };
 
   useEffect(() => { fetchPosts(); }, []);
+
+  const handleViewDetail = (post) => {
+    setSelectedPost(post);
+    setShowDetailModal(true);
+  };
 
   const handleStatusChange = async (id, newStatus) => {
     const statusLabels = {
@@ -129,7 +136,7 @@ const ManagePosts = () => {
                   <td>{renderStatusBadge(post.status)}</td>
                   <td className="text-end pe-4">
                     <div className="d-flex justify-content-end gap-2">
-                      <button className="btn-icon-table text-info" title="Xem chi tiết"><Eye size={16}/></button>
+                      <button className="btn-icon-table text-info" title="Xem chi tiết" onClick={() => handleViewDetail(post)}><Eye size={16}/></button>
                       
                       <Dropdown>
                         <Dropdown.Toggle variant="link" className="text-white p-0 no-caret btn-icon-table" style={{background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)'}}>
@@ -169,6 +176,93 @@ const ManagePosts = () => {
           </Table>
         )}
       </div>
+
+      {/* MODAL CHI TIẾT BÀI ĐĂNG */}
+      <Modal show={showDetailModal} onHide={() => setShowDetailModal(false)} size="lg" centered dialogClassName="modal-dark">
+        <Modal.Header closeButton className="border-bottom border-white-10">
+          <Modal.Title className="fw-bold">
+            <Eye size={20} className="me-2 text-info" />
+            Chi tiết bài đăng <span className="text-primary-glow">#{selectedPost?.jobId?.substring(0, 8)}</span>
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body className="bg-dark">
+          {selectedPost && (
+            <div>
+              <h5 className="text-white fw-bold mb-4">{selectedPost.title}</h5>
+              <Row className="g-3 mb-4">
+                <Col md={4}>
+                  <div className="glass-card p-3">
+                    <div className="x-small text-white-50 uppercase-tracking mb-1"><Building2 size={12} className="me-1"/> Doanh nghiệp</div>
+                    <div className="fw-bold text-white">{selectedPost.enterpriseName || 'N/A'}</div>
+                  </div>
+                </Col>
+                <Col md={4}>
+                  <div className="glass-card p-3">
+                    <div className="x-small text-white-50 uppercase-tracking mb-1"><Calendar size={12} className="me-1"/> Ngày đăng</div>
+                    <div className="fw-bold text-white">{new Date(selectedPost.createdAt).toLocaleDateString('vi-VN')}</div>
+                  </div>
+                </Col>
+                <Col md={4}>
+                  <div className="glass-card p-3">
+                    <div className="x-small text-white-50 uppercase-tracking mb-1"><DollarSign size={12} className="me-1"/> Lương</div>
+                    <div className="fw-bold text-warning">{selectedPost.salary ? selectedPost.salary.toLocaleString('vi-VN') + ' VND' : 'Thỏa thuận'}</div>
+                  </div>
+                </Col>
+                <Col md={4}>
+                  <div className="glass-card p-3">
+                    <div className="x-small text-white-50 uppercase-tracking mb-1"><Clock size={12} className="me-1"/> Hạn chót</div>
+                    <div className="fw-bold text-white">{selectedPost.deadline ? new Date(selectedPost.deadline).toLocaleDateString('vi-VN') : 'Không có'}</div>
+                  </div>
+                </Col>
+                <Col md={4}>
+                  <div className="glass-card p-3">
+                    <div className="x-small text-white-50 uppercase-tracking mb-1"><Users size={12} className="me-1"/> Số lượng</div>
+                    <div className="fw-bold text-white">{selectedPost.quantity || 1}</div>
+                  </div>
+                </Col>
+                <Col md={4}>
+                  <div className="glass-card p-3">
+                    <div className="x-small text-white-50 uppercase-tracking mb-1">Loại hình</div>
+                    <div className="fw-bold text-info">{selectedPost.jobType || 'N/A'}</div>
+                  </div>
+                </Col>
+              </Row>
+
+              {selectedPost.description && (
+                <div className="glass-card p-4 mb-3">
+                  <h6 className="text-primary-glow fw-bold mb-2">Mô tả công việc</h6>
+                  <p className="text-white-80 mb-0" style={{whiteSpace: 'pre-line'}}>{selectedPost.description}</p>
+                </div>
+              )}
+              {selectedPost.requirements && (
+                <div className="glass-card p-4 mb-3">
+                  <h6 className="text-primary-glow fw-bold mb-2">Yêu cầu</h6>
+                  <p className="text-white-80 mb-0" style={{whiteSpace: 'pre-line'}}>{selectedPost.requirements}</p>
+                </div>
+              )}
+              {selectedPost.benefits && (
+                <div className="glass-card p-4 mb-3">
+                  <h6 className="text-primary-glow fw-bold mb-2">Quyền lợi</h6>
+                  <p className="text-white-80 mb-0" style={{whiteSpace: 'pre-line'}}>{selectedPost.benefits}</p>
+                </div>
+              )}
+
+              <div className="d-flex justify-content-end mt-4 pt-3 border-top border-white-10">
+                {selectedPost.status === 'PENDING' && (
+                  <>
+                    <button className="btn btn-success fw-bold me-2" onClick={() => { handleStatusChange(selectedPost.jobId, 'OPEN'); setShowDetailModal(false); }}>
+                      <CheckCircle size={16} className="me-1"/> DUYỆT BÀI
+                    </button>
+                    <button className="btn btn-danger fw-bold" onClick={() => { handleStatusChange(selectedPost.jobId, 'REJECTED'); setShowDetailModal(false); }}>
+                      <XCircle size={16} className="me-1"/> TỪ CHỐI
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+          )}
+        </Modal.Body>
+      </Modal>
     </div>
   );
 };

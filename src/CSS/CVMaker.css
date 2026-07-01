@@ -253,7 +253,195 @@
 .italic-text { font-style: italic; }
 
 /* ============================================================
-   3. TỐI ƯU IN ẤN (PRINT SETTINGS)
+   3. AI COMPACT BAR (Horizontal)
+   ============================================================ */
+.ai-compact-bar {
+    display: flex;
+    align-items: center;
+    padding: 10px 16px;
+    border-radius: 12px;
+    background: rgba(10, 15, 25, 0.85);
+    border: 1px solid rgba(59, 130, 246, 0.15);
+    backdrop-filter: blur(16px);
+    flex-wrap: wrap;
+}
+
+.ai-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 6px 14px;
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.04);
+    color: rgba(255, 255, 255, 0.75);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+
+.ai-pill:hover {
+    background: rgba(59, 130, 246, 0.15);
+    border-color: rgba(59, 130, 246, 0.3);
+    color: #60a5fa;
+    transform: translateY(-1px);
+}
+
+.ai-pill:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.ai-pill-improve:hover {
+    background: rgba(16, 185, 129, 0.15);
+    border-color: rgba(16, 185, 129, 0.3);
+    color: #34d399;
+}
+
+.ai-pill-suggest:hover {
+    background: rgba(245, 158, 11, 0.15);
+    border-color: rgba(245, 158, 11, 0.3);
+    color: #fbbf24;
+}
+
+.ai-pill-objective:hover {
+    background: rgba(139, 92, 246, 0.15);
+    border-color: rgba(139, 92, 246, 0.3);
+    color: #a78bfa;
+}
+
+/* ============================================================
+   4. AI TOOLS PANEL (Legacy - hidden, kept for reference)
+   ============================================================ */
+.ai-tools-panel {
+    background: rgba(10, 15, 25, 0.8) !important;
+    border: 1px solid rgba(59, 130, 246, 0.15) !important;
+    backdrop-filter: blur(16px);
+}
+.cv-ai-modal .modal-content {
+    background: rgba(10, 15, 25, 0.95) !important;
+    border: 1px solid rgba(59, 130, 246, 0.2) !important;
+    backdrop-filter: blur(20px);
+}
+
+.cv-ai-header {
+    background: rgba(59, 130, 246, 0.08) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
+    padding: 16px 20px !important;
+}
+
+.cv-ai-body {
+    padding: 20px !important;
+    max-height: 60vh;
+    overflow-y: auto;
+}
+
+.cv-ai-body::-webkit-scrollbar {
+    width: 4px;
+}
+
+.cv-ai-body::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+}
+
+.cv-ai-output {
+    background: rgba(0, 0, 0, 0.3);
+    padding: 16px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    line-height: 1.7;
+}
+
+.ai-apply-btn {
+    background: linear-gradient(135deg, #10b981, #059669) !important;
+    border: none !important;
+    color: white !important;
+    padding: 12px !important;
+    font-weight: 700 !important;
+    border-radius: 10px !important;
+}
+
+.ai-apply-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.3) !important;
+}
+
+.objective-option {
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.03);
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.objective-option:hover {
+    background: rgba(139, 92, 246, 0.1);
+    border-color: rgba(139, 92, 246, 0.3);
+    transform: translateY(-2px);
+}
+
+.ai-preview-box {
+    background: rgba(0, 0, 0, 0.3);
+    padding: 16px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* ============================================================
+   5. HISTORY MODAL
+   ============================================================ */
+.cv-history-modal .modal-content {
+    background: rgba(10, 15, 25, 0.95) !important;
+    border: 1px solid rgba(59, 130, 246, 0.2) !important;
+}
+
+.history-item {
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    background: rgba(255, 255, 255, 0.02);
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.history-item:hover {
+    background: rgba(59, 130, 246, 0.08);
+    border-color: rgba(59, 130, 246, 0.2);
+}
+
+/* ============================================================
+   6. RESPONSIVE
+   ============================================================ */
+@media (max-width: 991px) {
+    .ai-compact-bar {
+        margin-bottom: 12px;
+    }
+    .editor-column {
+        height: auto !important;
+        max-height: none;
+    }
+}
+
+@media (max-width: 768px) {
+    .ai-compact-bar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+    .a4-document {
+        width: 100% !important;
+        min-height: auto;
+        flex-direction: column;
+    }
+    .cv-sidebar-box, .cv-main-box {
+        width: 100% !important;
+        padding: 24px 16px !important;
+    }
+}
+
+/* ============================================================
+   7. TỐI ƯU IN ẤN (PRINT SETTINGS)
    ============================================================ */
 @media print {
     /* Ẩn toàn bộ thành phần web khi nhấn Ctrl + P */
@@ -262,6 +450,7 @@
     .editor-column, 
     #canvas-container, 
     button, 
+    .ai-compact-bar,
     .d-flex.justify-content-between.align-items-center.mb-4 {
         display: none !important;
     }

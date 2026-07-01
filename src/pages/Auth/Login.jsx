@@ -143,7 +143,7 @@ const Login = () => {
           </div>
 
           <div className="social-login-area text-center">
-            <Button className="btn-google-login w-100 py-2 fw-bold">
+            <Button className="btn-google-login w-100 py-2 fw-bold" onClick={() => alert("Đăng nhập Google đang được phát triển. Vui lòng sử dụng email/密码.")}>
               <i className="fab fa-google me-2"></i> Google
             </Button>
           </div>

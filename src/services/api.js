@@ -78,6 +78,7 @@ api.interceptors.response.use(
 
                 localStorage.setItem('accessToken', accessToken);
                 localStorage.setItem('refreshToken', refreshToken);
+                localStorage.setItem('tokenRefreshedAt', Date.now().toString());
                 
                 // Đồng bộ lại timer 14p ở authService
                 window.dispatchEvent(new Event("token-refreshed"));
@@ -104,9 +105,12 @@ api.interceptors.response.use(
 );
 
 function handleLocalLogout() {
-    // Chỉ logout nếu thực sự không đang ở trang login
     if (window.location.pathname !== '/login') {
-        localStorage.clear();
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        localStorage.removeItem('userRole');
+        localStorage.removeItem('lastActivity');
+        localStorage.removeItem('tokenRefreshedAt');
         window.dispatchEvent(new Event("local-storage-update"));
         window.location.href = '/login';
     }

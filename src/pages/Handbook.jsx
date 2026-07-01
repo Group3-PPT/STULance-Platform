@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { Container, Row, Col, Badge, Nav } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
-import { Calendar, Eye, Clock, ChevronRight, BookOpen } from 'lucide-react';
-import '../CSS/Handbook.css'; // Tuân thủ cấu trúc import bạn yêu cầu
+import { Calendar, Eye, Clock, ChevronRight, BookOpen, Loader2 } from 'lucide-react';
+import '../CSS/Handbook.css';
 
 const Handbook = () => {
   const [activeTab, setActiveTab] = useState('Tất cả');
+  const [visibleCount, setVisibleCount] = useState(3);
+  const [loadingMore, setLoadingMore] = useState(false);
 
-  // Danh sách các bài viết mẫu
   const blogs = [
     {
       id: 1,
@@ -37,22 +38,59 @@ const Handbook = () => {
       img: 'https://images.unsplash.com/photo-1519389950473-47ba0277781c'
     },
     {
-        id: 4,
-        category: 'XU HƯỚNG',
-        date: '10/05/2026',
-        views: '3.4k',
-        title: 'Trí tuệ nhân tạo (AI) đang thay đổi bộ mặt Freelance như thế nào?',
-        desc: 'Tận dụng ChatGPT, Midjourney và các công cụ AI khác để tối ưu hóa quy trình làm việc và nâng cao chất lượng sản phẩm.',
-        img: 'https://images.unsplash.com/photo-1677442136019-21780ecad995'
-      }
+      id: 4,
+      category: 'XU HƯỚNG',
+      date: '10/05/2026',
+      views: '3.4k',
+      title: 'Trí tuệ nhân tạo (AI) đang thay đổi bộ mặt Freelance như thế nào?',
+      desc: 'Tận dụng ChatGPT, Midjourney và các công cụ AI khác để tối ưu hóa quy trình làm việc và nâng cao chất lượng sản phẩm.',
+      img: 'https://images.unsplash.com/photo-1677442136019-21780ecad995'
+    },
+    {
+      id: 5,
+      category: 'KIẾN THỨC',
+      date: '08/05/2026',
+      views: '1.8k',
+      title: 'Portfolio ấn tượng: Cách xây dựng hồ sơ năng lực cho Fresher',
+      desc: 'Hướng dẫn chi tiết cách tạo Portfolio chuyên nghiệp dù bạn chưa có kinh nghiệm thực tế, kèm theo mẫu miễn phí.',
+      img: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d'
+    },
+    {
+      id: 6,
+      category: 'KINH NGHIỆM',
+      date: '05/05/2026',
+      views: '920',
+      title: 'Từ chối như thế nào để không mất lòng khách hàng Freelance',
+      desc: 'Nghệ thuật说 "Không" trong Freelancing giúp bạn bảo vệ thời gian mà vẫn duy trì mối quan hệ tốt với khách hàng.',
+      img: 'https://images.unsplash.com/photo-1521737711867-e3b97375f902'
+    }
   ];
 
   const categories = ['Tất cả', 'Kiến thức', 'Kinh nghiệm', 'Cẩm nang', 'Xu hướng'];
 
+  const filteredBlogs = activeTab === 'Tất cả' 
+    ? blogs 
+    : blogs.filter(b => b.category.toLowerCase() === activeTab.toLowerCase());
+
+  const displayedBlogs = filteredBlogs.slice(0, visibleCount);
+  const hasMore = visibleCount < filteredBlogs.length;
+
+  const handleLoadMore = () => {
+    setLoadingMore(true);
+    setTimeout(() => {
+      setVisibleCount(prev => prev + 3);
+      setLoadingMore(false);
+    }, 800);
+  };
+
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    setVisibleCount(3);
+  };
+
   return (
     <div className="handbook-page py-5">
       <Container>
-        {/* TIÊU ĐỀ TRANG */}
         <div className="text-center mb-5 animate-fade-in">
           <h1 className="fw-bold text-white display-5">
             Cẩm nang & <span className="text-primary-glow">Kinh nghiệm</span>
@@ -62,14 +100,13 @@ const Handbook = () => {
           </p>
         </div>
 
-        {/* THANH LỌC DANH MỤC */}
         <div className="cat-filter-wrapper mb-5">
           <Nav variant="pills" className="justify-content-center gap-2">
             {categories.map((cat) => (
               <Nav.Item key={cat}>
                 <Nav.Link 
                   active={activeTab === cat} 
-                  onClick={() => setActiveTab(cat)}
+                  onClick={() => handleTabChange(cat)}
                   className="cat-pill"
                 >
                   {cat}
@@ -79,9 +116,8 @@ const Handbook = () => {
           </Nav>
         </div>
 
-        {/* LƯỚI BÀI VIẾT */}
         <Row className="g-4">
-          {blogs.map((blog) => (
+          {displayedBlogs.map((blog) => (
             <Col lg={4} md={6} key={blog.id}>
               <div className="glass-card blog-card-new h-100 shadow-lg">
                 <div className="blog-img-box">
@@ -112,10 +148,17 @@ const Handbook = () => {
           ))}
         </Row>
 
-        {/* NÚT XEM THÊM */}
-        <div className="text-center mt-5">
-           <button className="btn-load-more shadow-glow">XEM THÊM BÀI VIẾT</button>
-        </div>
+        {hasMore && (
+          <div className="text-center mt-5">
+            <button className="btn-load-more shadow-glow" onClick={handleLoadMore} disabled={loadingMore}>
+              {loadingMore ? (
+                <><Loader2 className="spinner me-2" size={16} /> ĐANG TẢI...</>
+              ) : (
+                'XEM THÊM BÀI VIẾT'
+              )}
+            </button>
+          </div>
+        )}
       </Container>
     </div>
   );

@@ -70,6 +70,50 @@ const handleRegister = async (e) => {
     alert("Mật khẩu xác nhận không khớp!");
     return;
   }
+  if (formData.password.length < 8) {
+    alert("Mật khẩu phải có ít nhất 8 ký tự!");
+    return;
+  }
+  if (formData.password === formData.password.toLowerCase()) {
+    alert("Mật khẩu phải chứa ít nhất một chữ hoa!");
+    return;
+  }
+  if (formData.password === formData.password.toUpperCase()) {
+    alert("Mật khẩu phải chứa ít nhất một chữ thường!");
+    return;
+  }
+  if (!/\d/.test(formData.password)) {
+    alert("Mật khẩu phải chứa ít nhất một chữ số!");
+    return;
+  }
+  if (!/[!@#$%^&*(),.?":{}|<>]/.test(formData.password)) {
+    alert("Mật khẩu phải chứa ít nhất một ký tự đặc biệt!");
+    return;
+  }
+  if (!formData.roleId) {
+    alert("Vui lòng chọn vai trò trước khi đăng ký!");
+    return;
+  }
+  if (!formData.email) {
+    alert("Vui lòng nhập email!");
+    return;
+  }
+  if (!formData.password) {
+    alert("Vui lòng nhập mật khẩu!");
+    return;
+  }
+  if (!formData.confirmPassword) {
+    alert("Vui lòng xác nhận mật khẩu!");
+    return;
+  }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+    alert("Email không hợp lệ!");
+    return;
+  }
+  if (formData.password.length > 50) {
+    alert("Mật khẩu không được vượt quá 50 ký tự!");
+    return;
+  }
   setLoading(true);
   try {
     const res = await axios.post('/api/v1/auth/register', formData);
@@ -159,7 +203,8 @@ const handleRegister = async (e) => {
                   <Form.Label className="small text-white-80">Mật khẩu</Form.Label>
                   <InputGroup>
                     <InputGroup.Text className="bg-transparent border-secondary text-success"><Lock size={18} /></InputGroup.Text>
-                    <Form.Control name="password" type={showPass ? "text" : "password"} placeholder="••••••••" onChange={handleChange} required className="bg-transparent text-white border-secondary shadow-none" />
+                    <Form.Control name="password" type={showPass ? "text" : "password"} placeholder="••••••••" onChange={handleChange} 
+                    required className="bg-transparent text-white border-secondary shadow-none" />
                     <InputGroup.Text className="bg-transparent border-secondary text-white-50 pointer" onClick={() => setShowPass(!showPass)}>
                       {showPass ? <Eye size={18} /> : <EyeOff size={18} />}
                     </InputGroup.Text>

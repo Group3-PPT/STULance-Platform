@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Form, Button, Spinner, InputGroup } from 'react-bootstrap';
+import { useNavigate } from 'react-router-dom';
 import { 
   Building2, Globe, MapPin, Camera, Save, 
-  UserCheck, CreditCard, Loader2, Link as LinkIcon 
+  UserCheck, CreditCard, Loader2, Link as LinkIcon, X 
 } from 'lucide-react';
 import { enterpriseService } from '../../services/enterprise.service';
 import '../../CSS/BusinessProfileSettings.css';
 
 const BusinessProfileSettings = () => {
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -59,11 +61,16 @@ const BusinessProfileSettings = () => {
     const file = e.target.files[0];
     if (file) {
       setLogoFile(file);
-      setLogoPreview(URL.createObjectURL(file)); // Tạo link tạm để xem trước
+      setLogoPreview(URL.createObjectURL(file));
     }
   };
 
-  // 4. Xử lý Lưu (Gửi FormData)
+  const handleCancel = () => {
+    if (window.confirm('Bạn có chắc muốn hủy? Các thay đổi chưa lưu sẽ bị mất.')) {
+      fetchProfile(); // Reset form by re-fetching data
+    }
+  };
+
   const handleSave = async (e) => {
     e.preventDefault();
     setIsSaving(true);
@@ -183,7 +190,9 @@ const BusinessProfileSettings = () => {
                 </Form.Group>
 
                 <div className="d-flex justify-content-end gap-3 pt-4 border-top border-white-10">
-                  <Button variant="outline-light" className="px-4 fw-bold">HỦY BỎ</Button>
+                  <Button variant="outline-light" className="px-4 fw-bold" onClick={handleCancel}>
+                    <X size={16} className="me-1" /> HỦY BỎ
+                  </Button>
                   <Button variant="primary" type="submit" className="px-5 fw-bold shadow-glow" disabled={isSaving}>
                     {isSaving ? <Loader2 className="spinner me-2" /> : <Save className="me-2" />} LƯU HỒ SƠ
                   </Button>

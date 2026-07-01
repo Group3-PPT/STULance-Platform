@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Form, Button, Badge, Spinner } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
-import { Search, Globe, MapPin, Bookmark, Send, Laptop, ShieldCheck, Zap, Loader2 } from 'lucide-react';
+import { Search, Globe, MapPin, Bookmark, Send, Laptop, ShieldCheck, Zap, Loader2, Sparkles } from 'lucide-react';
 import { jobService } from '../services/jobservice'; 
 import { savedItemsService } from '../services/saveditemsservice';
+import { recommendationService } from '../services/recommendationservice';
 import '../CSS/Jobs.css'; 
 
 const Jobs = () => {
@@ -14,10 +15,10 @@ const Jobs = () => {
   const [error, setError] = useState(null);
   const [savedJobIds, setSavedJobIds] = useState(new Set());
   const [actionLoading, setActionLoading] = useState(null);
+  const [aiMatching, setAiMatching] = useState(false);
 
   const token = localStorage.getItem('accessToken');
 
-  // 1. Tải danh sách công việc công khai
   useEffect(() => {
     const fetchJobs = async () => {
       try {
@@ -78,6 +79,26 @@ const Jobs = () => {
     }
   };
 
+  const handleAIMatching = async () => {
+    if (!token) {
+      alert("Vui lòng đăng nhập để sử dụng AI Matching!");
+      return;
+    }
+    setAiMatching(true);
+    try {
+      const res = await recommendationService.getMyRecommendations();
+      if (res.success && res.data?.jobs) {
+        setJobs(res.data.jobs);
+        if (res.data.jobs.length > 0) setSelectedJob(res.data.jobs[0]);
+        alert(`AI đã tìm được ${res.data.jobs.length} việc làm phù hợp với bạn!`);
+      }
+    } catch (err) {
+      alert("Lỗi AI Matching: " + (err.response?.data?.message || "Không thể phân tích"));
+    } finally {
+      setAiMatching(false);
+    }
+  };
+
   if (loading) return (
     <div className="vh-100 d-flex justify-content-center align-items-center bg-dark text-white">
       <div className="text-center">
@@ -106,8 +127,9 @@ const Jobs = () => {
               </div>
             </Col>
             <Col md={3}>
-                <Button variant="primary" className="w-100 fw-bold h-100 shadow-glow">
-                   <Zap size={16} className="me-2"/> AI MATCHING
+                <Button variant="primary" className="w-100 fw-bold h-100 shadow-glow" onClick={handleAIMatching} disabled={aiMatching}>
+                   {aiMatching ? <Loader2 className="spinner me-2" size={16}/> : <Sparkles size={16} className="me-2"/>}
+                   {aiMatching ? 'ĐANG PHÂN TÍCH...' : 'AI MATCHING'}
                 </Button>
             </Col>
           </Row>

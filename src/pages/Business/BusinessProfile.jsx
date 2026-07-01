@@ -1,17 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Button, Badge, Spinner } from 'react-bootstrap';
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { 
   MapPin, Globe, Mail, Phone, Users, 
-  CheckCircle, ShieldCheck, Info 
+  CheckCircle, ShieldCheck, Info, Heart, Loader2 
 } from 'lucide-react';
 import { enterpriseService } from '../../services/enterprise.service';
 import '../../CSS/BusinessProfile.css';
 
 const BusinessProfile = () => {
-  const { id } = useParams(); // Lấy ID từ link web (nếu có)
+  const { id } = useParams();
   const [loading, setLoading] = useState(true);
   const [company, setCompany] = useState(null);
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [followLoading, setFollowLoading] = useState(false);
 
   // 1. Tải dữ liệu từ Backend
   useEffect(() => {
@@ -38,6 +40,17 @@ const BusinessProfile = () => {
 
     fetchProfile();
   }, [id]);
+
+  const handleFollow = async () => {
+    setFollowLoading(true);
+    try {
+      setIsFollowing(!isFollowing);
+    } catch (err) {
+      alert("Lỗi: " + (err.response?.data?.message || "Không thể thực hiện"));
+    } finally {
+      setFollowLoading(false);
+    }
+  };
 
   if (loading) return (
     <div className="vh-100 d-flex justify-content-center align-items-center bg-dark">
@@ -78,7 +91,15 @@ const BusinessProfile = () => {
               </div>
             </div>
             <div className="biz-action-area">
-              <Button variant="primary" className="fw-bold px-4 py-2 shadow-glow">THEO DÕI CÔNG TY</Button>
+              <Button 
+                variant={isFollowing ? "outline-danger" : "primary"} 
+                className="fw-bold px-4 py-2 shadow-glow"
+                onClick={handleFollow}
+                disabled={followLoading}
+              >
+                {followLoading ? <Loader2 className="spinner me-2" size={16} /> : <Heart size={16} className="me-2" fill={isFollowing ? "currentColor" : "none"} />}
+                {isFollowing ? 'BỎ THEO DÕI' : 'THEO DÕI CÔNG TY'}
+              </Button>
             </div>
           </div>
         </Container>
