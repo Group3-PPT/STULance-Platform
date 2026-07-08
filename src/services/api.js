@@ -63,9 +63,6 @@ api.interceptors.response.use(
         if (originalRequest.url.includes('/refresh-token') || originalRequest.url.includes('/login')) {
             clearAuth();
             window.dispatchEvent(new Event("local-storage-update"));
-            if (window.location.pathname !== '/login') {
-                window.location.href = '/login';
-            }
             return Promise.reject(error);
         }
 
@@ -86,9 +83,6 @@ api.interceptors.response.use(
             isRefreshing = false;
             clearAuth();
             window.dispatchEvent(new Event("local-storage-update"));
-            if (window.location.pathname !== '/login') {
-                window.location.href = '/login';
-            }
             return Promise.reject(error);
         }
 
@@ -126,9 +120,6 @@ api.interceptors.response.use(
                 console.error("Refresh token hết hạn hoặc quá số lần thử, logout.");
                 clearAuth();
                 window.dispatchEvent(new Event("local-storage-update"));
-                if (window.location.pathname !== '/login') {
-                    window.location.href = '/login';
-                }
             } else {
                 console.error("Refresh lỗi server:", status, "- KHÔNG logout, sẽ thử lại ở request tiếp.");
             }
