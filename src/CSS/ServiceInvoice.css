@@ -5,8 +5,29 @@
 }
 
 .invoice-item-box {
-    background: rgba(255, 255, 255, 0.02) !important;
+    background: rgba(255, 255, 255, 0.03) !important;
     border: 1px dashed rgba(255, 255, 255, 0.15) !important;
+    color: #fff !important;
+}
+
+.invoice-item-box.bg-white,
+.invoice-item-box.bg-opacity-5,
+.invoice-item-box[class*="bg-"] {
+    background: rgba(255, 255, 255, 0.03) !important;
+}
+
+.invoice-item-box h5,
+.invoice-item-box p,
+.invoice-item-box .small {
+    color: #fff !important;
+}
+
+.invoice-item-box .text-white-50 {
+    color: rgba(255, 255, 255, 0.5) !important;
+}
+
+.invoice-item-box .text-success {
+    color: #10b981 !important;
 }
 
 .method-row {

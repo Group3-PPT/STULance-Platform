@@ -115,3 +115,23 @@
 @media (max-width: 767px) {
     .border-end-md { border-right: none !important; border-bottom: 1px solid rgba(255,255,255,0.06); }
 }
+
+/* Custom Tabs */
+.custom-tabs .nav-link {
+    color: rgba(255, 255, 255, 0.5) !important;
+    border: none !important;
+    padding: 10px 20px !important;
+    border-radius: 8px !important;
+    transition: all 0.2s ease !important;
+}
+
+.custom-tabs .nav-link:hover {
+    color: rgba(255, 255, 255, 0.8) !important;
+    background: rgba(255, 255, 255, 0.05) !important;
+}
+
+.custom-tabs .nav-link.active {
+    color: white !important;
+    background: rgba(59, 130, 246, 0.15) !important;
+    border-bottom: 2px solid #3b82f6 !important;
+}

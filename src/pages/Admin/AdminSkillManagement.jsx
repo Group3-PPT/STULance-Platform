@@ -148,7 +148,7 @@ const AdminSkillManager = () => {
                         {loading ? (
                             <div className="text-center py-5"><Loader2 className="spinner text-primary" size={40}/></div>
                         ) : (
-                            <Table responsive className="admin-table-clean mb-0 text-white">
+                            <Table responsive variant="dark" className="admin-table-clean mb-0">
                                 <thead>
                                     <tr>
                                         <th className="ps-4">Tên kỹ năng</th>

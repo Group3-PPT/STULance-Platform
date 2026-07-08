@@ -6,7 +6,8 @@ import {
   Wand2, Calendar, CheckCircle, GraduationCap, Briefcase, Star, Save, Edit2, ChevronLeft,
   Brain, Sparkles, FileText, Target, Lightbulb, Loader2, Copy, Check, X, History, Award, Heart
 } from 'lucide-react';
-import { scoreMyCV, improveMyCV, suggestImprovements, generateObjective, getCvHistory, saveCvHistory } from '../services/cvService';
+import { scoreMyCV, improveMyCV, suggestImprovements, generateObjective } from '../services/cvService';
+import { cvService as cvApi } from '../services/cvApiService';
 import '../CSS/CVMaker.css';
 
 const EMPTY_CV = {
@@ -39,31 +40,172 @@ const CVMaker = () => {
   const [showHistory, setShowHistory] = useState(false);
   const [history, setHistory] = useState([]);
   const [copied, setCopied] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [loadingHistory, setLoadingHistory] = useState(false);
+  const [deletingId, setDeletingId] = useState(null);
+  const [defaultId, setDefaultId] = useState(null);
 
   useEffect(() => {
     localStorage.setItem('stulance_cv_current', JSON.stringify(cv));
   }, [cv]);
 
-  const handleSaveCV = () => {
+  useEffect(() => {
+    const fetchCvs = async () => {
+      try {
+        const data = await cvApi.getMyCvs();
+        if (data && Array.isArray(data) && data.length > 0) {
+          setHistory(data);
+          const defaultCv = data.find(item => item.isDefault) || data[0];
+          if (defaultCv && !cv.id) {
+            setCv({
+              id: defaultCv.id,
+              cvTitle: defaultCv.cvTitle || '',
+              name: defaultCv.name || '',
+              title: defaultCv.title || '',
+              phone: defaultCv.phone || '',
+              birthday: defaultCv.birthday || '',
+              email: defaultCv.email || '',
+              address: defaultCv.address || '',
+              objective: defaultCv.objective || '',
+              skills: defaultCv.skills || '',
+              hobbies: defaultCv.hobbies || '',
+              education: defaultCv.education || { school: '', time: '', major: '', detail: '' },
+              experience: defaultCv.experience || [],
+              certificates: defaultCv.certificates || [],
+              projects: defaultCv.projects || []
+            });
+          }
+        }
+      } catch (err) {
+        console.error('Failed to fetch CVs from backend:', err);
+      }
+    };
+    fetchCvs();
+  }, []);
+
+  const handleSaveCV = async () => {
     if (!cv.name.trim()) {
       alert("Vui lòng nhập họ tên!");
       return;
     }
-    const toSave = { ...cv, id: cv.id || Date.now(), savedAt: new Date().toISOString() };
-    saveCvHistory(toSave);
-    setCv(prev => ({ ...prev, id: toSave.id }));
-    alert(`Đã lưu CV: "${cv.cvTitle || cv.name}"`);
+    setSaving(true);
+    try {
+      const payload = { ...cv };
+      delete payload.id;
+      delete payload.savedAt;
+
+      let result;
+      if (cv.id) {
+        result = await cvApi.updateCv(cv.id, payload);
+      } else {
+        result = await cvApi.create(payload);
+      }
+
+      if (result && result.id) {
+        setCv(prev => ({ ...prev, id: result.id }));
+      }
+
+      const data = await cvApi.getMyCvs();
+      if (data && Array.isArray(data)) {
+        setHistory(data);
+      }
+
+      alert(`Đã lưu CV: "${cv.cvTitle || cv.name}"`);
+    } catch (err) {
+      console.error('Save CV error:', err);
+      const toSave = { ...cv, id: cv.id || Date.now(), savedAt: new Date().toISOString() };
+      localStorage.setItem('stulance_cv_backup_' + toSave.id, JSON.stringify(toSave));
+      alert('Lỗi khi lưu lên server. CV đã được lưu tạm offline.');
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const handleLoadFromHistory = (item) => {
-    setCv(item);
+  const handleLoadFromHistory = async (item) => {
+    try {
+      const detail = await cvApi.getCvDetail(item.id);
+      if (detail) {
+        setCv({
+          id: detail.id,
+          cvTitle: detail.cvTitle || '',
+          name: detail.name || '',
+          title: detail.title || '',
+          phone: detail.phone || '',
+          birthday: detail.birthday || '',
+          email: detail.email || '',
+          address: detail.address || '',
+          objective: detail.objective || '',
+          skills: detail.skills || '',
+          hobbies: detail.hobbies || '',
+          education: detail.education || { school: '', time: '', major: '', detail: '' },
+          experience: detail.experience || [],
+          certificates: detail.certificates || [],
+          projects: detail.projects || []
+        });
+      } else {
+        setCv(item);
+      }
+    } catch (err) {
+      console.error('Load CV detail error:', err);
+      setCv(item);
+    }
     setShowHistory(false);
   };
 
   const handleNewCV = () => {
     if (window.confirm('Tạo CV mới? CV hiện tại sẽ được lưu vào lịch sử.')) {
-      if (cv.name) saveCvHistory(cv);
+      if (cv.name && cv.id) handleSaveCV();
       setCv(EMPTY_CV);
+    }
+  };
+
+  const handleDeleteCv = async (cvId, e) => {
+    e.stopPropagation();
+    if (!window.confirm('Bạn có chắc muốn xóa CV này?')) return;
+    setDeletingId(cvId);
+    try {
+      await cvApi.deleteCv(cvId);
+      setHistory(prev => prev.filter(item => item.id !== cvId));
+      if (cv.id === cvId) {
+        setCv(EMPTY_CV);
+      }
+    } catch (err) {
+      console.error('Delete CV error:', err);
+      alert('Xóa CV thất bại. Vui lòng thử lại.');
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+  const handleSetDefault = async (cvId, e) => {
+    e.stopPropagation();
+    setDefaultId(cvId);
+    try {
+      await cvApi.setDefault(cvId);
+      setHistory(prev => prev.map(item => ({
+        ...item,
+        isDefault: item.id === cvId
+      })));
+    } catch (err) {
+      console.error('Set default CV error:', err);
+      alert('Đặt làm CV mặc định thất bại.');
+    } finally {
+      setDefaultId(null);
+    }
+  };
+
+  const openHistoryModal = async () => {
+    setShowHistory(true);
+    setLoadingHistory(true);
+    try {
+      const data = await cvApi.getMyCvs();
+      if (data && Array.isArray(data)) {
+        setHistory(data);
+      }
+    } catch (err) {
+      console.error('Fetch history error:', err);
+    } finally {
+      setLoadingHistory(false);
     }
   };
 
@@ -165,14 +307,16 @@ const CVMaker = () => {
           </Col>
           <Col md={7} className="text-md-end mt-3 mt-md-0">
             <div className="d-flex gap-2 justify-content-md-end flex-wrap">
-              <Button variant="outline-info" size="sm" onClick={() => { setHistory(getCvHistory()); setShowHistory(true); }}>
-                <History size={15} className="me-1" /> Lịch sử
+              <Button variant="outline-info" size="sm" onClick={openHistoryModal} disabled={loadingHistory}>
+                {loadingHistory ? <Loader2 size={15} className="me-1 spinner" /> : <History size={15} className="me-1" />}
+                Lịch sử
               </Button>
               <Button variant="outline-warning" size="sm" onClick={handleNewCV}>
                 <Plus size={15} className="me-1" /> Mới
               </Button>
-              <Button variant="outline-primary" size="sm" onClick={handleSaveCV}>
-                <Save size={15} className="me-1" /> Lưu
+              <Button variant="outline-primary" size="sm" onClick={handleSaveCV} disabled={saving}>
+                {saving ? <Loader2 size={15} className="me-1 spinner" /> : <Save size={15} className="me-1" />}
+                Lưu
               </Button>
               <Button variant="primary" size="sm" onClick={() => window.print()}>
                 <Printer size={15} className="me-1" /> PDF
@@ -462,17 +606,45 @@ const CVMaker = () => {
           <Button variant="link" className="text-white-50" onClick={() => setShowHistory(false)}><X size={20} /></Button>
         </Modal.Header>
         <Modal.Body className="cv-ai-body">
-          {history.length === 0 ? (
+          {loadingHistory ? (
+            <div className="text-center py-5">
+              <Loader2 size={32} className="spinner text-primary mb-2" />
+              <p className="text-white-50 small">Đang tải danh sách CV...</p>
+            </div>
+          ) : history.length === 0 ? (
             <p className="text-white-50 text-center py-4">Chưa có CV nào được lưu</p>
           ) : (
             <div className="d-grid gap-2">
               {history.map((item) => (
                 <div key={item.id} className="history-item p-3 rounded d-flex justify-content-between align-items-center" onClick={() => handleLoadFromHistory(item)}>
-                  <div>
-                    <p className="text-white fw-bold mb-0">{item.cvTitle || item.name}</p>
-                    <p className="x-small text-white-50 mb-0">{item.title || 'Chưa có vị trí'} • {item.savedAt ? new Date(item.savedAt).toLocaleDateString('vi-VN') : ''}</p>
+                  <div className="flex-grow-1">
+                    <p className="text-white fw-bold mb-0">
+                      {item.cvTitle || item.name}
+                      {item.isDefault && <span className="badge bg-primary ms-2" style={{ fontSize: '0.6rem' }}>Mặc định</span>}
+                    </p>
+                    <p className="x-small text-white-50 mb-0">{item.title || 'Chưa có vị trí'} • {item.updatedAt ? new Date(item.updatedAt).toLocaleDateString('vi-VN') : item.savedAt ? new Date(item.savedAt).toLocaleDateString('vi-VN') : ''}</p>
                   </div>
-                  <Button size="sm" variant="outline-primary">Tải</Button>
+                  <div className="d-flex gap-1">
+                    <Button
+                      size="sm"
+                      variant={item.isDefault ? 'outline-secondary' : 'outline-warning'}
+                      onClick={(e) => handleSetDefault(item.id, e)}
+                      disabled={defaultId === item.id || item.isDefault}
+                      title="Đặt làm mặc định"
+                    >
+                      {defaultId === item.id ? <Loader2 size={12} className="spinner" /> : <Star size={12} fill={item.isDefault ? 'currentColor' : 'none'} />}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline-danger"
+                      onClick={(e) => handleDeleteCv(item.id, e)}
+                      disabled={deletingId === item.id}
+                      title="Xóa CV"
+                    >
+                      {deletingId === item.id ? <Loader2 size={12} className="spinner" /> : <Trash2 size={12} />}
+                    </Button>
+                    <Button size="sm" variant="outline-primary">Tải</Button>
+                  </div>
                 </div>
               ))}
             </div>

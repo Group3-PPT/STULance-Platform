@@ -223,3 +223,20 @@ body {
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
+
+/* Modal Dark (global) */
+.modal-dark .modal-content {
+  background: #0f1724 !important;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+}
+.modal-dark .modal-header {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 20px 24px;
+}
+.modal-dark .modal-body {
+  padding: 20px 24px;
+}
+.modal-dark .modal-header .btn-close {
+  filter: invert(1);
+}

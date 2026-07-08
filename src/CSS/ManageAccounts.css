@@ -35,6 +35,9 @@
 
 .acc-table {
     margin-bottom: 0 !important;
+    --bs-table-bg: transparent !important;
+    --bs-table-color: #e2e8f0 !important;
+    --bs-table-border-color: rgba(255, 255, 255, 0.06) !important;
 }
 
 .acc-table thead th { 

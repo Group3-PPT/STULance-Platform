@@ -1,16 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Form, Button, Badge, Spinner } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
-import { Search, Globe, MapPin, Bookmark, Send, Laptop, ShieldCheck, Zap, Loader2, Sparkles } from 'lucide-react';
-import { jobService } from '../services/jobservice'; 
+import { Search, Globe, MapPin, Bookmark, Send, Laptop, ShieldCheck, Zap, Loader2, Sparkles, Building2 } from 'lucide-react';
+import { jobService } from '../services/jobservice';
 import { savedItemsService } from '../services/saveditemsservice';
 import { recommendationService } from '../services/recommendationservice';
-import '../CSS/Jobs.css'; 
+import { enterpriseService } from '../services/enterprise.service';
+import '../CSS/Jobs.css';
 
 const Jobs = () => {
   const [jobs, setJobs] = useState([]);
   const [selectedJob, setSelectedJob] = useState(null);
+  const [enterpriseInfo, setEnterpriseInfo] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [loadingEnterprise, setLoadingEnterprise] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [error, setError] = useState(null);
   const [savedJobIds, setSavedJobIds] = useState(new Set());
@@ -18,6 +21,8 @@ const Jobs = () => {
   const [aiMatching, setAiMatching] = useState(false);
 
   const token = localStorage.getItem('accessToken');
+  const userRole = localStorage.getItem('userRole');
+  const isStudent = userRole === 'STUDENT';
 
   useEffect(() => {
     const fetchJobs = async () => {
@@ -31,7 +36,7 @@ const Jobs = () => {
           if (data.length > 0) setSelectedJob(data[0]);
         }
 
-        if (token) {
+        if (token && isStudent) {
           const savedRes = await savedItemsService.getMySavedJobs();
           if (savedRes.success) {
             setSavedJobIds(new Set(savedRes.data.map(item => item.jobId)));
@@ -47,13 +52,38 @@ const Jobs = () => {
     fetchJobs();
   }, []);
 
-  const filteredJobs = jobs.filter(job => 
+  useEffect(() => {
+    if (selectedJob?.enterpriseId) {
+      fetchEnterpriseInfo(selectedJob.enterpriseId);
+    } else {
+      setEnterpriseInfo(null);
+    }
+  }, [selectedJob]);
+
+  const fetchEnterpriseInfo = async (enterpriseId) => {
+    setLoadingEnterprise(true);
+    try {
+      const res = await enterpriseService.getPublicProfile(enterpriseId);
+      if (res.success && res.data) {
+        setEnterpriseInfo(res.data);
+      } else {
+        setEnterpriseInfo(null);
+      }
+    } catch (err) {
+      console.error("Lỗi tải thông tin DN:", err);
+      setEnterpriseInfo(null);
+    } finally {
+      setLoadingEnterprise(false);
+    }
+  };
+
+  const filteredJobs = jobs.filter(job =>
     job.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     job.enterpriseName?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const handleToggleSave = async (jobId) => {
-    if (!token) return;
+    if (!token || !isStudent) return;
     const isSaved = savedJobIds.has(jobId);
     setActionLoading(jobId);
     try {
@@ -99,6 +129,28 @@ const Jobs = () => {
     }
   };
 
+  const getJobPosterName = (job) => {
+    if (enterpriseInfo && job.enterpriseId === enterpriseInfo.enterpriseId) {
+      return enterpriseInfo.companyName || job.enterpriseName || 'Doanh nghiệp';
+    }
+    return job.enterpriseName || 'Doanh nghiệp';
+  };
+
+  const getJobPosterLogo = (job) => {
+    if (enterpriseInfo && job.enterpriseId === enterpriseInfo.enterpriseId && enterpriseInfo.logoUrl) {
+      return enterpriseInfo.logoUrl;
+    }
+    if (job.enterpriseLogoUrl) return job.enterpriseLogoUrl;
+    return `https://ui-avatars.com/api/?name=${encodeURIComponent(job.enterpriseName || 'D')}&background=0d6efd&color=fff&size=48`;
+  };
+
+  const getJobPosterEmail = (job) => {
+    if (enterpriseInfo && job.enterpriseId === enterpriseInfo.enterpriseId) {
+      return enterpriseInfo.email || '';
+    }
+    return job.enterpriseEmail || '';
+  };
+
   if (loading) return (
     <div className="vh-100 d-flex justify-content-center align-items-center bg-dark text-white">
       <div className="text-center">
@@ -111,16 +163,16 @@ const Jobs = () => {
   return (
     <div className="jobs-hub-wrapper animate-fade-in text-white py-4">
       <Container fluid className="px-lg-5">
-        
+
         {/* --- THANH FILTER --- */}
         <div className="hub-top-filter glass-card p-3 mb-4 border-0">
           <Row className="g-2 align-items-center">
             <Col md={9}>
               <div className="hub-search-wrapper position-relative">
-                <Search size={18} className="hub-search-icon text-muted" style={{position:'absolute', left:'15px', top:'13px'}}/>
-                <Form.Control 
-                  placeholder="Tìm kiếm dự án, công nghệ, doanh nghiệp..." 
-                  className="hub-input ps-5 bg-dark-input text-white border-0" 
+                <Search size={18} className="hub-search-icon text-white-50" style={{position:'absolute', left:'15px', top:'13px'}}/>
+                <Form.Control
+                  placeholder="Tìm kiếm dự án, công nghệ, doanh nghiệp..."
+                  className="hub-input ps-5 bg-dark-input text-white border-0"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
@@ -137,7 +189,7 @@ const Jobs = () => {
 
         {/* --- BỐ CỤC MASTER-DETAIL --- */}
         <div className="hub-main-layout d-flex gap-4">
-          
+
           {/* CỘT TRÁI: DANH SÁCH TÓM TẮT (SIDEBAR) */}
           <div className="hub-sidebar-list flex-shrink-0" style={{width: '400px'}}>
             <div className="sidebar-header-text mb-3 opacity-50 x-small uppercase-tracking">
@@ -145,21 +197,53 @@ const Jobs = () => {
             </div>
             <div className="sidebar-scroll-area overflow-auto" style={{maxHeight: 'calc(100vh - 250px)'}}>
                 {filteredJobs.map((job) => (
-                <div 
-                    key={job.jobId} 
+                <div
+                    key={job.jobId}
                     className={`hub-sidebar-item glass-card p-3 mb-2 border-0 pointer transition-all ${selectedJob?.jobId === job.jobId ? 'active-job' : ''}`}
                     onClick={() => setSelectedJob(job)}
                 >
-                    <div className="d-flex justify-content-between mb-2">
-                        <Badge bg="primary" className="x-small-badge opacity-75">{job.jobType}</Badge>
-                        <span className="x-small text-white opacity-50">{new Date(job.createdAt).toLocaleDateString()}</span>
-                    </div>
-                    <h6 className="fw-bold text-white mb-2 line-clamp-1">{job.title}</h6>
-                    <div className="small text-primary-glow fw-bold mb-2">
-                        {job.salary > 0 ? `${job.salary.toLocaleString()} VND` : "Thỏa thuận"}
-                    </div>
-                    <div className="x-small text-white opacity-50 d-flex align-items-center gap-1">
-                        <MapPin size={12}/> {job.enterpriseName || "Doanh nghiệp xác thực"}
+                    <div className="d-flex gap-3">
+                        <img
+                            src={getJobPosterLogo(job)}
+                            alt={job.enterpriseName}
+                            style={{ width: 40, height: 40, borderRadius: '50%', objectFit: 'cover', flexShrink: 0, border: '2px solid rgba(255,255,255,0.1)' }}
+                            onError={(e) => { e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(job.enterpriseName || 'D')}&background=0d6efd&color=fff&size=40`; }}
+                        />
+                        <div className="flex-fill">
+                            <div className="d-flex justify-content-between mb-1">
+                                <Badge bg="primary" className="x-small-badge opacity-75">{job.jobType}</Badge>
+                                <div className="d-flex align-items-center gap-2">
+                                    <span className="x-small text-white opacity-50">{new Date(job.createdAt).toLocaleDateString()}</span>
+                                    {isStudent && (
+                                        <button
+                                            className="border-0 bg-transparent p-0 d-flex align-items-center justify-content-center"
+                                            style={{ width: 20, height: 20, cursor: 'pointer' }}
+                                            onClick={(e) => { e.stopPropagation(); handleToggleSave(job.jobId); }}
+                                            disabled={actionLoading === job.jobId}
+                                            title={savedJobIds.has(job.jobId) ? 'Bỏ lưu' : 'Lưu việc làm'}
+                                        >
+                                            {actionLoading === job.jobId ? (
+                                                <Spinner animation="border" size="sm" style={{width: 12, height: 12}} />
+                                            ) : (
+                                                <Bookmark 
+                                                    size={14} 
+                                                    fill={savedJobIds.has(job.jobId) ? '#f59e0b' : 'none'} 
+                                                    color={savedJobIds.has(job.jobId) ? '#f59e0b' : 'rgba(255,255,255,0.4)'}
+                                                />
+                                            )}
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+                            <h6 className="fw-bold text-white mb-1 line-clamp-1" style={{fontSize: '0.85rem'}}>{job.title}</h6>
+                            <div className="fw-bold mb-1" style={{fontSize: '0.8rem', color: '#22c55e'}}>
+                                {job.salary > 0 ? `${job.salary.toLocaleString()} VND` : "Thỏa thuận"}
+                            </div>
+                            <div className="d-flex align-items-center gap-1">
+                                <Building2 size={10} style={{color: 'rgba(255,255,255,0.4)'}}/>
+                                <span style={{fontSize: '0.65rem', color: 'rgba(255,255,255,0.4)'}}>{getJobPosterName(job)}</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 ))}
@@ -179,45 +263,84 @@ const Jobs = () => {
                             </div>
                         </div>
                         <div className="d-flex gap-2">
-                            <Button
-                              variant="outline-light"
-                              className="border-white border-opacity-10 p-2 rounded-3 position-relative"
-                              onClick={() => handleToggleSave(selectedJob.jobId)}
-                              disabled={actionLoading === selectedJob.jobId}
-                            >
-                              {actionLoading === selectedJob.jobId ? (
-                                <Spinner animation="border" size="sm" />
-                              ) : (
-                                <Bookmark size={20} fill={savedJobIds.has(selectedJob.jobId) ? 'currentColor' : 'none'} />
-                              )}
-                            </Button>
-                            {/* ĐIỀU HƯỚNG SANG TRANG APPLY */}
-                            <Button as={Link} to={`/jobs/apply/${selectedJob.jobId}`} className="hub-btn-pink px-4 py-2 fw-bold shadow-glow">
-                                <Send size={18} className="me-2"/> ỨNG TUYỂN NGAY
-                            </Button>
+                            {isStudent && (
+                                <Button
+                                  variant="outline-light"
+                                  className="border-white border-opacity-10 p-2 rounded-3 position-relative"
+                                  onClick={() => handleToggleSave(selectedJob.jobId)}
+                                  disabled={actionLoading === selectedJob.jobId}
+                                >
+                                  {actionLoading === selectedJob.jobId ? (
+                                    <Spinner animation="border" size="sm" />
+                                  ) : (
+                                    <Bookmark size={20} fill={savedJobIds.has(selectedJob.jobId) ? 'currentColor' : 'none'} />
+                                  )}
+                                </Button>
+                            )}
+                            {isStudent && (
+                                <Button as={Link} to={`/jobs/apply/${selectedJob.jobId}`} className="hub-btn-pink px-4 py-2 fw-bold shadow-glow">
+                                    <Send size={18} className="me-2"/> ỨNG TUYỂN NGAY
+                                </Button>
+                            )}
                         </div>
                     </div>
 
                     <Row className="mb-5 g-4">
                         <Col md={4}>
-                            <div className="p-3 rounded-4 bg-white bg-opacity-5 border border-white border-opacity-10">
-                                <p className="x-small text-muted mb-1 uppercase-tracking">NGÂN SÁCH</p>
+                            <div className="p-3 rounded-4 border border-white border-opacity-10" style={{ background: 'rgba(255,255,255,0.03)' }}>
+                                <p className="x-small text-white-50 mb-1 uppercase-tracking">NGÂN SÁCH</p>
                                 <h4 className="text-success fw-bold mb-0">{selectedJob.salary?.toLocaleString() || "0"} <small className="fs-6">VND</small></h4>
                             </div>
                         </Col>
                         <Col md={4}>
-                            <div className="p-3 rounded-4 bg-white bg-opacity-5 border border-white border-opacity-10">
-                                <p className="x-small text-muted mb-1 uppercase-tracking">SỐ LƯỢNG</p>
-                                <h4 className="text-white fw-bold mb-0">{selectedJob.quantity} <small className="fs-6 text-muted">Ứng viên</small></h4>
+                            <div className="p-3 rounded-4 border border-white border-opacity-10" style={{ background: 'rgba(255,255,255,0.03)' }}>
+                                <p className="x-small text-white-50 mb-1 uppercase-tracking">SỐ LƯỢNG</p>
+                                <h4 className="text-white fw-bold mb-0">{selectedJob.quantity} <small className="fs-6 text-white-50">Ứng viên</small></h4>
                             </div>
                         </Col>
                         <Col md={4}>
-                            <div className="p-3 rounded-4 bg-white bg-opacity-5 border border-white border-opacity-10">
-                                <p className="x-small text-muted mb-1 uppercase-tracking">HẠN CHÓT</p>
+                            <div className="p-3 rounded-4 border border-white border-opacity-10" style={{ background: 'rgba(255,255,255,0.03)' }}>
+                                <p className="x-small text-white-50 mb-1 uppercase-tracking">HẠN CHÓT</p>
                                 <h4 className="text-warning fw-bold mb-0">{new Date(selectedJob.deadline).toLocaleDateString('vi-VN')}</h4>
                             </div>
                         </Col>
                     </Row>
+
+                    {/* POSTER INFO - NGƯỜI ĐĂNG BÀI */}
+                    <div className="p-4 rounded-4 mb-4" style={{ background: 'rgba(59,130,246,0.05)', border: '1px solid rgba(59,130,246,0.15)' }}>
+                        <p className="x-small text-primary fw-bold mb-3 uppercase-tracking">
+                            <Building2 size={12} className="me-1"/> NGƯỜI ĐĂNG BÀI
+                        </p>
+                        <div className="d-flex align-items-center gap-3">
+                            {loadingEnterprise ? (
+                                <Spinner animation="border" size="sm" variant="primary" />
+                            ) : (
+                                <img
+                                    src={getJobPosterLogo(selectedJob)}
+                                    alt={getJobPosterName(selectedJob)}
+                                    style={{ width: 56, height: 56, borderRadius: '50%', objectFit: 'cover', border: '3px solid rgba(59,130,246,0.3)' }}
+                                    onError={(e) => { e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(getJobPosterName(selectedJob))}&background=0d6efd&color=fff&size=56`; }}
+                                />
+                            )}
+                            <div className="flex-fill">
+                                <h6 className="fw-bold text-white mb-0">{getJobPosterName(selectedJob)}</h6>
+                                {enterpriseInfo?.industry && (
+                                    <p className="x-small text-primary mb-0">{enterpriseInfo.industry}</p>
+                                )}
+                                {getJobPosterEmail(selectedJob) && (
+                                    <p className="x-small text-white-50 mb-0 mt-1">{getJobPosterEmail(selectedJob)}</p>
+                                )}
+                                {enterpriseInfo?.location && (
+                                    <p className="x-small text-white-50 mb-0"><MapPin size={10} className="me-1"/>{enterpriseInfo.location}</p>
+                                )}
+                            </div>
+                            {selectedJob.enterpriseId && (
+                                <Button as={Link} to={`/businesses/business-profile/${selectedJob.enterpriseId}`} variant="outline-primary" size="sm" className="fw-bold px-3">
+                                    Xem hồ sơ
+                                </Button>
+                            )}
+                        </div>
+                    </div>
 
                     <div className="job-content-section">
                         <div className="mb-4">

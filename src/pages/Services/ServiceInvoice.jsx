@@ -74,7 +74,7 @@ const ServiceInvoice = () => {
                 <ShoppingCart className="text-primary" /> XÁC NHẬN ĐẶT HÀNG
               </h4>
 
-              <div className="invoice-item-box glass-card p-3 mb-4 bg-white bg-opacity-5">
+              <div className="invoice-item-box glass-card p-3 mb-4">
                 <Badge bg="primary" className="mb-2">DỊCH VỤ SINH VIÊN</Badge>
                 <h5 className="fw-bold text-white">{service.title}</h5>
                 <p className="small text-white-50">Người bán: <strong>{service.studentName}</strong></p>
@@ -83,7 +83,7 @@ const ServiceInvoice = () => {
                 </div>
               </div>
 
-              <div className="p-3 bg-white bg-opacity-5 rounded-4 border-dashed-blue d-flex gap-3 align-items-center">
+              <div className="p-3 rounded-4 border-dashed-blue d-flex gap-3 align-items-center" style={{ background: 'rgba(16,185,129,0.04)', border: '1px dashed rgba(16,185,129,0.15)' }}>
                  <ShieldCheck size={32} className="text-success" />
                  <p className="x-small mb-0 opacity-75">
                     Đơn hàng sẽ được tạo ở trạng thái <strong>PENDING</strong>. Tiền chỉ được chuyển khi hai bên ký hợp đồng và hoàn thành dự án.

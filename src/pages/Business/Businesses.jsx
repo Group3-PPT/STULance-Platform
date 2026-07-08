@@ -1,44 +1,36 @@
-import React from 'react';
-import { Container, Row, Col, Button } from 'react-bootstrap';
+import React, { useState, useEffect } from 'react';
+import { Container, Row, Col, Button, Spinner } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
-import { Building2, Star, Briefcase, ChevronRight } from 'lucide-react';
+import { Building2, Star, Briefcase, ChevronRight, Loader2 } from 'lucide-react';
+import { enterpriseService } from '../../services/enterprise.service';
 import '../../CSS/Businesses.css';
 
 const Businesses = () => {
-    const companies = [
-        {
-            id: 1,
-            name: "TechNova Solutions",
-            desc: "Chuyên cung cấp giải pháp chuyển đổi số và AI cho doanh nghiệp vừa và nhỏ.",
-            logo: "https://upload.wikimedia.org/wikipedia/commons/4/44/Microsoft_logo.svg",
-            jobs: 12,
-            rating: 4.8
-        },
-        {
-            id: 2,
-            name: "Creative Lab VN",
-            desc: "Agency hàng đầu về Branding và Marketing sáng tạo tại khu vực phía Nam.",
-            logo: "https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg",
-            jobs: 5,
-            rating: 5.0
-        },
-        {
-            id: 3,
-            name: "FPT Software",
-            desc: "Tập đoàn công nghệ hàng đầu, cung cấp dịch vụ xuất khẩu phần mềm toàn cầu.",
-            logo: "https://upload.wikimedia.org/wikipedia/commons/1/11/FPT_logo.svg",
-            jobs: 45,
-            rating: 4.7
-        },
-        {
-            id: 4,
-            name: "VinAI Research",
-            desc: "Viện nghiên cứu Trí tuệ nhân tạo hàng đầu Việt Nam thuộc tập đoàn Vingroup.",
-            logo: "https://upload.wikimedia.org/wikipedia/commons/a/af/Vingroup_logo.svg",
-            jobs: 8,
-            rating: 4.9
-        }
-    ];
+    const [companies, setCompanies] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchEnterprises = async () => {
+            try {
+                const res = await enterpriseService.getAllEnterprises();
+                const data = res?.data || res || [];
+                setCompanies(Array.isArray(data) ? data : []);
+            } catch (err) {
+                console.error("Lỗi tải danh sách doanh nghiệp:", err);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchEnterprises();
+    }, []);
+
+    if (loading) {
+        return (
+            <div className="vh-100 d-flex justify-content-center align-items-center bg-dark">
+                <Loader2 className="spinner text-primary" size={40} />
+            </div>
+        );
+    }
 
     return (
         <div className="businesses-page py-5">
@@ -47,42 +39,57 @@ const Businesses = () => {
                     <h1 className="fw-bold text-white display-5">
                         Kết nối với <span className="text-primary-glow">Doanh nghiệp</span>
                     </h1>
-                    <p className=" mx-auto mt-3" style={{ maxWidth: '700px' }}>
+                    <p className="mx-auto mt-3" style={{ maxWidth: '700px' }}>
                         Hơn 500+ doanh nghiệp đang tìm kiếm nhân sự trẻ, sáng tạo từ các trường đại học hàng đầu Việt Nam.
                     </p>
                 </div>
 
                 <Row className="g-4">
                     {companies.map(biz => (
-                        <Col lg={4} md={6} key={biz.id}>
+                        <Col lg={4} md={6} key={biz.enterpriseId || biz.id}>
                             <div className="glass-card biz-card p-4 text-center h-100 d-flex flex-column">
                                 <div className="biz-logo-wrapper mb-4">
-                                    <img src={biz.logo} alt={biz.name} />
+                                    <img 
+                                        src={biz.logoUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(biz.companyName || 'D')}&background=0d6efd&color=fff&size=120`} 
+                                        alt={biz.companyName}
+                                        onError={(e) => { e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(biz.companyName || 'D')}&background=0d6efd&color=fff&size=120`; }}
+                                    />
                                 </div>
                                 
-                                <h3 className="text-white h5 fw-bold mb-3">{biz.name}</h3>
-                                <p className=" small mb-4 flex-grow-1">
-                                    {biz.desc}
+                                <h3 className="text-white h5 fw-bold mb-3">{biz.companyName || biz.name}</h3>
+                                <p className="small mb-4 flex-grow-1">
+                                    {biz.description || biz.bio || 'Chưa có thông tin giới thiệu'}
                                 </p>
 
                                 <div className="biz-stats d-flex justify-content-center gap-4 py-3 border-top border-secondary">
                                     <div className="stat-item text-center">
-                                        <span className="d-block fw-bold text-primary">{biz.jobs}</span>
-                                        <small className="">Công việc</small>
+                                        <span className="d-block fw-bold text-primary">{biz.totalJobs || biz.jobs || 0}</span>
+                                        <small>Công việc</small>
                                     </div>
                                     <div className="stat-item text-center">
-                                        <span className="d-block fw-bold text-warning">{biz.rating}</span>
-                                        <small className="">Đánh giá</small>
+                                        <span className="d-block fw-bold text-warning">{biz.rating || 'N/A'}</span>
+                                        <small>Đánh giá</small>
                                     </div>
                                 </div>
 
-                                <Button as={Link} to="/businesses/business-profile" variant="primary" className="w-100 mt-3 fw-bold py-2 shadow-glow">
+                                <Button 
+                                    as={Link} 
+                                    to={`/businesses/business-profile/${biz.enterpriseId || biz.id}`} 
+                                    variant="primary" 
+                                    className="w-100 mt-3 fw-bold py-2 shadow-glow"
+                                >
                                     XEM CHI TIẾT <ChevronRight size={16} className="ms-1" />
                                 </Button>
                             </div>
                         </Col>
                     ))}
                 </Row>
+
+                {companies.length === 0 && (
+                    <div className="text-center py-5 text-white-50">
+                        Chưa có doanh nghiệp nào trên hệ thống.
+                    </div>
+                )}
             </Container>
         </div>
     );

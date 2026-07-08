@@ -167,8 +167,29 @@ const Portfolio = () => {
               </div>
               <div className="portfolio-info-item mb-0">
                 <span className="portfolio-info-label">GPA tích lũy</span>
-                <span className="portfolio-info-value text-success fw-bold">{combinedData.gpa} / 4.0</span>
+                <span className="portfolio-info-value text-success fw-bold">{combinedData.gpa || 'N/A'} / 4.0</span>
               </div>
+            </div>
+
+            {/* Contact Card */}
+            <div className="portfolio-sidebar-card glass-card p-4 mb-4">
+              <h5 className="fw-bold mb-4 text-primary-glow d-flex align-items-center gap-2">
+                <Smartphone size={20}/> LIÊN HỆ
+              </h5>
+              <div className="portfolio-info-item mb-3">
+                <span className="portfolio-info-label">Số điện thoại</span>
+                <span className="portfolio-info-value">{combinedData.phoneNumber || "Chưa cập nhật"}</span>
+              </div>
+              <div className="portfolio-info-item mb-3">
+                <span className="portfolio-info-label">Địa chỉ</span>
+                <span className="portfolio-info-value">{combinedData.location || "Chưa cập nhật"}</span>
+              </div>
+              {combinedData.dateOfBirth && (
+                <div className="portfolio-info-item mb-0">
+                  <span className="portfolio-info-label">Ngày sinh</span>
+                  <span className="portfolio-info-value">{new Date(combinedData.dateOfBirth).toLocaleDateString('vi-VN')}</span>
+                </div>
+              )}
             </div>
 
             {/* Skills Card */}

@@ -19,7 +19,8 @@ const BusinessProfileSettings = () => {
     companyTaxCode: '',
     representName: '',
     address: '',
-    website: ''
+    website: '',
+    description: ''
   });
 
   // State riêng cho File và Preview
@@ -37,7 +38,8 @@ const BusinessProfileSettings = () => {
             companyTaxCode: res.data.companyTaxCode || '',
             representName: res.data.representName || '',
             address: res.data.address || '',
-            website: res.data.website || ''
+            website: res.data.website || '',
+            description: res.data.description || ''
           });
           setLogoPreview(res.data.logoUrl); // Giả sử backend trả về logoUrl để hiển thị
         }
@@ -81,6 +83,7 @@ const BusinessProfileSettings = () => {
     formData.append('RepresentName', bizData.representName);
     formData.append('Address', bizData.address);
     formData.append('Website', bizData.website);
+    formData.append('Description', bizData.description);
     
     if (logoFile) {
       formData.append('LogoFile', logoFile);
@@ -186,6 +189,21 @@ const BusinessProfileSettings = () => {
                     value={bizData.address}
                     onChange={handleChange}
                     className="biz-input" 
+                  />
+                </Form.Group>
+
+                <h5 className="text-white fw-bold mt-4 mb-4 border-start border-primary border-4 ps-3 uppercase-tracking">Giới thiệu công ty</h5>
+
+                <Form.Group className="mb-5">
+                  <Form.Label className="small text-muted fw-bold">MÔ TẢ DOANH NGHIỆP</Form.Label>
+                  <Form.Control 
+                    as="textarea"
+                    rows={4}
+                    name="description"
+                    value={bizData.description}
+                    onChange={handleChange}
+                    className="biz-input" 
+                    placeholder="Giới thiệu về công ty, lĩnh vực hoạt động, quy mô..."
                   />
                 </Form.Group>
 

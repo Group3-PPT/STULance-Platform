@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Button, Badge, Form, InputGroup, Modal } from 'react-bootstrap';
-import { 
-  Search, Building2, ShieldCheck, Eye, Filter, Briefcase, Loader2, RefreshCw, 
-  MapPin, Star, X, Mail, Globe, Hash
+import {
+  Search, Building2, ShieldCheck, Eye, Filter, Briefcase, Loader2, RefreshCw,
+  MapPin, Star, X, Mail, Globe, Hash, Users
 } from 'lucide-react';
-import { jobService } from '../../services/jobservice';
 import { enterpriseService } from '../../services/enterprise.service';
 import '../../CSS/Businesses.css';
 
@@ -21,30 +20,43 @@ const FindEnterprises = () => {
     const fetchEnterprises = async () => {
         setLoading(true);
         try {
-            const res = await jobService.getAllPublicJobs();
-            if (res.success && res.data) {
-                const enterpriseMap = new Map();
-                res.data.forEach(job => {
-                    if (job.enterpriseId && !enterpriseMap.has(job.enterpriseId)) {
-                        enterpriseMap.set(job.enterpriseId, {
-                            enterpriseId: job.enterpriseId,
-                            companyName: job.enterpriseName || 'Chưa cập nhật',
-                            logoUrl: job.enterpriseLogoUrl || null,
-                            industry: job.enterpriseIndustry || 'Chưa cập nhật',
-                            location: job.location || 'Chưa cập nhật',
-                            description: job.enterpriseDescription || '',
-                            isVerified: job.isEnterpriseVerified || false,
-                            jobCount: 0
-                        });
-                    }
-                    if (job.enterpriseId && enterpriseMap.has(job.enterpriseId)) {
-                        enterpriseMap.get(job.enterpriseId).jobCount++;
-                    }
-                });
-                setEnterprises(Array.from(enterpriseMap.values()));
-            }
+            const res = await enterpriseService.getAllEnterprises();
+            const data = res.data || res || [];
+            const list = Array.isArray(data) ? data : data.items || [];
+            setEnterprises(list);
         } catch (err) {
             console.error("Lỗi tải danh sách doanh nghiệp:", err);
+            // Fallback: try from jobs
+            try {
+                const jobRes = await import('../../services/jobservice').then(m => m.jobService.getAllPublicJobs());
+                if (jobRes.success && jobRes.data) {
+                    const enterpriseMap = new Map();
+                    jobRes.data.forEach(job => {
+                        if (job.enterpriseId && !enterpriseMap.has(job.enterpriseId)) {
+                            enterpriseMap.set(job.enterpriseId, {
+                                enterpriseId: job.enterpriseId,
+                                companyName: job.enterpriseName || 'Chưa cập nhật',
+                                logoUrl: job.enterpriseLogoUrl || null,
+                                industry: job.enterpriseIndustry || 'Chưa cập nhật',
+                                location: job.location || 'Chưa cập nhật',
+                                description: job.enterpriseDescription || '',
+                                isVerified: job.isEnterpriseVerified || false,
+                                email: job.enterpriseEmail || '',
+                                companySize: '',
+                                website: '',
+                                companyTaxCode: '',
+                                jobCount: 0
+                            });
+                        }
+                        if (job.enterpriseId && enterpriseMap.has(job.enterpriseId)) {
+                            enterpriseMap.get(job.enterpriseId).jobCount++;
+                        }
+                    });
+                    setEnterprises(Array.from(enterpriseMap.values()));
+                }
+            } catch (fallbackErr) {
+                console.error("Fallback cũng lỗi:", fallbackErr);
+            }
         } finally {
             setLoading(false);
         }
@@ -72,6 +84,11 @@ const FindEnterprises = () => {
                (e.location || '').toLowerCase().includes(searchTerm.toLowerCase());
     });
 
+    const getLogo = (ent) => {
+        if (ent.logoUrl) return ent.logoUrl;
+        return `https://ui-avatars.com/api/?name=${encodeURIComponent(ent.companyName || 'D')}&background=10b981&color=fff&size=120`;
+    };
+
     return (
         <div className="businesses-page py-5 animate-fade-in">
             <Container>
@@ -90,8 +107,8 @@ const FindEnterprises = () => {
                         <Col md={8}>
                             <InputGroup className="bg-dark-input rounded-pill overflow-hidden border-0">
                                 <InputGroup.Text className="bg-transparent border-0 text-primary"><Search size={18}/></InputGroup.Text>
-                                <Form.Control 
-                                    placeholder="Tìm theo tên công ty, ngành nghề, địa điểm..." 
+                                <Form.Control
+                                    placeholder="Tìm theo tên công ty, ngành nghề, địa điểm..."
                                     className="bg-transparent border-0 text-white shadow-none py-2"
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
@@ -122,21 +139,15 @@ const FindEnterprises = () => {
                                 <Col lg={4} md={6} key={ent.enterpriseId || idx}>
                                     <div className="glass-card biz-card p-4 text-center h-100 d-flex flex-column">
                                         <div className="stu-avatar-wrap mb-3 mx-auto">
-                                            {ent.logoUrl ? (
-                                                <img src={ent.logoUrl} alt={ent.companyName} className="stu-avatar-img" />
-                                            ) : (
-                                                <div className="stu-avatar-placeholder" style={{background: 'linear-gradient(135deg, #10b981, #06b6d4)'}}>
-                                                    {(ent.companyName || 'D').charAt(0).toUpperCase()}
-                                                </div>
-                                            )}
+                                            <img src={getLogo(ent)} alt={ent.companyName} className="stu-avatar-img" />
                                             {ent.isVerified && (
                                                 <div className="stu-verified-badge">
                                                     <ShieldCheck size={12} fill="#10b981" color="white" />
                                                 </div>
                                             )}
                                         </div>
-                                        
-                                        <h5 className="text-white fw-bold mb-1">{ent.companyName}</h5>
+
+                                        <h5 className="text-white fw-bold mb-1">{ent.companyName || 'Chưa cập nhật'}</h5>
                                         <p className="x-small text-primary fw-bold mb-2 uppercase-tracking">
                                             {ent.industry || 'Chưa cập nhật'}
                                         </p>
@@ -152,10 +163,10 @@ const FindEnterprises = () => {
 
                                         <div className="mt-auto pt-3 border-top border-white border-opacity-10">
                                             <p className="x-small text-white-50 mb-2">
-                                                <Briefcase size={12} className="me-1"/> {ent.jobCount} việc làm
+                                                <Briefcase size={12} className="me-1"/> {ent.jobCount || 0} việc làm
                                             </p>
-                                            <Button 
-                                                variant="outline-primary" 
+                                            <Button
+                                                variant="outline-primary"
                                                 className="w-100 rounded-pill fw-bold btn-view-school"
                                                 onClick={() => fetchEnterpriseDetail(ent.enterpriseId)}
                                                 disabled={loadingDetail === ent.enterpriseId}
@@ -187,15 +198,11 @@ const FindEnterprises = () => {
                         <>
                             <div className="d-flex justify-content-between align-items-start mb-4">
                                 <div className="d-flex align-items-center gap-3">
-                                    <div className="stu-avatar-wrap">
-                                        {selectedEnterprise.logoUrl ? (
-                                            <img src={selectedEnterprise.logoUrl} alt="" className="stu-avatar-img" />
-                                        ) : (
-                                            <div className="stu-avatar-placeholder" style={{background: 'linear-gradient(135deg, #10b981, #06b6d4)'}}>
-                                                {(selectedEnterprise.companyName || 'D').charAt(0).toUpperCase()}
-                                            </div>
-                                        )}
-                                    </div>
+                                    <img
+                                        src={getLogo(selectedEnterprise)}
+                                        alt={selectedEnterprise.companyName}
+                                        style={{ width: 72, height: 72, borderRadius: '50%', objectFit: 'cover', border: '3px solid rgba(255,255,255,0.1)' }}
+                                    />
                                     <div>
                                         <h4 className="fw-bold text-white mb-1">{selectedEnterprise.companyName}</h4>
                                         <p className="text-primary mb-0">{selectedEnterprise.industry || 'Chưa cập nhật'}</p>
@@ -219,7 +226,7 @@ const FindEnterprises = () => {
                                 <Col md={6}>
                                     <div className="p-3 rounded-3" style={{background: 'rgba(255,255,255,0.04)'}}>
                                         <p className="x-small text-white-50 mb-2 uppercase-tracking fw-bold">Quy mô & Đánh giá</p>
-                                        <p className="small text-white mb-1"><Building2 size={14} className="me-2 text-primary"/>Quy mô: {selectedEnterprise.companySize || 'Chưa cập nhật'}</p>
+                                        <p className="small text-white mb-1"><Users size={14} className="me-2 text-primary"/>Quy mô: {selectedEnterprise.companySize || 'Chưa cập nhật'}</p>
                                         <p className="small text-white mb-0"><Star size={14} className="me-2 text-warning"/>Đánh giá: {selectedEnterprise.rating || '4.8'}/5.0</p>
                                     </div>
                                 </Col>

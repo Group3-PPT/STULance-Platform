@@ -4,72 +4,126 @@
 .contract-paper {
     background: #fff;
     color: #000;
-    padding: 80px 70px;
+    padding: 50px 45px;
     font-family: "Times New Roman", Times, serif;
-    line-height: 1.5;
-    min-height: 1100px;
+    line-height: 1.4;
+    min-height: 900px;
+    font-size: 13px;
 }
 
 .doc-divider {
-    width: 160px;
-    height: 1.5px;
+    width: 120px;
+    height: 1px;
     background: #000;
-    margin-top: 5px;
+    margin-top: 4px;
 }
 
 .party-box {
-    padding: 15px;
+    padding: 10px 12px;
     background: #f9fafb;
     border-radius: 4px;
-    border-left: 5px solid #2c424e;
+    border-left: 4px solid #2c424e;
 }
 
 .party-box p, .articles p {
-    margin-bottom: 5px;
-    font-size: 14.5px;
+    margin-bottom: 3px;
+    font-size: 12.5px;
 }
 
 .articles h6 {
-    margin-top: 20px;
-    font-size: 15px;
+    margin-top: 14px;
+    font-size: 13px;
+}
+
+/* Contract Terms Styling */
+.details-section h6 {
+    margin-top: 16px;
+    padding-bottom: 4px;
+    border-bottom: 1.5px solid #1a1a1a;
+    font-size: 12.5px;
+    letter-spacing: 0.3px;
+    color: #1a1a1a;
+}
+
+.details-section p {
+    margin-bottom: 5px;
+    line-height: 1.55;
+    text-align: justify;
+    font-size: 12px;
+}
+
+.details-section strong {
+    color: #b91c1c;
+}
+
+.party-info {
+    padding: 8px 12px;
+    background: #f8fafc;
+    border-left: 3px solid #2563eb;
+    border-radius: 0 6px 6px 0;
+}
+
+.party-info p {
+    margin-bottom: 3px;
+    font-size: 12px;
+}
+
+.contract-content {
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.contract-content p {
+    text-align: justify;
 }
 
 .masked-data {
     font-family: monospace;
     background: #f1f5f9;
-    padding: 1px 5px;
+    padding: 1px 4px;
     border-radius: 3px;
     font-weight: bold;
+    font-size: 11px;
 }
 
 .signature-row { display: grid; grid-template-columns: 1fr 1fr; }
 
 .stamp-box {
-    width: 130px;
-    height: 80px;
-    border: 5px double;
-    margin: 15px auto;
+    min-width: 110px;
+    min-height: 65px;
+    border: 4px double;
+    margin: 10px auto;
     display: flex;
     align-items: center;
     justify-content: center;
     font-weight: 900;
-    font-size: 22px;
+    font-size: 18px;
     transform: rotate(-12deg);
     opacity: 0.85;
+    padding: 6px 10px;
+}
+
+.stamp-box img {
+    max-width: 150px;
+    max-height: 65px;
+    object-fit: contain;
+    transform: rotate(0deg);
+    opacity: 1;
 }
 
 .signed { border-color: #b91c1c; color: #b91c1c; }
 .signed-blue { border-color: #1d4ed8; color: #1d4ed8; }
 
 .empty-sig {
-    height: 80px;
-    margin: 15px auto;
+    height: 65px;
+    margin: 10px auto;
     border: 1px dashed #d1d5db;
     display: flex;
     align-items: center;
     justify-content: center;
     color: #9ca3af;
-    width: 150px;
+    width: 130px;
+    font-size: 11px;
 }
 
 .sticky-sidebar { position: sticky; top: 100px; }
@@ -102,26 +156,279 @@
     }
 }
 
-.sig-canvas-wrapper {
-    border: 2px solid rgba(59, 130, 246, 0.25);
-    cursor: crosshair;
-    transition: 0.3s;
+/* --- SIGN CONTRACT PAGE --- */
+.sign-contract-page {
+    min-height: 100vh;
+    padding: 30px 0;
+    background: linear-gradient(135deg, #0a0f1a 0%, #1a1f35 100%);
 }
 
-.sig-canvas-wrapper:hover {
-    border-color: rgba(59, 130, 246, 0.5);
+.sign-back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: #3b82f6;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 13px;
+    transition: 0.2s;
 }
 
-.sigCanvas {
+.sign-back-link:hover {
+    color: #60a5fa;
+    transform: translateX(-4px);
+}
+
+/* Summary Card */
+.sign-summary-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+.sign-summary-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 20px;
+    background: rgba(59, 130, 246, 0.1);
+    color: #60a5fa;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.sign-summary-body {
+    padding: 16px 20px;
+}
+
+.sign-summary-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+}
+
+.sign-summary-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.sign-summary-item svg {
+    color: rgba(255, 255, 255, 0.3);
+    flex-shrink: 0;
+}
+
+.sign-summary-label {
+    display: block;
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.4);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.sign-summary-value {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: white;
+}
+
+.sign-summary-value.price {
+    color: #f59e0b;
+    font-size: 16px;
+}
+
+/* Main Card */
+.sign-main-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 20px;
+    padding: 40px;
+}
+
+.sign-main-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.sign-icon-circle {
+    width: 64px;
+    height: 64px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(139, 92, 246, 0.2));
+    color: #3b82f6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 16px;
+}
+
+.sign-main-title {
+    color: white;
+    font-size: 22px;
+    font-weight: 800;
+    margin-bottom: 6px;
+}
+
+.sign-main-subtitle {
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 13px;
+    margin: 0;
+}
+
+.sign-main-subtitle strong {
+    color: white;
+}
+
+/* Legal Notice */
+.sign-legal-notice {
+    display: flex;
+    gap: 12px;
+    padding: 16px;
+    background: rgba(245, 158, 11, 0.08);
+    border: 1px solid rgba(245, 158, 11, 0.15);
+    border-radius: 12px;
+    margin-bottom: 24px;
+}
+
+.sign-legal-notice svg {
+    color: #f59e0b;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.sign-legal-notice p {
+    margin: 0;
+    font-size: 12px;
+    line-height: 1.6;
+    color: rgba(255, 255, 255, 0.7);
+    font-style: italic;
+}
+
+/* Canvas Section */
+/* Checkbox */
+.sign-checkbox-group {
+    margin-bottom: 20px;
+}
+
+.sign-checkbox-group .form-check-input {
+    width: 18px;
+    height: 18px;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.05);
+    cursor: pointer;
+}
+
+.sign-checkbox-group .form-check-input:checked {
+    background-color: #3b82f6;
+    border-color: #3b82f6;
+}
+
+.sign-checkbox-label {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.7);
+    cursor: pointer;
+    user-select: none;
+}
+
+/* Error Message */
+.sign-error-message {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 16px;
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    border-radius: 10px;
+    color: #ef4444;
+    font-size: 12px;
+    margin-bottom: 16px;
+}
+
+/* Submit Button */
+.sign-submit-btn {
     width: 100%;
-    background-color: #ffffff;
+    padding: 16px 24px;
+    border: none;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    color: white;
+    font-size: 14px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: 0.3s;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
-.shadow-inner {
-    box-shadow: inset 0 2px 10px rgba(0,0,0,0.1);
+.sign-submit-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(59, 130, 246, 0.35);
+}
+
+.sign-submit-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Security Badge */
+.sign-security-badge {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    margin-top: 16px;
+    color: rgba(255, 255, 255, 0.3);
+    font-size: 11px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .sign-contract-page .glass-card {
+        padding: 1.5rem !important;
+        border-radius: 16px;
+    }
+    
+    .sign-contract-page h2 {
+        font-size: 1.3rem;
+    }
+    
+    .sigCanvas {
+        height: 150px !important;
+    }
+}
+
+/* Contract Detail - Signature Area */
+.sig-block {
+    flex: 1;
+}
+
+.sig-block .empty-sig {
+    border: 2px dashed rgba(0,0,0,0.15);
 }
 
 .signed-box img {
     filter: brightness(0.8) contrast(1.2);
     mix-blend-mode: multiply;
+}
+
+/* Contract - Progress/Delivery/Evaluate */
+.contract-page-container .progress {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.contract-page-container .progress-bar {
+    background: linear-gradient(90deg, #3b82f6, #60a5fa);
+    border-radius: 10px;
+    transition: width 0.5s ease;
 }

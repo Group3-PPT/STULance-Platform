@@ -2,6 +2,13 @@ import api from './api';
 
 export const paymentService = {
     /** 
+     * Tạo mã QR VNPAY để nạp tiền vào ví
+     * Endpoint: POST /api/v1/payments/deposit
+     */
+    createDeposit: (amount) => 
+        api.post('/v1/payments/deposit', { amount }).then(res => res.data),
+
+    /** 
      * Tạo mã QR VNPAY để thanh toán cho một hợp đồng cụ thể
      * Endpoint: POST /api/v1/contracts/{contractId}/payments/vnpay-qr
      * Response: Thường trả về một URL để chuyển hướng sang VNPAY

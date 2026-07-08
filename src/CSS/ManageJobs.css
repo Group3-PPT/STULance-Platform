@@ -1,169 +1,451 @@
-/* --- TRANG QUẢN LÝ BÀI ĐĂNG --- */
-.manage-jobs-page {
+/* --- MANAGE JOBS - PROFESSIONAL --- */
+.mj-page {
     position: relative;
     z-index: 10;
 }
 
-.btn-post-job {
-    background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+/* Header Button */
+.mj-btn-create {
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
     color: white;
-    padding: 12px 25px;
+    padding: 12px 24px;
     border-radius: 12px;
-    text-decoration: none;
-    font-weight: 800;
-    font-size: 14px;
-    display: flex;
+    font-weight: 700;
+    font-size: 13px;
+    display: inline-flex;
     align-items: center;
-    transition: 0.3s;
-}
-
-.btn-post-job:hover {
-    color: white;
-    transform: translateY(-3px);
-    box-shadow: 0 10px 25px rgba(59, 130, 246, 0.4);
-}
-
-.job-management-table {
-    background: transparent !important;
-}
-
-.job-management-table thead th {
-    background: rgba(59, 130, 246, 0.1);
-    color: #60a5fa;
-    text-transform: uppercase;
-    font-size: 12px;
-    letter-spacing: 1px;
-    font-weight: 800;
-    padding: 20px 15px;
+    gap: 8px;
+    transition: all 0.3s ease;
     border: none;
 }
 
-.job-row {
-    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
-    transition: 0.3s;
+.mj-btn-create:hover {
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(59, 130, 246, 0.35);
 }
 
-.job-row:hover {
-    background: rgba(255, 255, 255, 0.02) !important;
-}
-
-.status-pill-badge {
-    padding: 6px 12px !important;
-    border-radius: 50px !important;
-    font-size: 10px !important;
-    font-weight: 800 !important;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.status-active { background: rgba(16, 185, 129, 0.15); color: #10b981; }
-.status-pending { background: rgba(245, 158, 11, 0.15); color: #f59e0b; }
-.status-expired { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
-
-.candidate-badge {
-    width: 50px;
-    height: 50px;
-    background: rgba(255, 255, 255, 0.03);
+/* Stats Cards */
+.mj-stat-card {
+    background: rgba(15, 23, 42, 0.5);
+    backdrop-filter: blur(20px);
     border: 1px solid rgba(255, 255, 255, 0.06);
-    border-radius: 12px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-}
-
-.candidate-badge .count-num {
-    font-size: 16px;
-    font-weight: 800;
-    color: var(--primary-blue);
-}
-
-.action-icon-btn {
-    width: 36px;
-    height: 36px;
-    border-radius: 10px;
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    background: rgba(255, 255, 255, 0.04);
-    color: rgba(255, 255, 255, 0.5);
-    cursor: pointer;
-    transition: 0.3s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.action-icon-btn:hover {
-    background: rgba(59, 130, 246, 0.15);
-    color: #60a5fa;
-    border-color: rgba(59, 130, 246, 0.3);
-}
-
-.action-icon-btn.delete:hover {
-    background: rgba(239, 68, 68, 0.15);
-    border-color: rgba(239, 68, 68, 0.3);
-    color: #ef4444;
-}
-
-.modal-dark .modal-content {
-    background: #0f1117 !important;
-    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 16px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    transition: all 0.3s ease;
 }
 
-.modal-dark .modal-header {
-    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+.mj-stat-card:hover {
+    border-color: rgba(255, 255, 255, 0.1);
+    transform: translateY(-2px);
 }
 
-.modal-dark .modal-header .btn-close {
-    filter: invert(1);
-}
-
-.bid-card {
-    background: rgba(255, 255, 255, 0.03) !important;
-    border: 1px solid rgba(255, 255, 255, 0.06) !important;
-    border-radius: 14px !important;
-    transition: 0.3s;
-}
-
-.bid-card:hover {
-    border-color: rgba(59, 130, 246, 0.2) !important;
-    background: rgba(255, 255, 255, 0.05) !important;
-}
-
-.bid-avatar {
+.mj-stat-icon {
     width: 48px;
     height: 48px;
-    border-radius: 12px;
-    background: rgba(59, 130, 246, 0.1);
-    border: 1px solid rgba(59, 130, 246, 0.2);
+    border-radius: 14px;
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
 }
 
-.btn-auth {
-    padding: 10px 24px;
-    border-radius: 12px;
+.mj-stat-label {
+    font-size: 11px;
     font-weight: 600;
-    font-size: 13px;
-    color: rgba(255, 255, 255, 0.5);
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    backdrop-filter: blur(5px);
-    transition: 0.3s;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: rgba(255, 255, 255, 0.45);
+    margin-bottom: 4px;
 }
 
-.btn-auth:hover, .btn-auth.active {
-    background: rgba(59, 130, 246, 0.1);
+.mj-stat-value {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: white;
+    margin-bottom: 0;
+    line-height: 1;
+}
+
+/* Tabs */
+.mj-tabs .nav-link {
+    color: rgba(255, 255, 255, 0.45) !important;
+    font-weight: 600;
+    font-size: 14px;
+    padding: 10px 20px;
+    border: none;
+    border-bottom: 2px solid transparent;
+    transition: all 0.3s ease;
+    background: none;
+}
+
+.mj-tabs .nav-link:hover {
+    color: rgba(255, 255, 255, 0.7) !important;
+}
+
+.mj-tabs .nav-link.active {
+    color: #3b82f6 !important;
+    border-bottom-color: #3b82f6;
+    background: none !important;
+}
+
+/* Search */
+.mj-search {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+    padding: 8px 16px;
+    width: 280px;
+}
+
+.mj-search input {
+    background: none;
+    border: none;
+    color: white;
+    outline: none;
+    font-size: 13px;
+    width: 100%;
+}
+
+.mj-search input::placeholder {
+    color: rgba(255, 255, 255, 0.3);
+}
+
+/* Job Cards */
+.mj-job-card {
+    background: rgba(15, 23, 42, 0.5);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 16px;
+    padding: 24px;
+    transition: all 0.3s ease;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.mj-job-card:hover {
+    border-color: rgba(59, 130, 246, 0.2);
+    transform: translateY(-4px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+}
+
+.mj-job-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: white;
+    margin-bottom: 4px;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.mj-job-type {
+    font-size: 12px;
+    font-weight: 600;
+    color: #3b82f6;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.mj-job-meta {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.45);
+    display: flex;
+    align-items: center;
+}
+
+.mj-job-price {
+    font-size: 15px;
+    font-weight: 800;
+    color: #10b981;
+}
+
+.mj-date {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.35);
+}
+
+/* Status Badge */
+.mj-status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+/* Action Buttons */
+.mj-action-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: 600;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.04);
+    color: rgba(255, 255, 255, 0.6);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    flex: 1;
+    justify-content: center;
+}
+
+.mj-action-btn.primary:hover {
+    background: rgba(59, 130, 246, 0.15);
     border-color: rgba(59, 130, 246, 0.3);
     color: #60a5fa;
 }
 
+.mj-action-btn.danger {
+    flex: 0;
+    padding: 8px 12px;
+}
+
+.mj-action-btn.danger:hover {
+    background: rgba(239, 68, 68, 0.15);
+    border-color: rgba(239, 68, 68, 0.3);
+    color: #ef4444;
+}
+
+/* Contract List */
+.mj-contract-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.mj-contract-card {
+    background: rgba(15, 23, 42, 0.5);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 16px;
+    padding: 20px 24px;
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    transition: all 0.3s ease;
+}
+
+.mj-contract-card:hover {
+    border-color: rgba(255, 255, 255, 0.1);
+    background: rgba(15, 23, 42, 0.7);
+}
+
+.mj-contract-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    background: rgba(59, 130, 246, 0.1);
+    border: 1px solid rgba(59, 130, 246, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #3b82f6;
+    flex-shrink: 0;
+}
+
+.mj-contract-name {
+    font-size: 14px;
+    font-weight: 700;
+    color: white;
+}
+
+.mj-contract-id {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.3);
+    font-family: monospace;
+}
+
+.mj-contract-student {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.45);
+}
+
+.mj-contract-info {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
+    min-width: 140px;
+}
+
+.mj-contract-amount {
+    font-size: 14px;
+    font-weight: 800;
+    color: #10b981;
+}
+
+.mj-contract-sign {
+    display: flex;
+    gap: 12px;
+    min-width: 80px;
+    justify-content: center;
+}
+
+.mj-sign-dot {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.3);
+    padding: 4px 8px;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.mj-sign-dot.signed {
+    color: #10b981;
+    background: rgba(16, 185, 129, 0.1);
+}
+
+.mj-btn-sm {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 6px 14px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+/* Bid Card (Modal) */
+.mj-bid-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 14px;
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    transition: all 0.3s ease;
+}
+
+.mj-bid-card:hover {
+    border-color: rgba(59, 130, 246, 0.15);
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.mj-bid-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: rgba(59, 130, 246, 0.1);
+    border: 1px solid rgba(59, 130, 246, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #3b82f6;
+    flex-shrink: 0;
+}
+
+.mj-btn-sm.success {
+    background: rgba(16, 185, 129, 0.15);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    color: #10b981;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.mj-btn-sm.success:hover:not(:disabled) {
+    background: rgba(16, 185, 129, 0.25);
+}
+
+.mj-btn-sm.danger {
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    color: #ef4444;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.mj-btn-sm.danger:hover:not(:disabled) {
+    background: rgba(239, 68, 68, 0.2);
+}
+
+/* Empty State */
+.mj-empty-state {
+    text-align: center;
+    padding: 60px 20px;
+}
+
+/* Modal Dark */
+.modal-dark .modal-content {
+    background: #0f1724 !important;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 20px;
+}
+
+.modal-dark .modal-header {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    padding: 20px 24px;
+}
+
+.modal-dark .modal-body {
+    padding: 20px 24px;
+}
+
+.modal-dark .modal-header .btn-close {
+    filter: invert(1);
+}
+
+/* Responsive */
 @media (max-width: 991px) {
-    .filter-tabs {
-        overflow-x: auto;
-        white-space: nowrap;
-        justify-content: flex-start;
+    .mj-contract-card {
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+    
+    .mj-contract-info {
+        min-width: auto;
+    }
+}
+
+@media (max-width: 768px) {
+    .mj-search {
+        width: 100%;
+    }
+    
+    .mj-stat-card {
+        padding: 16px;
+    }
+    
+    .mj-stat-value {
+        font-size: 1.25rem;
+    }
+    
+    .mj-job-card {
+        padding: 20px;
     }
 }

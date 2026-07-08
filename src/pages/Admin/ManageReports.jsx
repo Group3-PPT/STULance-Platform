@@ -6,11 +6,13 @@ import {
   FileText, Briefcase, Clock, User, AlertTriangle
 } from 'lucide-react';
 import { adminService } from '../../services/adminservice';
+import { reportService } from '../../services/reportService';
 import '../../CSS/ManageReports.css'; 
 
 const ManageReports = () => {
   const [contracts, setContracts] = useState([]);
   const [orders, setOrders] = useState([]);
+  const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("Tất cả");
   const [searchTerm, setSearchTerm] = useState("");
@@ -22,12 +24,14 @@ const ManageReports = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [contractsRes, ordersRes] = await Promise.all([
+      const [contractsRes, ordersRes, reportsRes] = await Promise.all([
         adminService.getAllContracts(),
-        adminService.getAllServiceOrders()
+        adminService.getAllServiceOrders(),
+        reportService.adminGetAllReports()
       ]);
       if (contractsRes.success) setContracts(contractsRes.data || []);
       if (ordersRes.success) setOrders(ordersRes.data || []);
+      if (reportsRes.success !== false) setReports(reportsRes.data || reportsRes || []);
     } catch (err) {
       console.error("Lỗi tải dữ liệu:", err);
     } finally {
@@ -38,6 +42,24 @@ const ManageReports = () => {
   useEffect(() => { fetchData(); }, []);
 
   const disputes = [
+    ...reports.map(r => ({
+      id: r.reportId,
+      shortId: r.reportId?.substring(0, 8),
+      reporter: r.reporterName || 'N/A',
+      reported: r.targetName || 'N/A',
+      reason: r.reason || 'Báo cáo vi phạm',
+      priority: r.severity || 'Trung bình',
+      status: r.status === 'PENDING' ? 'Mới' : r.status === 'IN_PROGRESS' ? 'Đang xử lý' : 'Đã giải quyết',
+      date: new Date(r.createdAt).toLocaleDateString('vi-VN'),
+      type: r.targetType || 'Khác',
+      isActualReport: true,
+      details: {
+        amount: null,
+        description: r.description,
+        disputeReason: r.reason,
+        resolution: r.resolution
+      }
+    })),
     ...contracts.filter(c => c.status === 'DISPUTED' || c.status === 'CANCELLED').map(c => ({
       id: c.contractId,
       shortId: c.contractId?.substring(0, 8),
@@ -94,16 +116,21 @@ const ManageReports = () => {
     if (!window.confirm(`Xác nhận "${resolutionType}" cho khiếu nại này?`)) return;
     setResolving(true);
     try {
-      const resolutionData = {
-        resolution: resolutionType === 'Chấp nhận khiếu nại' ? 'FAVOR_STUDENT' : 
-                    resolutionType === 'Từ chối khiếu nại' ? 'FAVOR_ENTERPRISE' : 'DISMISSED',
-        note: resolutionType
-      };
-
-      if (dispute.type === 'Hợp đồng') {
-        await adminService.resolveContractDispute(dispute.id, resolutionData);
+      if (dispute.isActualReport) {
+        const status = resolutionType === 'Chấp nhận khiếu nại' ? 'RESOLVED' : 'REJECTED';
+        await reportService.adminUpdateStatus(dispute.id, { status });
       } else {
-        await adminService.cancelServiceOrderAdmin(dispute.id);
+        const resolutionData = {
+          resolution: resolutionType === 'Chấp nhận khiếu nại' ? 'FAVOR_STUDENT' : 
+                      resolutionType === 'Từ chối khiếu nại' ? 'FAVOR_ENTERPRISE' : 'DISMISSED',
+          note: resolutionType
+        };
+
+        if (dispute.type === 'Hợp đồng') {
+          await adminService.resolveContractDispute(dispute.id, resolutionData);
+        } else {
+          await adminService.cancelServiceOrderAdmin(dispute.id);
+        }
       }
 
       alert("Đã xử lý khiếu nại thành công!");

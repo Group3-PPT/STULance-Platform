@@ -1,8 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Badge, Button, Spinner, Modal, Row, Col } from 'react-bootstrap';
-import { Search, CheckCircle, XCircle, Eye, Loader2, User, DollarSign, Clock, Lock, EyeOff, Trash2, MapPin, FileText, ListChecks, Image as ImageIcon } from 'lucide-react';
+import { Badge, Modal, Row, Col } from 'react-bootstrap';
+import { 
+  Search, CheckCircle, Eye, Loader2, User, DollarSign, Clock, 
+  Lock, Trash2, FileText, ListChecks, Star, Shield, TrendingUp,
+  ChevronRight, X
+} from 'lucide-react';
 import { studentServiceService } from '../../services/studentserviceservice';
-import '../../CSS/ManagePosts.css';
+import '../../CSS/ManageStudentServices.css';
 
 const ManageStudentServices = () => {
   const [services, setServices] = useState([]);
@@ -35,10 +39,10 @@ const ManageStudentServices = () => {
 
   const handleUpdateStatus = async (id, newStatus) => {
     const statusMap = {
-        'ACTIVE': 'phê duyệt hiển thị',
-        'BLOCKED': 'khóa (vi phạm)',
-        'HIDDEN': 'tạm ẩn',
-        'DELETED': 'xóa vĩnh viễn'
+      'ACTIVE': 'phê duyệt hiển thị',
+      'BLOCKED': 'khóa (vi phạm)',
+      'HIDDEN': 'tạm ẩn',
+      'DELETED': 'xóa vĩnh viễn'
     };
 
     if (!window.confirm(`Xác nhận ${statusMap[newStatus]} gói dịch vụ này?`)) return;
@@ -64,38 +68,110 @@ const ManageStudentServices = () => {
 
   const renderStatusBadge = (status) => {
     switch (status) {
-      case 'ACTIVE': return <Badge bg="success" className="py-2 px-3">Đang hiển thị</Badge>;
-      case 'HIDDEN': return <Badge bg="secondary" className="py-2 px-3">Đang ẩn</Badge>;
-      case 'BLOCKED': return <Badge bg="danger" className="py-2 px-3">Bị khóa</Badge>;
-      case 'DELETED': return <Badge bg="dark" className="py-2 px-3 text-white-50">Đã xóa</Badge>;
-      default: return <Badge bg="warning" className="text-dark">{status}</Badge>;
+      case 'ACTIVE': 
+        return (
+          <span className="svc-badge svc-badge-active">
+            <span className="svc-badge-dot"></span>
+            Đang hiển thị
+          </span>
+        );
+      case 'HIDDEN': 
+        return (
+          <span className="svc-badge svc-badge-hidden">
+            <span className="svc-badge-dot"></span>
+            Đang ẩn
+          </span>
+        );
+      case 'BLOCKED': 
+        return (
+          <span className="svc-badge svc-badge-blocked">
+            <span className="svc-badge-dot"></span>
+            Bị khóa
+          </span>
+        );
+      default: 
+        return <span className="svc-badge svc-badge-default">{status}</span>;
     }
   };
 
+  const stats = {
+    total: services.length,
+    active: services.filter(s => s.status === 'ACTIVE').length,
+    hidden: services.filter(s => s.status === 'HIDDEN').length,
+    blocked: services.filter(s => s.status === 'BLOCKED').length,
+  };
+
   return (
-    <div className="adm-page-content animate-fade-in text-white py-4">
-      <div className="d-flex justify-content-between align-items-end mb-4">
-        <div>
-          <h2 className="fw-bold mb-1">Quản lý <span className="text-primary-glow">Gói Dịch Vụ</span></h2>
-          <p className="text-white opacity-75 small mb-0">Hệ thống kiểm duyệt dựa trên trạng thái ACTIVE / BLOCKED / HIDDEN.</p>
-        </div>
-        
-        <div className="adm-search-wrapper" style={{ width: '320px', position: 'relative' }}>
-            <Search size={18} className="text-white opacity-50" style={{ position:'absolute', left:'15px', top:'12px' }}/>
-            <input 
+    <div className="svc-manage-page animate-fade-in">
+      {/* Header */}
+      <div className="svc-header mb-4">
+        <div className="d-flex justify-content-between align-items-start">
+          <div>
+            <h2 className="svc-title">
+              Quản lý <span className="text-primary-glow">Gói Dịch Vụ</span>
+            </h2>
+            <p className="svc-subtitle">Quản lý và kiểm duyệt dịch vụ sinh viên trên hệ thống</p>
+          </div>
+          <div className="d-flex gap-2">
+            <div className="svc-search-box">
+              <Search size={16} />
+              <input 
                 type="text" 
-                placeholder="Tìm tiêu đề dịch vụ..." 
-                className="w-100 bg-dark-input text-white border-0 rounded-3 ps-5 py-2 shadow-none"
+                placeholder="Tìm tên dịch vụ..." 
+                value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-            />
+              />
+            </div>
+          </div>
         </div>
       </div>
 
-      <div className="post-filter-tabs glass-card p-2 mb-4 d-flex gap-2">
+      {/* Stats Cards */}
+      <div className="svc-stats-row mb-4">
+        <div className="svc-stat-card">
+          <div className="svc-stat-icon svc-stat-total">
+            <TrendingUp size={20} />
+          </div>
+          <div className="svc-stat-info">
+            <span className="svc-stat-label">Tổng dịch vụ</span>
+            <span className="svc-stat-value">{stats.total}</span>
+          </div>
+        </div>
+        <div className="svc-stat-card">
+          <div className="svc-stat-icon svc-stat-active">
+            <CheckCircle size={20} />
+          </div>
+          <div className="svc-stat-info">
+            <span className="svc-stat-label">Đang bán</span>
+            <span className="svc-stat-value">{stats.active}</span>
+          </div>
+        </div>
+        <div className="svc-stat-card">
+          <div className="svc-stat-icon svc-stat-hidden">
+            <Eye size={20} />
+          </div>
+          <div className="svc-stat-info">
+            <span className="svc-stat-label">Đã ẩn</span>
+            <span className="svc-stat-value">{stats.hidden}</span>
+          </div>
+        </div>
+        <div className="svc-stat-card">
+          <div className="svc-stat-icon svc-stat-blocked">
+            <Shield size={20} />
+          </div>
+          <div className="svc-stat-info">
+            <span className="svc-stat-label">Bị khóa</span>
+            <span className="svc-stat-value">{stats.blocked}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Filter Tabs */}
+      <div className="svc-filter-tabs mb-4">
         {["Tất cả", "Đang bán", "Đã ẩn", "Bị khóa"].map(tab => (
           <button 
             key={tab}
-            className={`post-tab-btn ${filter === tab ? 'active' : ''}`}
+            className={`svc-tab-btn ${filter === tab ? 'active' : ''}`}
             onClick={() => setFilter(tab)}
           >
             {tab}
@@ -103,149 +179,193 @@ const ManageStudentServices = () => {
         ))}
       </div>
 
-      <div className="glass-card overflow-hidden shadow-lg border-0">
-        {loading ? (
-          <div className="text-center py-5"><Loader2 className="spinner text-primary" size={40}/></div>
-        ) : (
-          <Table responsive variant="dark" className="mb-0 adm-custom-table align-middle">
-            <thead>
-              <tr className="text-white border-bottom border-white border-opacity-10 uppercase-tracking x-small">
-                <th className="ps-4 py-3">NỘI DUNG DỊCH VỤ</th>
-                <th>GIÁ & GIAO HÀNG</th>
-                <th>TRẠNG THÁI</th>
-                <th className="text-end pe-4">THAO TÁC ADMIN</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredServices.map((service) => (
-                <tr key={service.serviceId} className="border-bottom border-white border-opacity-5">
-                  <td className="ps-4">
-                    <div className="d-flex align-items-center gap-3">
-                      <div className="service-img-mini rounded bg-secondary overflow-hidden shadow" style={{width: '65px', height: '45px'}}>
-                         <img src={service.sampleImageUrl || 'https://via.placeholder.com/65x45'} className="w-100 h-100 object-fit-cover" />
-                      </div>
-                      <div>
-                        <div className="fw-bold text-white small mb-1">{service.title}</div>
-                        <div className="d-flex align-items-center gap-2">
-                            <Badge bg="info" className="text-dark fw-bold" style={{fontSize: '9px'}}>{service.category}</Badge>
-                            <span className="x-small text-white opacity-50"><User size={10}/> {service.studentName || "N/A"}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </td>
-                  <td>
-                    <div className="text-warning fw-bold small"><DollarSign size={12}/>{service.price?.toLocaleString()}đ</div>
-                    <div className="text-white opacity-50 x-small"><Clock size={10}/> {service.deliveryDays} ngày bàn giao</div>
-                  </td>
-                  <td>
-                    {renderStatusBadge(service.status)}
-                  </td>
-                  <td className="text-end pe-4">
-                    <div className="d-flex justify-content-end gap-2">
-                      <button className="adm-btn-action text-info bg-white bg-opacity-10 p-2 rounded" title="Xem chi tiết" onClick={() => handleViewDetail(service)}>
-                        <Eye size={18}/>
-                      </button>
-                      
-                      {service.status !== 'ACTIVE' && (
-                        <button className="adm-btn-action text-success bg-white bg-opacity-10 p-2 rounded" title="Phê duyệt mở bán" onClick={() => handleUpdateStatus(service.serviceId, 'ACTIVE')}>
-                           <CheckCircle size={18}/>
-                        </button>
-                      )}
+      {/* Services List */}
+      {loading ? (
+        <div className="svc-loading">
+          <Loader2 className="spinner" size={40} />
+          <span>Đang tải...</span>
+        </div>
+      ) : filteredServices.length === 0 ? (
+        <div className="svc-empty">
+          <Search size={48} />
+          <p>Không tìm thấy dịch vụ nào</p>
+        </div>
+      ) : (
+        <div className="svc-list">
+          {filteredServices.map((service) => (
+            <div key={service.serviceId} className="svc-card">
+              {/* Thumbnail */}
+              <div className="svc-card-thumb">
+                <img 
+                  src={service.sampleImageUrl || 'https://via.placeholder.com/120x80'} 
+                  alt={service.title}
+                  onError={(e) => e.target.src = 'https://via.placeholder.com/120x80'}
+                />
+              </div>
 
-                      {service.status === 'ACTIVE' && (
-                        <button className="adm-btn-action text-danger bg-white bg-opacity-10 p-2 rounded" title="Khóa dịch vụ" onClick={() => handleUpdateStatus(service.serviceId, 'BLOCKED')}>
-                           <Lock size={18}/>
-                        </button>
-                      )}
+              {/* Content */}
+              <div className="svc-card-content">
+                <div className="svc-card-header">
+                  <h4 className="svc-card-title">{service.title}</h4>
+                  <div className="svc-card-meta">
+                    <span className="svc-meta-tag svc-meta-category">
+                      {service.category}
+                    </span>
+                    <span className="svc-meta-tag svc-meta-author">
+                      <User size={12} />
+                      {service.studentName || "N/A"}
+                    </span>
+                  </div>
+                </div>
+              </div>
 
-                      {service.status !== 'DELETED' && (
-                        <button className="adm-btn-action text-white opacity-50 bg-white bg-opacity-10 p-2 rounded" title="Xóa dịch vụ" onClick={() => handleUpdateStatus(service.serviceId, 'DELETED')}>
-                           <Trash2 size={18}/>
-                        </button>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </Table>
-        )}
-      </div>
+              {/* Price */}
+              <div className="svc-card-price">
+                <div className="svc-price-main">
+                  <DollarSign size={14} />
+                  <span>{service.price?.toLocaleString()}đ</span>
+                </div>
+                <div className="svc-price-delivery">
+                  <Clock size={12} />
+                  <span>{service.deliveryDays} ngày bàn giao</span>
+                </div>
+              </div>
 
-      {/* MODAL CHI TIẾT DỊCH VỤ */}
-      <Modal show={showDetailModal} onHide={() => setShowDetailModal(false)} size="lg" centered dialogClassName="modal-dark">
-        <Modal.Header closeButton className="border-bottom border-white-10">
-          <Modal.Title className="fw-bold">
-            <Eye size={20} className="me-2 text-info" />
-            Chi tiết dịch vụ <span className="text-primary-glow">#{selectedService?.serviceId?.substring(0, 8)}</span>
-          </Modal.Title>
+              {/* Status */}
+              <div className="svc-card-status">
+                {renderStatusBadge(service.status)}
+              </div>
+
+              {/* Actions */}
+              <div className="svc-card-actions">
+                <button 
+                  className="svc-action-btn svc-action-view" 
+                  title="Xem chi tiết" 
+                  onClick={() => handleViewDetail(service)}
+                >
+                  <Eye size={16} />
+                </button>
+                
+                {service.status !== 'ACTIVE' && (
+                  <button 
+                    className="svc-action-btn svc-action-approve" 
+                    title="Phê duyệt" 
+                    onClick={() => handleUpdateStatus(service.serviceId, 'ACTIVE')}
+                  >
+                    <CheckCircle size={16} />
+                  </button>
+                )}
+
+                {service.status === 'ACTIVE' && (
+                  <button 
+                    className="svc-action-btn svc-action-block" 
+                    title="Khóa dịch vụ" 
+                    onClick={() => handleUpdateStatus(service.serviceId, 'BLOCKED')}
+                  >
+                    <Lock size={16} />
+                  </button>
+                )}
+
+                {service.status !== 'DELETED' && (
+                  <button 
+                    className="svc-action-btn svc-action-delete" 
+                    title="Xóa" 
+                    onClick={() => handleUpdateStatus(service.serviceId, 'DELETED')}
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* MODAL CHI TIẾT */}
+      <Modal show={showDetailModal} onHide={() => setShowDetailModal(false)} size="lg" centered className="svc-detail-modal">
+        <Modal.Header className="svc-modal-header">
+          <div className="d-flex align-items-center gap-2">
+            <div className="svc-modal-icon">
+              <Eye size={18} />
+            </div>
+            <div>
+              <h5 className="mb-0 fw-bold">Chi tiết dịch vụ</h5>
+              <span className="x-small text-white-50">#{selectedService?.serviceId?.substring(0, 8)}</span>
+            </div>
+          </div>
+          <button className="svc-modal-close" onClick={() => setShowDetailModal(false)}>
+            <X size={20} />
+          </button>
         </Modal.Header>
-        <Modal.Body className="bg-dark">
+        <Modal.Body className="svc-modal-body">
           {selectedService && (
             <div>
-              <h5 className="text-white fw-bold mb-4">{selectedService.title}</h5>
+              <h4 className="text-white fw-bold mb-3">{selectedService.title}</h4>
               
               {selectedService.sampleImageUrl && (
-                <div className="mb-4 rounded-4 overflow-hidden border border-white border-opacity-10" style={{maxHeight: '300px'}}>
-                  <img src={selectedService.sampleImageUrl} alt="Sample" className="w-100 h-100 object-fit-cover" />
+                <div className="svc-modal-image mb-4">
+                  <img src={selectedService.sampleImageUrl} alt="Sample" />
                 </div>
               )}
 
-              <Row className="g-3 mb-4">
-                <Col md={4}>
-                  <div className="glass-card p-3">
-                    <div className="x-small text-white-50 uppercase-tracking mb-1"><User size={12} className="me-1"/> Sinh viên</div>
-                    <div className="fw-bold text-white">{selectedService.studentName || 'N/A'}</div>
+              <div className="svc-modal-stats mb-4">
+                <div className="svc-modal-stat">
+                  <User size={16} />
+                  <div>
+                    <span className="svc-modal-stat-label">Sinh viên</span>
+                    <span className="svc-modal-stat-value">{selectedService.studentName || 'N/A'}</span>
                   </div>
-                </Col>
-                <Col md={4}>
-                  <div className="glass-card p-3">
-                    <div className="x-small text-white-50 uppercase-tracking mb-1"><DollarSign size={12} className="me-1"/> Giá</div>
-                    <div className="fw-bold text-warning">{selectedService.price?.toLocaleString('vi-VN')} VND</div>
+                </div>
+                <div className="svc-modal-stat">
+                  <DollarSign size={16} />
+                  <div>
+                    <span className="svc-modal-stat-label">Giá</span>
+                    <span className="svc-modal-stat-value text-warning">{selectedService.price?.toLocaleString('vi-VN')}đ</span>
                   </div>
-                </Col>
-                <Col md={4}>
-                  <div className="glass-card p-3">
-                    <div className="x-small text-white-50 uppercase-tracking mb-1"><Clock size={12} className="me-1"/> Thời gian giao</div>
-                    <div className="fw-bold text-white">{selectedService.deliveryDays} ngày</div>
+                </div>
+                <div className="svc-modal-stat">
+                  <Clock size={16} />
+                  <div>
+                    <span className="svc-modal-stat-label">Thời gian giao</span>
+                    <span className="svc-modal-stat-value">{selectedService.deliveryDays} ngày</span>
                   </div>
-                </Col>
-                <Col md={4}>
-                  <div className="glass-card p-3">
-                    <div className="x-small text-white-50 uppercase-tracking mb-1">Danh mục</div>
-                    <div className="fw-bold text-info">{selectedService.category || 'N/A'}</div>
+                </div>
+                <div className="svc-modal-stat">
+                  <Star size={16} />
+                  <div>
+                    <span className="svc-modal-stat-label">Danh mục</span>
+                    <span className="svc-modal-stat-value text-info">{selectedService.category || 'N/A'}</span>
                   </div>
-                </Col>
-                <Col md={4}>
-                  <div className="glass-card p-3">
-                    <div className="x-small text-white-50 uppercase-tracking mb-1">Trạng thái</div>
-                    {renderStatusBadge(selectedService.status)}
-                  </div>
-                </Col>
-              </Row>
+                </div>
+              </div>
 
               {selectedService.description && (
-                <div className="glass-card p-4 mb-3">
-                  <h6 className="text-primary-glow fw-bold mb-2"><FileText size={14} className="me-1"/> Mô tả chi tiết</h6>
-                  <p className="text-white-80 mb-0" style={{whiteSpace: 'pre-line'}}>{selectedService.description}</p>
-                </div>
-              )}
-              {selectedService.features && (
-                <div className="glass-card p-4 mb-3">
-                  <h6 className="text-primary-glow fw-bold mb-2"><ListChecks size={14} className="me-1"/> Tính năng đi kèm</h6>
-                  <p className="text-white-80 mb-0" style={{whiteSpace: 'pre-line'}}>{selectedService.features}</p>
+                <div className="svc-modal-section">
+                  <h6 className="svc-modal-section-title">
+                    <FileText size={14} /> Mô tả chi tiết
+                  </h6>
+                  <p className="svc-modal-section-content">{selectedService.description}</p>
                 </div>
               )}
 
-              <div className="d-flex justify-content-end mt-4 pt-3 border-top border-white-10 gap-2">
+              {selectedService.features && (
+                <div className="svc-modal-section">
+                  <h6 className="svc-modal-section-title">
+                    <ListChecks size={14} /> Tính năng đi kèm
+                  </h6>
+                  <p className="svc-modal-section-content">{selectedService.features}</p>
+                </div>
+              )}
+
+              <div className="svc-modal-actions">
                 {selectedService.status !== 'ACTIVE' && (
-                  <button className="btn btn-success fw-bold" onClick={() => { handleUpdateStatus(selectedService.serviceId, 'ACTIVE'); setShowDetailModal(false); }}>
-                    <CheckCircle size={16} className="me-1"/> PHÊ DUYỆT
+                  <button className="svc-modal-btn svc-modal-btn-approve" onClick={() => { handleUpdateStatus(selectedService.serviceId, 'ACTIVE'); setShowDetailModal(false); }}>
+                    <CheckCircle size={16} /> PHÊ DUYỆT
                   </button>
                 )}
                 {selectedService.status === 'ACTIVE' && (
-                  <button className="btn btn-danger fw-bold" onClick={() => { handleUpdateStatus(selectedService.serviceId, 'BLOCKED'); setShowDetailModal(false); }}>
-                    <Lock size={16} className="me-1"/> KHÓA DỊCH VỤ
+                  <button className="svc-modal-btn svc-modal-btn-block" onClick={() => { handleUpdateStatus(selectedService.serviceId, 'BLOCKED'); setShowDetailModal(false); }}>
+                    <Lock size={16} /> KHÓA DỊCH VỤ
                   </button>
                 )}
               </div>

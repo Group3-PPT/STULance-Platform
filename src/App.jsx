@@ -48,6 +48,7 @@ import BusinessProfileSettings from './pages/Business/BusinessProfileSettings';
 import AdminSkillManagement from './pages/Admin/AdminSkillManagement';
 import MyPortfolio from './pages/Lancer/MyPortfolio';
 import ManageStudentServices from './pages/Admin/ManageStudentServices';
+import ManageContracts from './pages/Admin/ManageContracts';
 import ApplyJob from './pages/Lancer/ApplyJob';
 import SignContract from './pages/SignContract';
 import NotFound from './pages/NotFound';
@@ -73,10 +74,21 @@ const MainLayout = () => {
 
 const PaymentReturn = () => {
   const [searchParams] = useSearchParams();
+  const userRole = localStorage.getItem('userRole');
   useEffect(() => {
     const params = Object.fromEntries([...searchParams]);
     paymentService.handleVnpayReturn(params).then(res => {
-      if (res.success) alert("Nạp tiền thành công!");
+      if (res?.success || res?.data?.isGatewaySuccess) {
+        alert("Thanh toán thành công!");
+      }
+      if (userRole === 'ENTERPRISE') {
+        window.location.href = "/manage-jobs";
+      } else if (userRole === 'STUDENT') {
+        window.location.href = "/dashboardlancer";
+      } else {
+        window.location.href = "/payment";
+      }
+    }).catch(() => {
       window.location.href = "/payment";
     });
   }, []);
@@ -96,7 +108,7 @@ const router = createBrowserRouter([
       { path: 'jobs', element: <Jobs /> },
       { path: 'jobs/apply/:jobId', element: <ApplyJob /> },
       { path: 'businesses', element: <Businesses /> },
-      { path: 'find-enterprises', element: <FindEnterprises /> },
+      { path: 'businesses/business-profile/:id', element: <BusinessProfile /> },
       { path: 'businesses/business-profile', element: <BusinessProfile /> },
       { path: 'services-list', element: <ServicesList /> },
       { path: 'services', element: <Services /> },
@@ -106,8 +118,6 @@ const router = createBrowserRouter([
       { path: 'handbook', element: <Handbook /> },
       { path: 'privacy', element: <Privacy /> },
       { path: 'universities', element: <Universities /> },
-      { path: 'contract/:id', element: <Contract /> },
-      { path: 'contract/sign/:id', element: <SignContract /> },
 
       // ===== SINH VIÊN ONLY =====
       {
@@ -119,7 +129,6 @@ const router = createBrowserRouter([
           { path: 'portfolio-manager', element: <MyPortfolio /> },
           { path: 'post-service', element: <PostService /> },
           { path: 'post-service/:id', element: <PostService /> },
-          { path: 'find-students', element: <FindStudents /> },
         ]
       },
 
@@ -133,10 +142,14 @@ const router = createBrowserRouter([
         ]
       },
 
-      // ===== CẦN LOGIN =====
+      // ===== SINH VIÊN + DOANH NGHIỆP =====
       {
         element: <RequireAuth />,
         children: [
+          { path: 'find-students', element: <FindStudents /> },
+          { path: 'find-enterprises', element: <FindEnterprises /> },
+          { path: 'contract/:id', element: <Contract /> },
+          { path: 'contract/sign/:id', element: <SignContract /> },
           { path: 'payment', element: <Payment /> },
           { path: 'payment/return', element: <PaymentReturn /> },
           { path: 'JobPayment', element: <JobPayment /> },
@@ -163,6 +176,7 @@ const router = createBrowserRouter([
           { path: 'report-detail', element: <ManageReportDetail /> },
           { path: 'skills', element: <AdminSkillManagement /> },
           { path: 'student-services', element: <ManageStudentServices /> },
+          { path: 'contracts', element: <ManageContracts /> },
           { path: '*', element: <NotFound /> },
         ]
       }
