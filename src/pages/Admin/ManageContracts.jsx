@@ -167,7 +167,12 @@ const ManageContracts = () => {
             <div className="mb-3 p-3 rounded" style={{ background: 'rgba(255,255,255,0.03)' }}>
               <p className="x-small text-white-50 mb-1">Hợp đồng: <strong className="text-white">{selectedContract?.contractName || selectedContract?.jobTitle}</strong></p>
               <p className="x-small text-white-50 mb-1">Bên thuê: <strong className="text-white">{selectedContract?.enterpriseName}</strong></p>
-              <p className="x-small text-white-50 mb-0">Bên thực hiện: <strong className="text-white">{selectedContract?.studentName}</strong></p>
+              <p className="x-small text-white-50 mb-1">Bên thực hiện: <strong className="text-white">{selectedContract?.studentName}</strong></p>
+              <p className="x-small text-white-50 mb-0">Giá trị: <strong className="text-warning">{formatMoney(selectedContract?.totalBudget || selectedContract?.totalAmount)}</strong></p>
+            </div>
+
+            <div className="mb-3 p-2 rounded x-small" style={{ background: 'rgba(245,158,11,0.06)', border: '1px solid rgba(245,158,11,0.15)', color: '#f59e0b' }}>
+              <strong>Phí nền tảng:</strong> 10% giá trị hợp đồng sẽ được trừ khi hợp đồng hoàn thành.
             </div>
 
             <Form.Group className="mb-3">
@@ -178,31 +183,31 @@ const ManageContracts = () => {
                   className="text-start"
                   onClick={() => setResolveAction('IN_PROGRESS')}
                 >
-                  <RefreshCw size={14} className="me-2" /> Tiếp tục làm việc (IN_PROGRESS)
+                  <RefreshCw size={14} className="me-2" /> Tiếp tục làm việc (IN_PROGRESS) — Hợp đồng được khôi phục, hai bên tiếp tục thực hiện
                 </Button>
                 <Button
                   variant={resolveAction === 'COMPLETED' ? 'success' : 'outline-success'}
                   className="text-start"
                   onClick={() => setResolveAction('COMPLETED')}
                 >
-                  <CheckCircle size={14} className="me-2" /> Hoàn thành & Giải ngân (COMPLETED)
+                  <CheckCircle size={14} className="me-2" /> Hoàn thành & Giải ngân (COMPLETED) — Tiền ký quỹ giải ngân cho Bên B (trừ 10% phí nền tảng)
                 </Button>
                 <Button
                   variant={resolveAction === 'CANCELLED' ? 'danger' : 'outline-danger'}
                   className="text-start"
                   onClick={() => setResolveAction('CANCELLED')}
                 >
-                  <XCircle size={14} className="me-2" /> Hủy & Hoàn tiền (CANCELLED)
+                  <XCircle size={14} className="me-2" /> Hủy & Hoàn tiền (CANCELLED) — Hợp đồng bị hủy, tiền hoàn trả cho Bên A
                 </Button>
               </div>
             </Form.Group>
 
             <Form.Group className="mb-3">
-              <Form.Label className="x-small fw-bold text-white-50">GHI CHÚ</Form.Label>
+              <Form.Label className="x-small fw-bold text-white-50">GHI CHÚ XỬ LÝ *</Form.Label>
               <Form.Control
                 as="textarea"
                 rows={2}
-                placeholder="Lý do xử lý..."
+                placeholder="Nhập lý do xử lý tranh chấp..."
                 className="bg-dark-input text-white border-0"
                 value={resolveNote}
                 onChange={(e) => setResolveNote(e.target.value)}

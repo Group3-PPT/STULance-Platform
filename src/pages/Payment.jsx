@@ -226,6 +226,12 @@ const Payment = () => {
                 Số dư tối thiểu rút: 50.000đ
               </p>
             </div>
+
+            {/* Fee Info */}
+            <div className="glass-card p-3 mt-3" style={{ background: 'rgba(245,158,11,0.05)', border: '1px solid rgba(245,158,11,0.15)' }}>
+              <p className="x-small fw-bold text-warning mb-1">PHÍ NỀN TẢNG</p>
+              <p className="x-small text-white-50 mb-0">Phí quản lý và nền tảng: <strong className="text-warning">10%</strong> giá trị hợp đồng. Áp dụng khi hợp đồng hoàn thành và được nghiệm thu.</p>
+            </div>
           </Col>
 
           <Col lg={8}>

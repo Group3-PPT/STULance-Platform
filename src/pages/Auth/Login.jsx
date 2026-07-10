@@ -5,13 +5,10 @@ import { Mail, Lock, LogIn, ChevronLeft } from 'lucide-react';
 import { authService } from '../../services/authService'; 
 import '../../CSS/Login.css';
 
-
-
 const Login = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
 
-  // ĐƯA HÀM handleLogin VÀO TRONG COMPONENT ĐỂ SỬ DỤNG ĐƯỢC setLoading và navigate
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -20,21 +17,47 @@ const Login = () => {
       const email = e.target.elements.email.value;
       const password = e.target.elements.password.value;
 
-      // 1. GỌI API LOGIN
       const res = await authService.login({ email, password });
-
-      // --- KIỂM TRA DỮ LIỆU ---
-      console.log("Full Response từ Server:", res.data);
-
-      // Thông thường cấu trúc là res.data.data
       const result = res.data.data; 
 
       if (result) {
-        // 1. Lấy token (Đảm bảo lấy đúng tên trường từ Server: có thể là .token hoặc .accessToken)
+        if (result.requiresPolicyAcceptance) {
+          const acceptedPolicies = JSON.parse(localStorage.getItem('acceptedPolicies') || '{}');
+          const pv = result.policyVersion || '';
+          if (acceptedPolicies[pv]) {
+            const tokenToSave = result.accessToken || result.token;
+            const refreshTokenToSave = result.refreshToken;
+            if (tokenToSave) {
+              localStorage.setItem('accessToken', tokenToSave);
+              localStorage.setItem('refreshToken', refreshTokenToSave || '');
+              const roleValue = result.roleId || result.roleName || result.role;
+              localStorage.setItem('userRole', roleValue);
+              window.dispatchEvent(new Event("local-storage-update"));
+              if (roleValue === 'STUDENT' || roleValue === 'odl1dDNm') { navigate('/dashboardlancer'); }
+              else if (roleValue === 'ENTERPRISE' || roleValue === 'Jx7ze2Kd') { navigate('/manage-jobs'); }
+              else if (roleValue === 'ADMIN' || roleValue === 'pPDY5Dnk') { navigate('/admin'); }
+              else { navigate('/'); }
+              return;
+            }
+          }
+
+          sessionStorage.setItem('pendingPolicyEmail', email);
+          sessionStorage.setItem('pendingPolicyPassword', password);
+          sessionStorage.setItem('pendingPolicyVersion', result.policyVersion || '');
+          navigate('/policy', {
+            state: {
+              email,
+              policyVersion: result.policyVersion,
+              policyUrl: result.policyUrl,
+              policyTitle: result.policyTitle
+            }
+          });
+          return;
+        }
+
         const tokenToSave = result.accessToken || result.token;
         const refreshTokenToSave = result.refreshToken;
 
-        // 2. LƯU THÔNG TIN VÀO LOCALSTORAGE (Dùng đúng key 'accessToken')
         localStorage.setItem('accessToken', tokenToSave); 
         localStorage.setItem('refreshToken', refreshTokenToSave || "");
         
@@ -43,10 +66,9 @@ const Login = () => {
 
         window.dispatchEvent(new Event("local-storage-update"));
         
-        // 3. ĐIỀU HƯỚNG
         if (roleValue === 'odl1dDNm' || roleValue === 'STUDENT') { 
           alert("Đăng nhập thành công!");
-          navigate('/dashboardlancer'); // Hoặc trang Portfolio của bạn
+          navigate('/dashboardlancer');
         }
         else if (roleValue === 'Jx7ze2Kd' || roleValue === 'ENTERPRISE') { 
           alert("Đăng nhập thành công! \nChào mừng quý đối tác, Nhà tuyển dụng");
@@ -143,7 +165,7 @@ const Login = () => {
           </div>
 
           <div className="social-login-area text-center">
-            <Button className="btn-google-login w-100 py-2 fw-bold" onClick={() => alert("Đăng nhập Google đang được phát triển. Vui lòng sử dụng email/密码.")}>
+            <Button className="btn-google-login w-100 py-2 fw-bold" onClick={() => alert("Đăng nhập Google đang được phát triển. Vui lòng sử dụng email/mật khẩu.")}>
               <i className="fab fa-google me-2"></i> Google
             </Button>
           </div>

@@ -99,13 +99,14 @@ const ServiceInvoice = () => {
                 <span>Giá dịch vụ</span>
                 <span>{service.price?.toLocaleString()}đ</span>
               </div>
-              <div className="d-flex justify-content-between mb-4 small text-white-50">
-                <span>Phí dịch vụ (5%)</span>
-                <span>{(service.price * 0.05).toLocaleString()}đ</span>
+              <div className="d-flex justify-content-between mb-2 small text-white-50">
+                <span>Phí nền tảng (10%)</span>
+                <span>{(service.price * 0.10).toLocaleString()}đ</span>
               </div>
+              <p className="x-small text-white-50 mb-3" style={{fontSize: '10px'}}>* Phí nền tảng được trừ khi hợp đồng hoàn thành và nghiệm thu.</p>
               <div className="d-flex justify-content-between border-top border-white border-opacity-10 pt-3 mb-5 h4 fw-bold text-primary-glow">
                 <span>Tổng cộng</span>
-                <span>{(service.price * 1.05).toLocaleString()}đ</span>
+                <span>{(service.price * 1.10).toLocaleString()}đ</span>
               </div>
 
               <Button 

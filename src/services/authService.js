@@ -169,6 +169,7 @@ export const authService = {
     register: (data) => api.post('/v1/auth/register', data),
     verifyOtp: (data) => api.post('/v1/auth/verify-otp', data),
     changePassword: (data) => api.post('/v1/auth/change-password', data).then(r => r.data),
+    acceptPolicy: (data) => api.post('/v1/auth/accept-policy', data).then(r => r.data),
 };
 
 window.addEventListener("token-refreshed", () => {

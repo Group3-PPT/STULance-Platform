@@ -212,7 +212,7 @@ const SignContract = () => {
                   id="agree-check"
                   label={
                     <span className="sign-checkbox-label">
-                      Tôi xác nhận đồng ý với các điều khoản hợp đồng và muốn ký kết điện tử.
+                      Tôi xác nhận đã đọc và đồng ý với <Link to={`/contract-terms/${id}`} target="_blank" className="text-primary fw-bold text-decoration-underline">điều khoản hợp đồng</Link> và muốn ký kết điện tử.
                     </span>
                   }
                   checked={isAgreed}

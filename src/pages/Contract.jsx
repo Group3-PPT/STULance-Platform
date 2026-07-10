@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Button, Badge, Spinner, Alert, Form, Tab, Tabs } from 'react-bootstrap';
+import { Container, Row, Col, Button, Badge, Spinner, Alert, Form, Tab, Tabs, Modal } from 'react-bootstrap';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import {
-  ShieldCheck, Printer, Eye, EyeOff, ChevronLeft,
+  ShieldCheck, Printer, Eye, EyeOff, ChevronLeft, Download,
   FileCheck, Lock, Loader2, AlertTriangle, CheckCircle,
   PenTool, XCircle, DollarSign, Upload, MessageSquare,
   Clock, Star, Send, File
@@ -12,6 +12,8 @@ import { contractSignatureService } from '../services/contractsignatureservice';
 import { paymentService } from '../services/paymentservice';
 import { reportService } from '../services/reportService';
 import { authService } from '../services/authService';
+import { enterpriseService } from '../services/enterprise.service';
+import { studentService } from '../services/studentservice';
 import '../CSS/Contract.css';
 
 const Contract = () => {
@@ -22,6 +24,8 @@ const Contract = () => {
   const [showSensitive, setShowSensitive] = useState(false);
 
   const [contract, setContract] = useState(null);
+  const [enterpriseProfile, setEnterpriseProfile] = useState(null);
+  const [studentProfile, setStudentProfile] = useState(null);
   const [signatures, setSignatures] = useState([]);
   const [progress, setProgress] = useState(null);
   const [deliveries, setDeliveries] = useState([]);
@@ -34,6 +38,8 @@ const Contract = () => {
   const [deliveryDesc, setDeliveryDesc] = useState('');
   const [evalRating, setEvalRating] = useState(5);
   const [evalComment, setEvalComment] = useState('');
+  const [showDisputeModal, setShowDisputeModal] = useState(false);
+  const [disputeReason, setDisputeReason] = useState('');
 
   const currentUserRole = localStorage.getItem('userRole');
   const [currentUserId, setCurrentUserId] = useState(() => localStorage.getItem('userId'));
@@ -53,8 +59,21 @@ const Contract = () => {
 
       if (contRes.status === 'fulfilled') {
         const data = contRes.value.data;
-        console.log("Contract data:", data);
         setContract(data);
+
+        const isEnterprise = currentUserRole === 'ENTERPRISE';
+        if (isEnterprise) {
+          enterpriseService.getMe().then(res => {
+            setEnterpriseProfile(res?.data || res);
+          }).catch(() => {});
+        } else {
+          studentService.getProfile().then(res => {
+            setStudentProfile(res?.data || res);
+          }).catch(() => {});
+          enterpriseService.getPublicProfile(data.enterpriseId || data.clientUserId).then(p => {
+            setEnterpriseProfile(p);
+          }).catch(() => {});
+        }
       }
       if (sigRes.status === 'fulfilled') {
         const sigData = sigRes.value.data;
@@ -115,21 +134,24 @@ const Contract = () => {
     }
   };
 
-  const handleAction = async (actionType) => {
+  const handleAction = async (actionType, disputeReasonText) => {
     let confirmMsg = "";
     if (actionType === 'complete') confirmMsg = "Xác nhận hoàn thành dự án và giải ngân tiền cho sinh viên?";
     if (actionType === 'cancel') confirmMsg = "Bạn muốn yêu cầu hủy hợp đồng này?";
-    if (actionType === 'dispute') confirmMsg = "Bạn muốn gửi yêu cầu khiếu nại/tranh chấp?";
     if (actionType === 'approveCancel') confirmMsg = "Bạn đồng ý hủy hợp đồng này?";
     if (actionType === 'rejectCancel') confirmMsg = "Từ chối yêu cầu hủy? Hợp đồng sẽ tiếp tục.";
 
-    if (!window.confirm(confirmMsg)) return;
+    if (actionType !== 'dispute' && !window.confirm(confirmMsg)) return;
 
     setIsSaving(true);
     try {
       if (actionType === 'complete') await contractService.completeContract(id);
       if (actionType === 'cancel') await contractService.cancelContract(id);
-      if (actionType === 'dispute') await contractService.disputeContract(id);
+      if (actionType === 'dispute') {
+        await contractService.disputeContract(id, { reason: disputeReasonText });
+        setShowDisputeModal(false);
+        setDisputeReason('');
+      }
       if (actionType === 'approveCancel') await contractService.approveCancelContract(id);
       if (actionType === 'rejectCancel') await contractService.rejectCancelContract(id);
       alert("Cập nhật thành công!");
@@ -139,6 +161,47 @@ const Contract = () => {
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const handleDownload = () => {
+    const el = document.getElementById('cv-print');
+    if (!el) return;
+    const htmlContent = `<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><title>Hợp đồng ${contract?.contractId?.substring(0,8) || ''}</title>
+<style>
+body{font-family:'Times New Roman',serif;margin:40px;color:#000;font-size:13px;line-height:1.6;}
+h5,h6{margin:8px 0;}
+.border-bottom{border-bottom:1px solid #000;}
+.border-dark{border-color:#000!important;}
+.text-center{text-align:center;}
+.fw-bold{font-weight:700;}
+.mb-0{margin-bottom:0;}
+.mb-1{margin-bottom:4px;}
+.mb-2{margin-bottom:8px;}
+.mb-3{margin-bottom:12px;}
+.mb-4{margin-bottom:16px;}
+.mt-3{margin-top:12px;}
+.mt-5{margin-top:20px;}
+.pt-5{padding-top:20px;}
+.pb-3{padding-bottom:12px;}
+.ps-2{padding-left:8px;}
+.italic{font-style:italic;}
+.d-flex{display:flex;justify-content:space-around;}
+.sig-block{text-align:center;width:45%;}
+.stamp-box{border:2px solid #000;padding:10px 20px;display:inline-block;margin:8px 0;}
+.party-info p{margin:2px 0;font-size:12px;}
+.details-section p{margin:3px 0;font-size:12px;}
+.details-section h6{font-size:12px;margin:12px 0 4px;}
+</style></head><body>${el.innerHTML}</body></html>`;
+    const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `HopDong_${contract?.contractId?.substring(0,8) || 'contract'}.html`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   };
 
   const handleReport = async () => {
@@ -246,6 +309,7 @@ const Contract = () => {
             <Button variant="outline-light" size="sm" onClick={() => setShowSensitive(!showSensitive)}>
               {showSensitive ? <><EyeOff size={16} className="me-2" />Ẩn</> : <><Eye size={16} className="me-2" />Hiện</>}
             </Button>
+            <Button variant="outline-primary" size="sm" onClick={handleDownload}><Download size={16} className="me-2" />Tải về</Button>
             <Button variant="primary" size="sm" onClick={() => window.print()}><Printer size={16} className="me-2" />In file</Button>
           </div>
         </div>
@@ -267,32 +331,39 @@ const Contract = () => {
                 <p className="mb-3 italic" style={{fontSize: '11.5px'}}>Căn cứ vào nội dung {contract.bidId ? 'Đấu thầu dự án' : 'Đơn đặt hàng dịch vụ'} trên sàn StudentLance, hai bên đồng ý ký kết hợp đồng với các điều khoản sau:</p>
 
                 <div className="party-info mb-3">
-                  <p className="fw-bold mb-1 text-primary" style={{fontSize: '12px'}}>BÊN THUÊ (BÊN A): {contract.enterpriseName || contract.clientName}</p>
-                  <p className="mb-0" style={{fontSize: '11px'}}>Đại diện: {contract.representName || 'N/A'}</p>
-                  <p className="mb-0" style={{fontSize: '11px'}}>Địa chỉ: {maskInfo(contract.address)}</p>
+                  <p className="fw-bold mb-1 text-primary" style={{fontSize: '12px'}}>BÊN THUÊ (BÊN A): {contract.enterpriseName || contract.clientName || enterpriseProfile?.companyName || 'N/A'}</p>
+                  <p className="mb-0" style={{fontSize: '11px'}}>Đại diện: {contract.representName || enterpriseProfile?.representName || 'N/A'}</p>
+                  <p className="mb-0" style={{fontSize: '11px'}}>Mã số thuế: {maskInfo(contract.taxCode || contract.companyTaxCode || enterpriseProfile?.companyTaxCode || enterpriseProfile?.taxCode)}</p>
+                  <p className="mb-0" style={{fontSize: '11px'}}>Địa chỉ: {maskInfo(contract.address || enterpriseProfile?.address) || 'Chưa cập nhật'}</p>
                 </div>
 
                 <div className="party-info mb-3">
-                  <p className="fw-bold mb-1 text-primary" style={{fontSize: '12px'}}>BÊN THỰC HIỆN (BÊN B): {contract.studentName}</p>
-                  <p className="mb-0" style={{fontSize: '11px'}}>MSSV: {contract.studentCode}</p>
-                  <p className="mb-0" style={{fontSize: '11px'}}>Số CCCD: {maskInfo(contract.citizenId)}</p>
+                  <p className="fw-bold mb-1 text-primary" style={{fontSize: '12px'}}>BÊN THỰC HIỆN (BÊN B): {contract.studentName || contract.providerName || studentProfile?.fullName || 'N/A'}</p>
+                  <p className="mb-0" style={{fontSize: '11px'}}>Số CCCD: {maskInfo(contract.citizenId || contract.studentCitizenId || studentProfile?.citizenId) || (isClient ? 'Chưa cập nhật' : '')}</p>
+                  <p className="mb-0" style={{fontSize: '11px'}}>Số điện thoại: {maskInfo(contract.studentPhone || contract.phone || studentProfile?.phone || studentProfile?.phoneNumber) || (isClient ? 'Chưa cập nhật' : '')}</p>
                 </div>
 
                 <div className="details-section">
                   {/* ĐIỀU 1: NỘI DUNG CÔNG VIỆC */}
                   <h6 className="fw-bold border-bottom pb-1" style={{fontSize: '12px'}}>ĐIỀU 1: NỘI DUNG CÔNG VIỆC</h6>
-                  <p className="ps-2 mb-1" style={{fontSize: '11.5px'}}>1.1. Bên B cam kết thực hiện công việc theo đúng mô tả và yêu cầu đã được hai bên thống nhất trên hệ thống StudentLance.</p>
+                  <p className="ps-2 mb-1" style={{fontSize: '11.5px'}}>1.1. Bên B cam kết thực hiện công việc theo đúng mô tả và yêu cầu đã được hai bên thống nhất trên hệ thống STULance.</p>
                   <p className="ps-2 mb-1" style={{fontSize: '11.5px'}}>1.2. Nội dung công việc cụ thể: <strong>{contract.description || "Thực hiện sản phẩm theo thỏa thuận đã thống nhất trên hệ thống."}</strong></p>
                   <p className="ps-2 mb-1" style={{fontSize: '11.5px'}}>1.3. Bên B phải tuân thủ các tiêu chuẩn chất lượng và thời hạn đã cam kết. Trong trường hợp phát sinh thay đổi, hai bên phải thỏa thuận lại bằng văn bản qua hệ thống.</p>
-                  <p className="ps-2 mb-2" style={{fontSize: '11.5px'}}>1.4. Mọi yêu cầu thay đổi超出 phạm vi hợp đồng ban đầu sẽ được xem xét và thương lượng lại về chi phí và thời gian.</p>
+                  <p className="ps-2 mb-2" style={{fontSize: '11.5px'}}>1.4. Mọi yêu cầu thay đổi ngoài phạm vi hợp đồng ban đầu sẽ được xem xét và thương lượng lại về chi phí và thời gian.</p>
 
                   {/* ĐIỀU 2: GIÁ TRỊ & THANH TOÁN */}
                   <h6 className="fw-bold border-bottom pb-1 mt-3" style={{fontSize: '12px'}}>ĐIỀU 2: GIÁ TRỊ & THANH TOÁN</h6>
                   <p className="ps-2 mb-1" style={{fontSize: '11.5px'}}>2.1. Tổng giá trị hợp đồng: <strong style={{color: '#b91c1c', fontSize: '13px'}}>{formatMoney(contractAmount)}</strong></p>
-                  <p className="ps-2 mb-1" style={{fontSize: '11.5px'}}>2.2. Hình thức thanh toán: Thanh toán qua hệ thống Escrow của StudentLance.</p>
+                  <p className="ps-2 mb-1" style={{fontSize: '11.5px'}}>2.2. Hình thức thanh toán: Thanh toán qua hệ thống Escrow của STULance.</p>
                   <p className="ps-2 mb-1" style={{fontSize: '11.5px'}}>2.3. Bên A cam kết nạp tiền ký quỹ vào hệ thống trước khi hợp đồng có hiệu lực. Số tiền sẽ được giải ngân cho Bên B khi Bên A xác nhận hoàn thành và chấp nhận bản giao.</p>
-                  <p className="ps-2 mb-1" style={{fontSize: '11.5px'}}>2.4. Trường hợp hủy hợp đồng: Tiền sẽ được hoàn trả theo chính sách Escrow của StudentLance (xem Điều 7).</p>
-                  <p className="ps-2 mb-2" style={{ color: '#888', fontSize: '10.5px' }}>* Mọi giao dịch đều được ghi nhận và bảo mật bởi hệ thống. StudentLance không chịu trách nhiệm cho các giao dịch ngoài hệ thống.</p>
+                  <p className="ps-2 mb-1 p-2 rounded" style={{fontSize: '11.5px', background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.2)'}}>
+                    <strong>2.4. Phí nền tảng & quản lý: 10% giá trị hợp đồng</strong> ({formatMoney(contractAmount * 0.1)}).<br/>
+                    - Phí được trừ tự động khi hợp đồng hoàn thành và bên A xác nhận nghiệm thu.<br/>
+                    - Bên B nhận: <strong style={{color:'#22c55e'}}>{formatMoney(contractAmount * 0.9)}</strong> (sau khi trừ phí nền tảng).<br/>
+                    - Phí nền tảng bao gồm: phí quản lý giao dịch, phí bảo mật Escrow, phí hỗ trợ tranh chấp và vận hành hệ thống.
+                  </p>
+                  <p className="ps-2 mb-1" style={{fontSize: '11.5px'}}>2.5. Trường hợp hủy hợp đồng: Tiền sẽ được hoàn trả theo chính sách Escrow của STULance (xem Điều 7).</p>
+                  <p className="ps-2 mb-2" style={{ color: '#888', fontSize: '10.5px' }}>* Mọi giao dịch đều được ghi nhận và bảo mật bởi hệ thống. STULance không chịu trách nhiệm cho các giao dịch ngoài hệ thống.</p>
 
                   {/* ĐIỀU 3: THỜI HẠN THỰC HIỆN */}
                   <h6 className="fw-bold border-bottom pb-1 mt-3" style={{fontSize: '12px'}}>ĐIỀU 3: THỜI HẠN THỰC HIỆN</h6>
@@ -318,25 +389,38 @@ const Contract = () => {
                   <p className="ps-2 mb-1" style={{fontSize: '11.5px'}}>5.2. Mọi sản phẩm, mã nguồn, thiết kế và tài liệu được tạo ra trong quá trình thực hiện hợp đồng thuộc quyền sở hữu của Bên A sau khi thanh toán đầy đủ.</p>
                   <p className="ps-2 mb-2" style={{fontSize: '11.5px'}}>5.3. Bên B không được sử dụng hoặc tiết lộ thông tin dự án cho bất kỳ bên thứ ba nào nếu không có sự đồng ý bằng văn bản của Bên A.</p>
 
-                  {/* ĐIỀU 6: TRÁCH NHIỆM PHÁP LÝ */}
-                  <h6 className="fw-bold border-bottom pb-1 mt-3" style={{fontSize: '12px'}}>ĐIỀU 6: TRÁCH NHIỆM PHÁP LÝ</h6>
-                  <p className="ps-2 mb-1" style={{fontSize: '11.5px'}}>6.1. Mỗi bên chịu trách nhiệm pháp lý độc lập về các hành động và cam kết của mình trong phạm vi hợp đồng này.</p>
-                  <p className="ps-2 mb-1" style={{fontSize: '11.5px'}}>6.2. StudentLance chỉ đóng vai trò trung gian kết nối và quản lý giao dịch, không chịu trách nhiệm về chất lượng sản phẩm hay tranh chấp giữa các bên.</p>
-                  <p className="ps-2 mb-2" style={{fontSize: '11.5px'}}>6.3. Các bên cam kết tuân thủ pháp luật Việt Nam và các quy định của StudentLance.</p>
+                  {/* ĐIỀU 6: TRÁCH NHIỆM CỦA STULANCE */}
+                  <h6 className="fw-bold border-bottom pb-1 mt-3" style={{fontSize: '12px'}}>ĐIỀU 6: TRÁCH NHIỆM CỦA STULANCE</h6>
+                  <p className="ps-2 mb-1" style={{fontSize: '11.5px'}}>6.1. STULance đóng vai trò trung gian kết nối và quản lý giao dịch giữa hai bên.</p>
+                  <p className="ps-2 mb-1" style={{fontSize: '11.5px'}}>6.2. STULance quản lý quỹ ký quỹ (Escrow), đảm bảo tiền được giữ an toàn và giải ngân đúng quy định.</p>
+                  <p className="ps-2 mb-1" style={{fontSize: '11.5px'}}>6.3. STULance tiếp nhận và xử lý các tranh chấp (dispute) theo quy trình: khi có yêu cầu từ một trong hai bên, STULance sẽ xem xét bằng chứng và lịch sử giao dịch trên hệ thống để đưa ra quyết định công bằng.</p>
+                  <p className="ps-2 mb-1" style={{fontSize: '11.5px'}}>6.4. Quyết định của STULance là quyết định cuối cùng (chung thẩm). Các bên cam kết chấp hành.</p>
+                  <p className="ps-2 mb-2" style={{fontSize: '11.5px'}}>6.5. STULance không chịu trách nhiệm về chất lượng sản phẩm, hiệu suất công việc hay các thỏa thuận ngoài hệ thống giữa các bên.</p>
 
                   {/* ĐIỀU 7: GIẢI QUYẾT TRANH CHẤP */}
                   <h6 className="fw-bold border-bottom pb-1 mt-3" style={{fontSize: '12px'}}>ĐIỀU 7: GIẢI QUYẾT TRANH CHẤP</h6>
-                  <p className="ps-2 mb-1" style={{fontSize: '11.5px'}}>7.1. Mọi tranh chấp phát sinh sẽ được giải quyết thông qua thương lượng trên hệ thống trong vòng <strong>7 ngày</strong>.</p>
-                  <p className="ps-2 mb-1" style={{fontSize: '11.5px'}}>7.2. Nếu không đạt được thỏa thuận, một trong hai bên có thể gửi yêu cầu khiếu nại lên hệ thống để StudentLance xử lý.</p>
-                  <p className="ps-2 mb-1" style={{fontSize: '11.5px'}}>7.3. StudentLance có quyền đưa ra quyết định cuối cùng dựa trên bằng chứng và lịch sử giao dịch trên hệ thống.</p>
-                  <p className="ps-2 mb-2" style={{fontSize: '11.5px'}}>7.4. Quyết định của StudentLance là quyết định chung thẩm và các bên cam kết chấp hành.</p>
+                  <p className="ps-2 mb-1" style={{fontSize: '11.5px'}}>7.1. <strong>Thương lượng:</strong> Mọi tranh chấp trước hết phải được giải quyết thông qua thương lượng trực tiếp trên hệ thống trong vòng <strong>7 ngày</strong>.</p>
+                  <p className="ps-2 mb-1 p-2 rounded" style={{fontSize: '11.5px', background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.15)'}}>
+                    <strong>7.2. Tạo tranh chấp (Dispute):</strong><br/>
+                    - Nếu không đạt được thỏa thuận, một trong hai bên (Bên A hoặc Bên B) có thể yêu cầu tạo tranh chấp trên hệ thống khi hợp đồng đang ở trạng thái <strong>IN_PROGRESS</strong> hoặc <strong>DELIVERED</strong>.<br/>
+                    - Khi tạo tranh chấp, hợp đồng chuyển sang trạng thái <strong>DISPUTED</strong>.<br/>
+                    - Trong thời gian tranh chấp, hợp đồng tạm ngưng các hoạt động khác cho đến khi có quyết định từ STULance.
+                  </p>
+                  <p className="ps-2 mb-1 p-2 rounded" style={{fontSize: '11.5px', background: 'rgba(59,130,246,0.06)', border: '1px solid rgba(59,130,246,0.15)'}}>
+                    <strong>7.3. Xử lý tranh chấp bởi STULance (Admin):</strong><br/>
+                    STULance xem xét bằng chứng và đưa ra một trong ba quyết định:<br/>
+                    - <strong style={{color:'#22c55e'}}>Tiếp tục (IN_PROGRESS):</strong> Hợp đồng được khôi phục, hai bên tiếp tục thực hiện.<br/>
+                    - <strong style={{color:'#3b82f6'}}>Hoàn thành (COMPLETED):</strong> Hợp đồng kết thúc, tiền ký quỹ được giải ngân cho Bên B (trừ 10% phí nền tảng).<br/>
+                    - <strong style={{color:'#ef4444'}}>Hủy bỏ (CANCELLED):</strong> Hợp đồng bị hủy, tiền ký quỹ được hoàn trả cho Bên A theo tỷ lệ thỏa đáng.
+                  </p>
+                  <p className="ps-2 mb-2" style={{fontSize: '11.5px'}}>7.4. Quyết định xử lý tranh chấp của STULance là quyết định chung thẩm và có hiệu lực ngay lập tức.</p>
 
                   {/* ĐIỀU 8: ĐIỀU KHOẢN CHUNG */}
                   <h6 className="fw-bold border-bottom pb-1 mt-3" style={{fontSize: '12px'}}>ĐIỀU 8: ĐIỀU KHOẢN CHUNG</h6>
-                  <p className="ps-2 mb-1" style={{fontSize: '11.5px'}}>8.1. Hợp đồng này có hiệu lực kể từ khi cả hai bên đã ký kết trên hệ thống StudentLance.</p>
+                  <p className="ps-2 mb-1" style={{fontSize: '11.5px'}}>8.1. Hợp đồng này có hiệu lực kể từ khi cả hai bên đã ký kết trên hệ thống STULance.</p>
                   <p className="ps-2 mb-1" style={{fontSize: '11.5px'}}>8.2. Mọi sửa đổi, bổ sung hợp đồng phải được thực hiện qua hệ thống và có sự đồng ý của cả hai bên.</p>
                   <p className="ps-2 mb-1" style={{fontSize: '11.5px'}}>8.3. Nếu một điều khoản nào đó của hợp đồng bị coi là vô hiệu, các điều khoản còn lại vẫn có hiệu lực.</p>
-                  <p className="ps-2 mb-2" style={{fontSize: '11.5px'}}>8.4. Hợp đồng này được quản lý và lưu trữ trên hệ thống StudentLance, có giá trị pháp lý theo quy định hiện hành.</p>
+                  <p className="ps-2 mb-2" style={{fontSize: '11.5px'}}>8.4. Hợp đồng này được quản lý và lưu trữ trên hệ thống STULance, có giá trị pháp lý theo quy định hiện hành.</p>
                 </div>
 
                 <div className="signature-area mt-5 pt-5 d-flex justify-content-around text-center">
@@ -387,6 +471,24 @@ const Contract = () => {
                   <p className="x-small text-white-50">Cập nhật: {new Date(contract.updatedAt).toLocaleString()}</p>
                 </div>
 
+                {contract.status === 'DISPUTED' && (
+                  <div className="mb-4 p-3 rounded" style={{background:'rgba(239,68,68,0.08)', border:'1px solid rgba(239,68,68,0.2)'}}>
+                    <div className="d-flex align-items-center gap-2 mb-2">
+                      <AlertTriangle size={14} className="text-danger" />
+                      <span className="x-small fw-bold text-danger">TRẠNG THÁI TRANH CHẤP</span>
+                    </div>
+                    {contract.disputeReason && (
+                      <p className="x-small text-white mb-1"><strong>Lý do:</strong> {contract.disputeReason}</p>
+                    )}
+                    {contract.disputedByUserId && (
+                      <p className="x-small text-white-50 mb-1">Người tạo: {contract.disputedByUserId === currentUserId ? 'Bạn' : 'Đối tác'}</p>
+                    )}
+                    {contract.disputedAt && (
+                      <p className="x-small text-white-50 mb-0">Thời gian: {new Date(contract.disputedAt).toLocaleString('vi-VN')}</p>
+                    )}
+                  </div>
+                )}
+
                 {isLocked && (
                   <Alert variant="info" className="bg-primary bg-opacity-10 border-0 text-white x-small mb-4">
                     <Lock size={14} className="me-2" /> Nội dung đã khóa.
@@ -424,6 +526,18 @@ const Contract = () => {
                     </Button>
                   )}
 
+                  {(contract.status === 'IN_PROGRESS' || contract.status === 'DELIVERED') && (
+                    <Button onClick={() => setShowDisputeModal(true)} variant="danger" className="py-2 x-small fw-bold">
+                      <AlertTriangle size={14} className="me-2" /> TẠO TRANH CHẤP
+                    </Button>
+                  )}
+
+                  {contract.status === 'DISPUTED' && (
+                    <Alert variant="danger" className="text-center x-small fw-bold mb-0 py-3">
+                      <AlertTriangle size={16} className="me-2" /> Hợp đồng đang tranh chấp — Chờ Admin xử lý
+                    </Alert>
+                  )}
+
                   {contract.status === 'CANCEL_REQUESTED' && (
                     <div className="d-grid gap-2">
                       <Button onClick={() => handleAction('approveCancel')} variant="danger" className="py-2 fw-bold" disabled={isSaving}>
@@ -450,10 +564,13 @@ const Contract = () => {
 
                 <div className="mt-4 p-3 rounded" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
                   <div className="d-flex align-items-center gap-2 text-warning mb-2">
-                    <ShieldCheck size={16} /> <span className="x-small fw-bold">BẢO VỆ STUDENTLANCE</span>
+                    <ShieldCheck size={16} /> <span className="x-small fw-bold">BẢO VỆ STULANCE</span>
                   </div>
-                  <p className="x-small text-white-50 mb-0" style={{ fontStyle: 'italic' }}>
+                  <p className="x-small text-white-50 mb-1" style={{ fontStyle: 'italic' }}>
                     Mọi thay đổi sau khi ký đều được lưu vết. Escrow đảm bảo an toàn dòng tiền.
+                  </p>
+                  <p className="x-small text-white-50 mb-0" style={{ fontStyle: 'italic' }}>
+                    Phí nền tảng: <strong className="text-warning">10%</strong> giá trị hợp đồng. Nếu có tranh chấp, Admin sẽ đưa ra quyết định cuối cùng.
                   </p>
                 </div>
               </div>
@@ -572,6 +689,47 @@ const Contract = () => {
           </Col>
         </Row>
       </Container>
+
+      {/* DISPUTE MODAL */}
+      <Modal show={showDisputeModal} onHide={() => setShowDisputeModal(false)} centered dialogClassName="modal-dark">
+        <Modal.Header closeButton className="border-0 pb-0">
+          <Modal.Title className="fw-bold d-flex align-items-center gap-2">
+            <div style={{background:'rgba(239,68,68,0.1)', color:'#ef4444', width:40, height:40, borderRadius:12, display:'flex', alignItems:'center', justifyContent:'center'}}>
+              <AlertTriangle size={18} />
+            </div>
+            <div>
+              <span className="text-white">Tạo tranh chấp</span>
+              <p className="x-small text-white-50 mb-0">Hợp đồng sẽ chuyển sang trạng thái DISPUTED</p>
+            </div>
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body className="pt-3">
+          <div className="mb-3 p-3 rounded" style={{background:'rgba(239,68,68,0.06)', border:'1px solid rgba(239,68,68,0.15)'}}>
+            <p className="x-small text-white-50 mb-1">Hợp đồng: <strong className="text-white">{contract?.jobTitle || contract?.contractName}</strong></p>
+            <p className="x-small text-white-50 mb-0">Giá trị: <strong className="text-warning">{formatMoney(contractAmount)}</strong></p>
+          </div>
+
+          <Form.Group className="mb-3">
+            <Form.Label className="x-small fw-bold text-white-50">LÝ DO TRANH CHẤP *</Form.Label>
+            <Form.Control
+              as="textarea"
+              rows={4}
+              placeholder="Mô tả chi tiết lý do bạn tạo tranh chấp (tối đa 1000 ký tự)..."
+              className="bg-dark-input text-white border-0"
+              value={disputeReason}
+              maxLength={1000}
+              onChange={(e) => setDisputeReason(e.target.value)}
+            />
+            <p className="x-small text-white-50 mt-1 mb-0">{disputeReason.length}/1000 ký tự</p>
+          </Form.Group>
+        </Modal.Body>
+        <Modal.Footer className="border-0 pt-0">
+          <Button variant="outline-light" onClick={() => { setShowDisputeModal(false); setDisputeReason(''); }}>Hủy</Button>
+          <Button variant="danger" onClick={() => handleAction('dispute', disputeReason)} disabled={!disputeReason.trim() || isSaving}>
+            {isSaving ? <><Loader2 className="spinner me-1" size={14} /> Đang gửi...</> : <><AlertTriangle size={14} className="me-1" /> Gửi tranh chấp</>}
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </div>
   );
 };

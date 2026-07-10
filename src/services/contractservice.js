@@ -24,7 +24,7 @@ export const contractService = {
     // --- Actions ---
     cancelContract: (contractId) => api.patch(`/v1/contracts/${contractId}/cancel`).then(res => res.data),
     completeContract: (contractId) => api.patch(`/v1/contracts/${contractId}/complete`).then(res => res.data),
-    disputeContract: (contractId) => api.patch(`/v1/contracts/${contractId}/dispute`).then(res => res.data),
+    disputeContract: (contractId, data) => api.patch(`/v1/contracts/${contractId}/dispute`, data).then(res => res.data),
     approveCancelContract: (contractId) => api.patch(`/v1/contracts/${contractId}/approve-cancel`).then(res => res.data),
     rejectCancelContract: (contractId) => api.patch(`/v1/contracts/${contractId}/reject-cancel`).then(res => res.data),
 

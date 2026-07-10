@@ -1,0 +1,14 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /login
+Disallow: /register
+Disallow: /forgot-password
+Disallow: /payment
+Disallow: /service-invoice
+Disallow: /contract/
+Disallow: /contract/sign/
+Disallow: /profile-settings
+Disallow: /cv-maker
+
+Sitemap: https://stulance-platform.vercel.app/sitemap.xml

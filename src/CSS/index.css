@@ -240,3 +240,23 @@ body {
 .modal-dark .modal-header .btn-close {
   filter: invert(1);
 }
+
+/* --- Laptop / Wide Screen Optimizations (1200-1440px) --- */
+@media (min-width: 1200px) and (max-width: 1440px) {
+  .container { max-width: 1140px; }
+  .navbar-custom { padding: 10px 0; }
+  .btn-primary { padding: 10px 28px; }
+}
+
+/* --- Large Desktop (>1440px) --- */
+@media (min-width: 1441px) {
+  .container { max-width: 1320px; }
+}
+
+/* --- Print Styles for SEO / Contract --- */
+@media print {
+  body { background: #fff !important; color: #000 !important; }
+  .navbar-custom, .footer-glass, .chatbox-wrap, .btn, .three-bg-canvas { display: none !important; }
+  main { padding-top: 0 !important; }
+  .glass-card { background: #fff !important; border: 1px solid #ddd !important; backdrop-filter: none !important; }
+}

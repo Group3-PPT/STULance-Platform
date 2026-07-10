@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { authService } from './services/authService';
-import { createBrowserRouter, RouterProvider, Outlet, useSearchParams } from 'react-router-dom';
+import { createBrowserRouter, RouterProvider, Outlet, useSearchParams, useLocation } from 'react-router-dom';
 
 import NavbarComp from './components/NavbarComp';
 import FooterComp from './components/Footer';
@@ -51,11 +51,50 @@ import ManageStudentServices from './pages/Admin/ManageStudentServices';
 import ManageContracts from './pages/Admin/ManageContracts';
 import ApplyJob from './pages/Lancer/ApplyJob';
 import SignContract from './pages/SignContract';
+import ContractTerms from './pages/ContractTerms';
+import Policy from './pages/Policy';
 import NotFound from './pages/NotFound';
 import { paymentService } from './services/paymentservice';
 
+const PAGE_TITLES = {
+  '/': 'Trang chủ',
+  '/login': 'Đăng nhập',
+  '/register': 'Đăng ký',
+  '/forgot-password': 'Quên mật khẩu',
+  '/jobs': 'Việc làm',
+  '/businesses': 'Doanh nghiệp',
+  '/services': 'Dịch vụ',
+  '/services-list': 'Danh sách dịch vụ',
+  '/portfolio': 'Portfolio',
+  '/handbook': 'Cẩm nang',
+  '/privacy': 'Chính sách bảo mật',
+  '/policy': 'Điều khoản sử dụng',
+  '/universities': 'Trường đại học',
+  '/dashboardlancer': 'Bảng điều khiển',
+  '/cv-maker': 'Tạo CV',
+  '/profile-settings': 'Cài đặt hồ sơ',
+  '/portfolio-manager': 'Quản lý Portfolio',
+  '/post-service': 'Đăng dịch vụ',
+  '/post-job': 'Đăng việc',
+  '/manage-jobs': 'Quản lý việc',
+  '/find-students': 'Tìm sinh viên',
+  '/find-enterprises': 'Tìm doanh nghiệp',
+  '/payment': 'Thanh toán',
+  '/service-invoice': 'Hóa đơn dịch vụ',
+};
+
+const useSeo = () => {
+  const location = useLocation();
+  useEffect(() => {
+    const path = location.pathname;
+    const title = PAGE_TITLES[path] || '';
+    document.title = title ? `${title} | STULance` : 'STULance - Kết nối Sinh viên & Doanh nghiệp';
+  }, [location.pathname]);
+};
+
 const MainLayout = () => {
   const [isLoading, setIsLoading] = useState(true);
+  useSeo();
   return (
     <div className="app-wrapper">
       {isLoading && <LoadingScreen onFinished={() => setIsLoading(false)} />}
@@ -117,6 +156,8 @@ const router = createBrowserRouter([
       { path: 'portfolio/:id', element: <Portfolio /> },
       { path: 'handbook', element: <Handbook /> },
       { path: 'privacy', element: <Privacy /> },
+      { path: 'policy', element: <Policy /> },
+      { path: 'contract-terms/:id', element: <ContractTerms /> },
       { path: 'universities', element: <Universities /> },
 
       // ===== SINH VIÊN ONLY =====

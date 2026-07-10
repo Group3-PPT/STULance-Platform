@@ -152,7 +152,17 @@ const handleRegister = async (e) => {
         otpCode: codeString 
       });
       alert("Xác thực thành công!");
-      navigate('/login');
+      sessionStorage.setItem('pendingPolicyEmail', formData.email);
+      sessionStorage.setItem('pendingPolicyPassword', formData.password);
+      navigate('/policy', {
+        state: {
+          email: formData.email,
+          policyVersion: '2026.07.01',
+          policyUrl: '/policy',
+          policyTitle: 'Điều khoản sử dụng và chính sách STULance',
+          fromRegister: true
+        }
+      });
     } catch (error) {
       alert("Mã OTP không chính xác hoặc đã hết hạn.");
     } finally {

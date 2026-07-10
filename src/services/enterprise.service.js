@@ -1,4 +1,5 @@
 import api from './api';
+import axios from 'axios';
 
 export const enterpriseService = {
     // --- DÀNH CHO DOANH NGHIỆP (Self-management) ---
@@ -29,9 +30,17 @@ export const enterpriseService = {
 
     /**
      * Lấy danh sách tất cả doanh nghiệp trên hệ thống (Dùng cho trang chủ/tìm kiếm)
-     * Endpoint: GET /api/v1/enterprises
+     * Endpoint: GET /api/v1/enterprises/public
      */
-    getAllEnterprises: () => api.get('/v1/enterprises').then(res => res.data),
+    getAllEnterprises: () => {
+        const token = localStorage.getItem('accessToken');
+        if (token) {
+            return api.get('/v1/enterprises').then(res => res.data);
+        }
+        return axios.get('/api/v1/enterprises/public', {
+            headers: { 'X-API-KEY': 'STULANCE_SECRET_API_KEY_2026' }
+        }).then(res => res.data);
+    },
 
 
     // --- DÀNH CHO ADMIN (Hệ thống quản trị) ---
