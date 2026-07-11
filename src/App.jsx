@@ -183,12 +183,13 @@ const router = createBrowserRouter([
         ]
       },
 
+      { path: 'find-students', element: <FindStudents /> },
+      { path: 'find-enterprises', element: <FindEnterprises /> },
+
       // ===== SINH VIÊN + DOANH NGHIỆP =====
       {
         element: <RequireAuth />,
         children: [
-          { path: 'find-students', element: <FindStudents /> },
-          { path: 'find-enterprises', element: <FindEnterprises /> },
           { path: 'contract/:id', element: <Contract /> },
           { path: 'contract/sign/:id', element: <SignContract /> },
           { path: 'payment', element: <Payment /> },

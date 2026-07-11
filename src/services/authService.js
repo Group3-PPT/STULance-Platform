@@ -1,8 +1,29 @@
 import api from './api';
 
 let refreshTimer = null;
-const REFRESH_INTERVAL = 14 * 60 * 1000; // 14 phút
+const REFRESH_INTERVAL = 14 * 60 * 1000;
 const SESSION_MAX_AGE = 7 * 24 * 60 * 60 * 1000;
+
+const storage = {
+    getAccess: () => localStorage.getItem('accessToken'),
+    setAccess: (v) => localStorage.setItem('accessToken', v),
+    getRefresh: () => sessionStorage.getItem('refreshToken'),
+    setRefresh: (v) => sessionStorage.setItem('refreshToken', v),
+    getRole: () => localStorage.getItem('userRole'),
+    setRole: (v) => localStorage.setItem('userRole', v),
+    getUserId: () => localStorage.getItem('userId'),
+    setUserId: (v) => localStorage.setItem('userId', v),
+    getLastActivity: () => localStorage.getItem('lastActivity'),
+    setLastActivity: (v) => localStorage.setItem('lastActivity', v),
+    clear: () => {
+        localStorage.removeItem('accessToken');
+        sessionStorage.removeItem('refreshToken');
+        localStorage.removeItem('userRole');
+        localStorage.removeItem('userId');
+        localStorage.removeItem('lastActivity');
+        localStorage.removeItem('tokenRefreshedAt');
+    }
+};
 
 export const authService = {
     login: async (credentials) => {
@@ -12,16 +33,15 @@ export const authService = {
             await authService.startSession(
                 result.accessToken || result.token,
                 result.refreshToken,
-                result.roleId || result.role
+                result.roleName || result.roleId || result.role
             );
         }
         return response;
     },
 
     refreshAccessToken: async () => {
-        const oldRefreshToken = localStorage.getItem('refreshToken');
+        const oldRefreshToken = storage.getRefresh();
         if (!oldRefreshToken) {
-            console.warn("Không có refreshToken, bỏ qua refresh.");
             return null;
         }
 
@@ -29,20 +49,17 @@ export const authService = {
             const res = await api.post('/v1/auth/refresh-token', { refreshToken: oldRefreshToken });
             const data = res.data.data || res.data;
             if (data.accessToken) {
-                localStorage.setItem('accessToken', data.accessToken);
-                if (data.refreshToken) localStorage.setItem('refreshToken', data.refreshToken);
+                storage.setAccess(data.accessToken);
+                if (data.refreshToken) storage.setRefresh(data.refreshToken);
                 localStorage.setItem('tokenRefreshedAt', Date.now().toString());
-                localStorage.setItem('lastActivity', Date.now().toString());
+                storage.setLastActivity(Date.now().toString());
                 window.dispatchEvent(new Event("token-refreshed"));
-                console.log("Refresh token thành công!");
                 authService.scheduleRefresh();
                 return data.accessToken;
             }
             return null;
         } catch (err) {
-            console.error("Refresh token lỗi:", err.response?.status);
             if (err.response?.status === 401 || err.response?.status === 400) {
-                console.error("Refresh token hết hạn/invalid, logout.");
                 authService.handleSessionExpired();
             }
             return null;
@@ -51,7 +68,7 @@ export const authService = {
 
     fetchAndStoreUserId: async () => {
         try {
-            const role = localStorage.getItem('userRole');
+            const role = storage.getRole();
             let userId = null;
 
             if (role === 'STUDENT') {
@@ -66,18 +83,16 @@ export const authService = {
             }
 
             if (userId) {
-                localStorage.setItem('userId', userId);
-                console.log("UserId đã được lưu:", userId);
+                storage.setUserId(userId);
                 return userId;
             }
 
             const res = await api.get('/v1/profiles/me');
             userId = res.data?.data?.userId || res.data?.userId;
             if (userId) {
-                localStorage.setItem('userId', userId);
-                console.log("UserId từ profiles/me:", userId);
-                return userId;
+                storage.setUserId(userId);
             }
+            return userId;
         } catch (err) {
             console.error("Lỗi lấy userId:", err.response?.status);
         }
@@ -85,15 +100,14 @@ export const authService = {
     },
 
     startSession: async (accessToken, refreshToken, role) => {
-        localStorage.setItem('accessToken', accessToken);
-        localStorage.setItem('refreshToken', refreshToken);
-        localStorage.setItem('userRole', role);
-        localStorage.setItem('lastActivity', Date.now().toString());
+        storage.setAccess(accessToken);
+        storage.setRefresh(refreshToken);
+        storage.setRole(role);
+        storage.setLastActivity(Date.now().toString());
         localStorage.setItem('tokenRefreshedAt', Date.now().toString());
 
         window.dispatchEvent(new Event("local-storage-update"));
         authService.scheduleRefresh();
-
         await authService.fetchAndStoreUserId();
     },
 
@@ -103,39 +117,36 @@ export const authService = {
             refreshTimer = null;
         }
 
-        const token = localStorage.getItem('accessToken');
-        const rfToken = localStorage.getItem('refreshToken');
+        const token = storage.getAccess();
+        const rfToken = storage.getRefresh();
         if (!token || !rfToken) return;
 
-        console.log(`Token sẽ refresh sau ${REFRESH_INTERVAL / 60000} phút.`);
         refreshTimer = setTimeout(async () => {
-            console.log("Đang refresh token...");
             await authService.refreshAccessToken();
         }, REFRESH_INTERVAL);
     },
 
     ensureUserId: async () => {
-        let userId = localStorage.getItem('userId');
+        let userId = storage.getUserId();
         if (userId) return userId;
         return await authService.fetchAndStoreUserId();
     },
 
     initAuth: async () => {
-        const token = localStorage.getItem('accessToken');
-        const rfToken = localStorage.getItem('refreshToken');
-        const lastActivity = localStorage.getItem('lastActivity');
+        const token = storage.getAccess();
+        const rfToken = storage.getRefresh();
+        const lastActivity = storage.getLastActivity();
 
         if (!token || !rfToken) return;
 
         if (lastActivity && (Date.now() - Number(lastActivity)) > SESSION_MAX_AGE) {
-            console.log("Phiên đã hết hạn (quá 7 ngày).");
             authService.handleSessionExpired();
             return;
         }
 
         authService.scheduleRefresh();
 
-        if (!localStorage.getItem('userId')) {
+        if (!storage.getUserId()) {
             await authService.fetchAndStoreUserId();
         }
     },
@@ -145,12 +156,7 @@ export const authService = {
             clearTimeout(refreshTimer);
             refreshTimer = null;
         }
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
-        localStorage.removeItem('userRole');
-        localStorage.removeItem('userId');
-        localStorage.removeItem('lastActivity');
-        localStorage.removeItem('tokenRefreshedAt');
+        storage.clear();
         window.dispatchEvent(new Event("local-storage-update"));
         if (window.location.pathname !== '/login') {
             window.location.href = '/login';
@@ -158,7 +164,7 @@ export const authService = {
     },
 
     logout: async () => {
-        const refreshToken = localStorage.getItem('refreshToken');
+        const refreshToken = storage.getRefresh();
         try {
             if (refreshToken) await api.post('/v1/auth/logout', { refreshToken });
         } finally {

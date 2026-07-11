@@ -1,7 +1,5 @@
 import React, { useEffect, useRef } from 'react';
 import * as THREE from 'three';
-import { FontLoader } from 'three/examples/jsm/loaders/FontLoader';
-import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry';
 
 const ThreeBg = () => {
     const mountRef = useRef(null);
@@ -29,57 +27,84 @@ const ThreeBg = () => {
         const coreMesh = new THREE.Mesh(coreGeo, coreMat);
         scene.add(coreMesh);
 
-        // 2. Nhóm chứa chữ (Text Group)
-        // const textGroup = new THREE.Group();
-        // scene.add(textGroup);
+        // 2. Vòng chữ kiểu Thổ Tinh — dùng PlaneGeometry luôn hướng ra ngoài
+        const textGroup = new THREE.Group();
+        textGroup.rotation.x = 0.3;
+        scene.add(textGroup);
 
-        // const loader = new FontLoader();
-        // loader.load('https://threejs.org/examples/fonts/helvetiker_bold.typeface.json', (font) => {
-        //     const string = "STUDENT FREELANCER PLATFORM * ";
-        //     const radius = 14; 
-            
-        //     for (let i = 0; i < string.length; i++) {
-        //         const charGeo = new TextGeometry(string[i], {
-        //             font: font,
-        //             size: 1,
-        //             height: 0.02,      // FIX: Để cực nhỏ (0.02) để không bị kéo dài ra màn hình
-        //             curveSegments: 12,
-        //             bevelEnabled: false // FIX: Tắt vát cạnh để chữ phẳng và sắc nét
-        //         });
+        const createTextPlane = (text, fontSize, color) => {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = 256;
+            canvas.height = 64;
 
-        //         // CỰC KỲ QUAN TRỌNG: Đưa tâm chữ về giữa để không bị méo khi xoay
-        //         charGeo.center(); 
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.font = `bold ${fontSize}px Arial, sans-serif`;
+            ctx.fillStyle = color;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(text, 128, 32);
 
-        //         // Sử dụng MeshBasicMaterial để chữ rõ nét nhất
-        //         const charMat = new THREE.MeshBasicMaterial({ 
-        //             color: 0x3b82f6,
-        //             transparent: true,
-        //             opacity: 0.8
-        //         });
-                
-        //         const charMesh = new THREE.Mesh(charGeo, charMat);
+            const texture = new THREE.CanvasTexture(canvas);
+            texture.minFilter = THREE.LinearFilter;
 
-        //         const angle = (i / string.length) * Math.PI * 2;
-        //         charMesh.position.x = Math.cos(angle) * radius;
-        //         charMesh.position.z = Math.sin(angle) * radius;
+            const mat = new THREE.MeshBasicMaterial({ 
+                map: texture, 
+                transparent: true, 
+                side: THREE.DoubleSide,
+                depthWrite: false 
+            });
+            const geo = new THREE.PlaneGeometry(5, 1.2);
+            const mesh = new THREE.Mesh(geo, mat);
+            return mesh;
+        };
 
-        //         // Xoay chữ hướng mặt thẳng về tâm/camera
-        //         charMesh.rotation.y = -angle + Math.PI / 2;
-                
-        //         textGroup.add(charMesh);
-        //     }
-        // });
+        // Vòng trong
+        const text1 = "STUDENT FREELANCER PLATFORM  •  ";
+        const chars1 = text1.split('');
+        const radius1 = 13;
+        const group1 = new THREE.Group();
+
+        chars1.forEach((char, i) => {
+            const mesh = createTextPlane(char, 36, 'rgba(59, 130, 246, 0.8)');
+            const angle = (i / chars1.length) * Math.PI * 2;
+            const x = Math.cos(angle) * radius1;
+            const z = Math.sin(angle) * radius1;
+            mesh.position.set(x, 0, z);
+            // Hướng mặt phẳng ra ngoài tâm
+            mesh.lookAt(0, 0, 0);
+            mesh.rotateY(Math.PI);
+            group1.add(mesh);
+        });
+        textGroup.add(group1);
+
+        // Vòng ngoài
+        const text2 = "KẾT NỐI  ★  SINH VIÊN  ★  DOANH NGHIỆP  ★  ";
+        const chars2 = text2.split('');
+        const radius2 = 16;
+        const group2 = new THREE.Group();
+
+        chars2.forEach((char, i) => {
+            const mesh = createTextPlane(char, 30, 'rgba(96, 165, 250, 0.6)');
+            const angle = (i / chars2.length) * Math.PI * 2;
+            const x = Math.cos(angle) * radius2;
+            const z = Math.sin(angle) * radius2;
+            mesh.position.set(x, 0, z);
+            mesh.lookAt(0, 0, 0);
+            mesh.rotateY(Math.PI);
+            group2.add(mesh);
+        });
+        textGroup.add(group2);
 
         // 3. Sao nền
         const starsGeometry = new THREE.BufferGeometry();
         const posArray = new Float32Array(8000 * 3);
-        for(let i = 0; i < 5000; i++) posArray[i] = (Math.random() - 0.5) * 100;
+        for(let i = 0; i < 8000; i++) posArray[i] = (Math.random() - 0.5) * 100;
         starsGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
         const starsMaterial = new THREE.PointsMaterial({ size: 0.05, color: 0xffffff });
         const starMesh = new THREE.Points(starsGeometry, starsMaterial);
         scene.add(starMesh);
 
-        // Lùi Camera ra xa để thấy rõ vòng chữ (Fix cảm giác bị kéo dài do quá gần)
         camera.position.z = 40; 
 
         const clock = new THREE.Clock();
@@ -92,8 +117,8 @@ const ThreeBg = () => {
             coreMesh.rotation.y = elapsedTime * 0.3;
             coreMesh.rotation.x = elapsedTime * 0.1;
 
-            // Xoay vòng chữ quanh quả cầu (Tốc độ vừa phải)
-            // textGroup.rotation.y = -elapsedTime * 0.4; 
+            group1.rotation.y = elapsedTime * 0.2;
+            group2.rotation.y = -elapsedTime * 0.15;
 
             renderer.render(scene, camera);
         };

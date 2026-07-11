@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Button, Badge, Form, InputGroup, Modal } from 'react-bootstrap';
 import {
-  Search, Building2, ShieldCheck, Eye, Filter, Briefcase, Loader2, RefreshCw,
-  MapPin, Star, X, Mail, Globe, Hash, Users
+  Search, Building2, ShieldCheck, Eye, Filter, Loader2, RefreshCw,
+  MapPin, X, Mail, Globe, Hash, Users, User
 } from 'lucide-react';
 import { enterpriseService } from '../../services/enterprise.service';
 import '../../CSS/Businesses.css';
@@ -13,75 +13,26 @@ const FindEnterprises = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedEnterprise, setSelectedEnterprise] = useState(null);
     const [showModal, setShowModal] = useState(false);
-    const [loadingDetail, setLoadingDetail] = useState(null);
 
     useEffect(() => { fetchEnterprises(); }, []);
 
     const fetchEnterprises = async () => {
         setLoading(true);
         try {
-            const res = await enterpriseService.getAllEnterprises();
-            const data = res.data || res || [];
-            const list = Array.isArray(data) ? data : data.items || [];
-            setEnterprises(list);
+            const res = await enterpriseService.getAllPublicEnterprises();
+            const data = res?.data || res || [];
+            setEnterprises(Array.isArray(data) ? data : []);
         } catch (err) {
             console.error("Lỗi tải danh sách doanh nghiệp:", err);
-            // Fallback: try from jobs
-            try {
-                const jobRes = await import('../../services/jobservice').then(m => m.jobService.getAllPublicJobs());
-                if (jobRes.success && jobRes.data) {
-                    const enterpriseMap = new Map();
-                    jobRes.data.forEach(job => {
-                        if (job.enterpriseId && !enterpriseMap.has(job.enterpriseId)) {
-                            enterpriseMap.set(job.enterpriseId, {
-                                enterpriseId: job.enterpriseId,
-                                companyName: job.enterpriseName || 'Chưa cập nhật',
-                                logoUrl: job.enterpriseLogoUrl || null,
-                                industry: job.enterpriseIndustry || 'Chưa cập nhật',
-                                location: job.location || 'Chưa cập nhật',
-                                description: job.enterpriseDescription || '',
-                                isVerified: job.isEnterpriseVerified || false,
-                                email: job.enterpriseEmail || '',
-                                companySize: '',
-                                website: '',
-                                companyTaxCode: '',
-                                jobCount: 0
-                            });
-                        }
-                        if (job.enterpriseId && enterpriseMap.has(job.enterpriseId)) {
-                            enterpriseMap.get(job.enterpriseId).jobCount++;
-                        }
-                    });
-                    setEnterprises(Array.from(enterpriseMap.values()));
-                }
-            } catch (fallbackErr) {
-                console.error("Fallback cũng lỗi:", fallbackErr);
-            }
         } finally {
             setLoading(false);
         }
     };
 
-    const fetchEnterpriseDetail = async (enterpriseId) => {
-        setLoadingDetail(enterpriseId);
-        setSelectedEnterprise(null);
-        try {
-            const res = await enterpriseService.getPublicProfile(enterpriseId);
-            if (res.success && res.data) {
-                setSelectedEnterprise(res.data);
-                setShowModal(true);
-            }
-        } catch (err) {
-            console.error("Lỗi tải chi tiết doanh nghiệp:", err);
-        } finally {
-            setLoadingDetail(null);
-        }
-    };
-
     const filtered = enterprises.filter(e => {
         return (e.companyName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-               (e.industry || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-               (e.location || '').toLowerCase().includes(searchTerm.toLowerCase());
+               (e.description || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+               (e.address || '').toLowerCase().includes(searchTerm.toLowerCase());
     });
 
     const getLogo = (ent) => {
@@ -98,7 +49,7 @@ const FindEnterprises = () => {
                         Kết nối với <span className="text-primary-glow">Doanh nghiệp</span>
                     </h1>
                     <p className="text-white-50 mx-auto mt-3" style={{ maxWidth: '700px' }}>
-                        Khám phá {enterprises.length}+ doanh nghiệp đang tuyển dụng trên hệ thống.
+                        Khám phá {enterprises.length}+ doanh nghiệp trên hệ thống.
                     </p>
                 </div>
 
@@ -108,7 +59,7 @@ const FindEnterprises = () => {
                             <InputGroup className="bg-dark-input rounded-pill overflow-hidden border-0">
                                 <InputGroup.Text className="bg-transparent border-0 text-primary"><Search size={18}/></InputGroup.Text>
                                 <Form.Control
-                                    placeholder="Tìm theo tên công ty, ngành nghề, địa điểm..."
+                                    placeholder="Tìm theo tên công ty, mô tả, địa điểm..."
                                     className="bg-transparent border-0 text-white shadow-none py-2"
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
@@ -140,42 +91,37 @@ const FindEnterprises = () => {
                                     <div className="glass-card biz-card p-4 text-center h-100 d-flex flex-column">
                                         <div className="stu-avatar-wrap mb-3 mx-auto">
                                             <img src={getLogo(ent)} alt={ent.companyName} className="stu-avatar-img" />
-                                            {ent.isVerified && (
+                                            {ent.verificationStatus === 'VERIFIED' && (
                                                 <div className="stu-verified-badge">
                                                     <ShieldCheck size={12} fill="#10b981" color="white" />
                                                 </div>
                                             )}
                                         </div>
 
-                                        <h5 className="text-white fw-bold mb-1">{ent.companyName || 'Chưa cập nhật'}</h5>
-                                        <p className="x-small text-primary fw-bold mb-2 uppercase-tracking">
-                                            {ent.industry || 'Chưa cập nhật'}
-                                        </p>
-                                        {ent.location && (
-                                            <p className="x-small text-white-50 mb-3">
-                                                <MapPin size={12} className="me-1"/> {ent.location}
-                                            </p>
-                                        )}
-
+                                        <h5 className="text-white fw-bold mb-1">{ent.companyName}</h5>
                                         {ent.description && (
                                             <p className="x-small text-white-50 mb-3 line-clamp-2">{ent.description}</p>
                                         )}
+                                        {ent.address && (
+                                            <p className="x-small text-white-50 mb-3">
+                                                <MapPin size={12} className="me-1"/> {ent.address}
+                                            </p>
+                                        )}
 
                                         <div className="mt-auto pt-3 border-top border-white border-opacity-10">
-                                            <p className="x-small text-white-50 mb-2">
-                                                <Briefcase size={12} className="me-1"/> {ent.jobCount || 0} việc làm
-                                            </p>
+                                            <div className="mb-2">
+                                                {ent.verificationStatus === 'VERIFIED' ? (
+                                                    <Badge bg="success" className="x-small-badge">Đã xác thực</Badge>
+                                                ) : (
+                                                    <Badge bg="secondary" className="x-small-badge">Chưa xác thực</Badge>
+                                                )}
+                                            </div>
                                             <Button
                                                 variant="outline-primary"
                                                 className="w-100 rounded-pill fw-bold btn-view-school"
-                                                onClick={() => fetchEnterpriseDetail(ent.enterpriseId)}
-                                                disabled={loadingDetail === ent.enterpriseId}
+                                                onClick={() => setSelectedEnterprise(ent) || setShowModal(true)}
                                             >
-                                                {loadingDetail === ent.enterpriseId ? (
-                                                    <><Loader2 size={14} className="me-1 spinner"/> Đang tải...</>
-                                                ) : (
-                                                    <><Eye size={14} className="me-1"/> Xem chi tiết</>
-                                                )}
+                                                <Eye size={14} className="me-1"/> Xem chi tiết
                                             </Button>
                                         </div>
                                     </div>
@@ -201,13 +147,14 @@ const FindEnterprises = () => {
                                     <img
                                         src={getLogo(selectedEnterprise)}
                                         alt={selectedEnterprise.companyName}
-                                        style={{ width: 72, height: 72, borderRadius: '50%', objectFit: 'cover', border: '3px solid rgba(255,255,255,0.1)' }}
+                                        style={{ width: 72, height: 72, borderRadius: 12, objectFit: 'cover', border: '3px solid rgba(255,255,255,0.1)' }}
                                     />
                                     <div>
                                         <h4 className="fw-bold text-white mb-1">{selectedEnterprise.companyName}</h4>
-                                        <p className="text-primary mb-0">{selectedEnterprise.industry || 'Chưa cập nhật'}</p>
-                                        {selectedEnterprise.location && (
-                                            <p className="x-small text-white-50"><MapPin size={12} className="me-1"/>{selectedEnterprise.location}</p>
+                                        {selectedEnterprise.verificationStatus === 'VERIFIED' ? (
+                                            <Badge bg="success" className="x-small-badge">Đã xác thực</Badge>
+                                        ) : (
+                                            <Badge bg="secondary" className="x-small-badge">Chưa xác thực</Badge>
                                         )}
                                     </div>
                                 </div>
@@ -218,16 +165,26 @@ const FindEnterprises = () => {
                                 <Col md={6}>
                                     <div className="p-3 rounded-3" style={{background: 'rgba(255,255,255,0.04)'}}>
                                         <p className="x-small text-white-50 mb-2 uppercase-tracking fw-bold">Thông tin liên hệ</p>
-                                        <p className="small text-white mb-1"><Mail size={14} className="me-2 text-primary"/>{selectedEnterprise.email || 'Chưa cập nhật'}</p>
-                                        <p className="small text-white mb-1"><Globe size={14} className="me-2 text-primary"/>{selectedEnterprise.website || 'Chưa cập nhật'}</p>
-                                        <p className="small text-white mb-0"><Hash size={14} className="me-2 text-primary"/>MST: {selectedEnterprise.companyTaxCode || 'Chưa cập nhật'}</p>
+                                        {selectedEnterprise.representName && (
+                                            <p className="small text-white mb-1"><User size={14} className="me-2 text-primary"/>Người đại diện: {selectedEnterprise.representName}</p>
+                                        )}
+                                        <p className="small text-white mb-1"><MapPin size={14} className="me-2 text-primary"/>{selectedEnterprise.address || 'Chưa cập nhật'}</p>
+                                        {selectedEnterprise.website && (
+                                            <p className="small text-white mb-0"><Globe size={14} className="me-2 text-primary"/>{selectedEnterprise.website}</p>
+                                        )}
                                     </div>
                                 </Col>
                                 <Col md={6}>
                                     <div className="p-3 rounded-3" style={{background: 'rgba(255,255,255,0.04)'}}>
-                                        <p className="x-small text-white-50 mb-2 uppercase-tracking fw-bold">Quy mô & Đánh giá</p>
-                                        <p className="small text-white mb-1"><Users size={14} className="me-2 text-primary"/>Quy mô: {selectedEnterprise.companySize || 'Chưa cập nhật'}</p>
-                                        <p className="small text-white mb-0"><Star size={14} className="me-2 text-warning"/>Đánh giá: {selectedEnterprise.rating || '4.8'}/5.0</p>
+                                        <p className="x-small text-white-50 mb-2 uppercase-tracking fw-bold">Xác thực</p>
+                                        <p className="small text-white mb-0">
+                                            <ShieldCheck size={14} className="me-2 text-primary"/>
+                                            Trạng thái: {selectedEnterprise.verificationStatus === 'VERIFIED' ? (
+                                                <span className="text-success fw-bold">Đã xác thực</span>
+                                            ) : (
+                                                <span className="text-secondary">Chưa xác thực</span>
+                                            )}
+                                        </p>
                                     </div>
                                 </Col>
                             </Row>
@@ -247,11 +204,6 @@ const FindEnterprises = () => {
                                 )}
                             </div>
                         </>
-                    )}
-                    {loadingDetail && !selectedEnterprise && (
-                        <div className="text-center py-4">
-                            <Loader2 className="spinner text-primary" size={30}/>
-                        </div>
                     )}
                 </Modal.Body>
             </Modal>

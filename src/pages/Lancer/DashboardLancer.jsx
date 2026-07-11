@@ -171,7 +171,7 @@ const DashboardLancer = () => {
 
   const activeContracts = contracts.filter(c => c.status === 'IN_PROGRESS' || c.status === 'SIGNING');
   const completedContracts = contracts.filter(c => c.status === 'COMPLETED');
-  const totalEarnings = completedContracts.reduce((sum, c) => sum + (c.totalAmount || 0), 0);
+  const totalEarnings = completedContracts.reduce((sum, c) => sum + ((c.totalBudget || c.totalAmount) || 0), 0);
 
   if (loading) return <div className="vh-100 d-flex justify-content-center align-items-center bg-dark"><Spinner animation="border" variant="primary" /></div>;
 
@@ -346,15 +346,15 @@ const DashboardLancer = () => {
                           <Row className="align-items-center">
                             <Col md={9}>
                               <Badge bg={cfg.variant} className="text-dark x-small-badge mb-2 fw-bold">{cfg.label.toUpperCase()}</Badge>
-                              <h6 className="fw-bold text-white mb-1">{item.contractName || "Dự án Freelance"}</h6>
+                              <h6 className="fw-bold text-white mb-1">{item.jobTitle || item.contractName || "Dự án Freelance"}</h6>
                               <div className="d-flex gap-3 x-small text-white-50 mb-2">
                                 <span><Clock size={12} className="me-1" /> {new Date(item.updatedAt).toLocaleDateString()}</span>
-                                <span>Đối tác: {item.enterpriseName || 'Enterprise'}</span>
+                                <span>Đối tác: {item.clientName || item.enterpriseName || 'Enterprise'}</span>
                               </div>
                               <ProgressBar now={item.status === 'COMPLETED' ? 100 : 40} className="custom-progress-sm" style={{ width: '120px' }} />
                             </Col>
                             <Col md={3} className="text-md-end mt-2 mt-md-0">
-                              <div className="small fw-bold text-success mb-2">{formatMoney(item.totalAmount)}</div>
+                              <div className="small fw-bold text-success mb-2">{formatMoney(item.totalBudget || item.totalAmount)}</div>
                               <Button as={Link} to={cfg.link} variant={cfg.variant === 'warning' ? 'primary' : 'outline-light'} className="x-small fw-bold px-3 py-2 shadow-glow d-flex align-items-center gap-1 ms-auto">
                                 {cfg.btnIcon} {cfg.btnText}
                               </Button>

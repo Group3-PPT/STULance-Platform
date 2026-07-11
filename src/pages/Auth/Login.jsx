@@ -18,72 +18,51 @@ const Login = () => {
       const password = e.target.elements.password.value;
 
       const res = await authService.login({ email, password });
-      const result = res.data.data; 
+      const result = res.data.data;
 
-      if (result) {
-        if (result.requiresPolicyAcceptance) {
-          const acceptedPolicies = JSON.parse(localStorage.getItem('acceptedPolicies') || '{}');
-          const pv = result.policyVersion || '';
-          if (acceptedPolicies[pv]) {
-            const tokenToSave = result.accessToken || result.token;
-            const refreshTokenToSave = result.refreshToken;
-            if (tokenToSave) {
-              localStorage.setItem('accessToken', tokenToSave);
-              localStorage.setItem('refreshToken', refreshTokenToSave || '');
-              const roleValue = result.roleId || result.roleName || result.role;
-              localStorage.setItem('userRole', roleValue);
-              window.dispatchEvent(new Event("local-storage-update"));
-              if (roleValue === 'STUDENT' || roleValue === 'odl1dDNm') { navigate('/dashboardlancer'); }
-              else if (roleValue === 'ENTERPRISE' || roleValue === 'Jx7ze2Kd') { navigate('/manage-jobs'); }
-              else if (roleValue === 'ADMIN' || roleValue === 'pPDY5Dnk') { navigate('/admin'); }
-              else { navigate('/'); }
-              return;
-            }
+      if (!result) {
+        alert("Lỗi: Server không trả về dữ liệu!");
+        return;
+      }
+
+      if (result.requiresPolicyAcceptance) {
+        sessionStorage.setItem('pendingPolicyEmail', email);
+        sessionStorage.setItem('pendingPolicyPassword', password);
+        navigate('/policy', {
+          state: {
+            email,
+            policyVersion: result.policyVersion,
+            policyUrl: result.policyUrl,
+            policyTitle: result.policyTitle
           }
+        });
+        return;
+      }
 
-          sessionStorage.setItem('pendingPolicyEmail', email);
-          sessionStorage.setItem('pendingPolicyPassword', password);
-          sessionStorage.setItem('pendingPolicyVersion', result.policyVersion || '');
-          navigate('/policy', {
-            state: {
-              email,
-              policyVersion: result.policyVersion,
-              policyUrl: result.policyUrl,
-              policyTitle: result.policyTitle
-            }
-          });
-          return;
-        }
-
-        const tokenToSave = result.accessToken || result.token;
-        const refreshTokenToSave = result.refreshToken;
-
-        localStorage.setItem('accessToken', tokenToSave); 
-        localStorage.setItem('refreshToken', refreshTokenToSave || "");
-        
-        const roleValue = result.roleId || result.roleName || result.role;
-        localStorage.setItem('userRole', roleValue); 
-
-        window.dispatchEvent(new Event("local-storage-update"));
-        
-        if (roleValue === 'odl1dDNm' || roleValue === 'STUDENT') { 
-          alert("Đăng nhập thành công!");
-          navigate('/dashboardlancer');
-        }
-        else if (roleValue === 'Jx7ze2Kd' || roleValue === 'ENTERPRISE') { 
-          alert("Đăng nhập thành công! \nChào mừng quý đối tác, Nhà tuyển dụng");
-          navigate('/manage-jobs');
-        } 
-        else if (roleValue === 'pPDY5Dnk' || roleValue === 'ADMIN') { 
-          alert("Đăng nhập thành công! \nChào Quản trị viên");
-          navigate('/admin');
-        } 
-        else {
-          alert("Đăng nhập thành công nhưng không xác định được vai trò!");
-          navigate('/');
-        }
-      } else {
+      const tokenToSave = result.accessToken || result.token;
+      if (!tokenToSave) {
         alert("Lỗi: Server không trả về Token!");
+        return;
+      }
+
+      window.dispatchEvent(new Event("local-storage-update"));
+
+      const roleValue = result.roleId || result.roleName || result.role;
+      if (roleValue === 'STUDENT' || roleValue === 'odl1dDNm') { 
+        alert("Đăng nhập thành công!");
+        navigate('/dashboardlancer');
+      }
+      else if (roleValue === 'ENTERPRISE' || roleValue === 'Jx7ze2Kd') { 
+        alert("Đăng nhập thành công! \nChào mừng quý đối tác, Nhà tuyển dụng");
+        navigate('/manage-jobs');
+      } 
+      else if (roleValue === 'ADMIN' || roleValue === 'pPDY5Dnk') { 
+        alert("Đăng nhập thành công! \nChào Quản trị viên");
+        navigate('/admin');
+      } 
+      else {
+        alert("Đăng nhập thành công!");
+        navigate('/');
       }
 
     } catch (error) {

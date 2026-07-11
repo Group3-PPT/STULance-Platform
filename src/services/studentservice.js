@@ -1,4 +1,5 @@
 import api from './api';
+import axios from 'axios';
 
 export const studentService = {
     // ==========================================
@@ -29,7 +30,15 @@ export const studentService = {
     getPublicProfile: (studentId) => api.get(`/v1/students/${studentId}/public`).then(res => res.data),
 
     /** Lấy danh sách tất cả sinh viên (Dùng cho trang tìm kiếm ứng viên) */
-    getAllStudents: () => api.get('/v1/students').then(res => res.data),
+    getAllStudents: () => {
+        const role = localStorage.getItem('userRole');
+        if (role === 'ADMIN' || role === 'pPDY5Dnk') {
+            return api.get('/v1/students').then(res => res.data);
+        }
+        return studentService.getAllPublicStudents();
+    },
+
+    getAllPublicStudents: () => axios.get('/api/v1/students/public').then(res => res.data),
 
 
     // ==========================================

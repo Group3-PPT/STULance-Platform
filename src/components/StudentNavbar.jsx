@@ -112,7 +112,7 @@ const StudentNavbar = () => {
 
         <Navbar.Toggle aria-controls="student-navbar" />
         <Navbar.Collapse id="student-navbar">
-          <Nav className="mx-auto gap-lg-4 text-center fw-bold x-small">
+          <Nav className="mx-auto gap-lg-4 text-center fw-bold x-small nav-links-main">
             <Nav.Link as={Link} to="/" className="nav-hover-link">Trang chủ</Nav.Link>
             <Nav.Link as={Link} to="/jobs" className="nav-hover-link">Việc làm</Nav.Link>
             <Nav.Link as={Link} to="/services" className="nav-hover-link">Dịch vụ</Nav.Link>
@@ -120,7 +120,7 @@ const StudentNavbar = () => {
             <Nav.Link as={Link} to="/handbook" className="nav-hover-link">Cẩm nang</Nav.Link>
           </Nav>
 
-          <Nav className="d-flex align-items-center gap-3">
+          <Nav className="d-flex align-items-center gap-3 nav-actions-mobile">
             {/* WALLET */}
             <Link to="/payment" className="d-flex align-items-center gap-2 text-decoration-none" style={{ padding: '6px 12px', borderRadius: 20, background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.2)' }}>
               <Wallet size={16} style={{ color: '#22c55e' }} />
@@ -131,10 +131,10 @@ const StudentNavbar = () => {
             <div className="position-relative">
               <div
                 className="pointer d-flex align-items-center justify-content-center"
-                style={{ width: 36, height: 36, borderRadius: '50%', background: 'rgba(255,255,255,0.05)' }}
+                style={{ width: 36, height: 36, borderRadius: '50%', background: 'rgba(255,255,255,0.15)', border: 'none' }}
                 onClick={() => setShowNotifications(!showNotifications)}
               >
-                <Bell size={20} className="text-white-50" />
+                <Bell size={20} className="text-white-80" />
                 {unreadCount > 0 && (
                   <Badge bg="danger" pill className="position-absolute" style={{ top: 0, right: 0, fontSize: 10, padding: '2px 5px' }}>
                     {unreadCount > 9 ? '9+' : unreadCount}
@@ -146,7 +146,7 @@ const StudentNavbar = () => {
                 <>
                   <div className="position-fixed top-0 start-0 w-100 h-100" style={{ zIndex: 1040 }} onClick={() => setShowNotifications(false)} />
                   <div className="position-absolute" style={{ top: '100%', right: 0, width: 340, zIndex: 1050, marginTop: 8 }}>
-                    <div className="glass-card p-0 shadow-lg" style={{ borderRadius: 12, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)' }}>
+                    <div className="p-0 shadow-lg" style={{ borderRadius: 12, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(17,24,39,0.98)' }}>
                       <div className="d-flex justify-content-between align-items-center px-3 py-2" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
                         <span className="small fw-bold text-white">Thông báo</span>
                         {unreadCount > 0 && (

@@ -12,8 +12,6 @@ import { contractSignatureService } from '../services/contractsignatureservice';
 import { paymentService } from '../services/paymentservice';
 import { reportService } from '../services/reportService';
 import { authService } from '../services/authService';
-import { enterpriseService } from '../services/enterprise.service';
-import { studentService } from '../services/studentservice';
 import '../CSS/Contract.css';
 
 const Contract = () => {
@@ -24,8 +22,6 @@ const Contract = () => {
   const [showSensitive, setShowSensitive] = useState(false);
 
   const [contract, setContract] = useState(null);
-  const [enterpriseProfile, setEnterpriseProfile] = useState(null);
-  const [studentProfile, setStudentProfile] = useState(null);
   const [signatures, setSignatures] = useState([]);
   const [progress, setProgress] = useState(null);
   const [deliveries, setDeliveries] = useState([]);
@@ -58,22 +54,7 @@ const Contract = () => {
       ]);
 
       if (contRes.status === 'fulfilled') {
-        const data = contRes.value.data;
-        setContract(data);
-
-        const isEnterprise = currentUserRole === 'ENTERPRISE';
-        if (isEnterprise) {
-          enterpriseService.getMe().then(res => {
-            setEnterpriseProfile(res?.data || res);
-          }).catch(() => {});
-        } else {
-          studentService.getProfile().then(res => {
-            setStudentProfile(res?.data || res);
-          }).catch(() => {});
-          enterpriseService.getPublicProfile(data.enterpriseId || data.clientUserId).then(p => {
-            setEnterpriseProfile(p);
-          }).catch(() => {});
-        }
+        setContract(contRes.value.data);
       }
       if (sigRes.status === 'fulfilled') {
         const sigData = sigRes.value.data;
@@ -103,10 +84,8 @@ const Contract = () => {
 
   useEffect(() => { if (id) initData(); }, [id]);
 
-  const isClient = String(contract?.clientUserId) === String(currentUserId);
-  const isProvider = String(contract?.providerUserId) === String(currentUserId);
-
-  console.log("Contract debug:", { currentUserId, clientUserId: contract?.clientUserId, providerUserId: contract?.providerUserId, isClient, isProvider, status: contract?.status });
+  const isClient = String(contract?.clientInfo?.userId || contract?.clientUserId) === String(currentUserId);
+  const isProvider = String(contract?.providerInfo?.userId || contract?.providerUserId) === String(currentUserId);
 
   const sigList = Array.isArray(signatures) ? signatures : [];
   const isLocked = Boolean(contract?.isContentLocked || contract?.contentLockedAt);
@@ -225,7 +204,9 @@ h5,h6{margin:8px 0;}
     try {
       await contractService.updateProgress(id, {
         progressPercent,
-        note: progressNote
+        title: `Tiến độ ${progressPercent}%`,
+        content: progressNote,
+        attachmentUrl: ''
       });
       setProgressNote('');
       alert("Cập nhật tiến độ thành công!");
@@ -331,16 +312,28 @@ h5,h6{margin:8px 0;}
                 <p className="mb-3 italic" style={{fontSize: '11.5px'}}>Căn cứ vào nội dung {contract.bidId ? 'Đấu thầu dự án' : 'Đơn đặt hàng dịch vụ'} trên sàn StudentLance, hai bên đồng ý ký kết hợp đồng với các điều khoản sau:</p>
 
                 <div className="party-info mb-3">
-                  <p className="fw-bold mb-1 text-primary" style={{fontSize: '12px'}}>BÊN THUÊ (BÊN A): {contract.enterpriseName || contract.clientName || enterpriseProfile?.companyName || 'N/A'}</p>
-                  <p className="mb-0" style={{fontSize: '11px'}}>Đại diện: {contract.representName || enterpriseProfile?.representName || 'N/A'}</p>
-                  <p className="mb-0" style={{fontSize: '11px'}}>Mã số thuế: {maskInfo(contract.taxCode || contract.companyTaxCode || enterpriseProfile?.companyTaxCode || enterpriseProfile?.taxCode)}</p>
-                  <p className="mb-0" style={{fontSize: '11px'}}>Địa chỉ: {maskInfo(contract.address || enterpriseProfile?.address) || 'Chưa cập nhật'}</p>
+                  <p className="fw-bold mb-1 text-primary" style={{fontSize: '12px'}}>BÊN THUÊ (BÊN A): {contract.clientInfo?.displayName || contract.clientName || 'N/A'}</p>
+                  <p className="mb-0" style={{fontSize: '11px'}}>Họ tên: {contract.clientInfo?.fullName || contract.clientInfo?.displayName || 'N/A'}</p>
+                  <p className="mb-0" style={{fontSize: '11px'}}>Email: {contract.clientInfo?.email || 'N/A'}</p>
+                  {contract.clientInfo?.companyTaxCode && (
+                    <p className="mb-0" style={{fontSize: '11px'}}>Mã số thuế: {maskInfo(contract.clientInfo.companyTaxCode)}</p>
+                  )}
+                  {contract.clientInfo?.address && (
+                    <p className="mb-0" style={{fontSize: '11px'}}>Địa chỉ: {maskInfo(contract.clientInfo.address)}</p>
+                  )}
+                  {contract.clientInfo?.phoneNumber && (
+                    <p className="mb-0" style={{fontSize: '11px'}}>Số điện thoại: {maskInfo(contract.clientInfo.phoneNumber)}</p>
+                  )}
                 </div>
 
                 <div className="party-info mb-3">
-                  <p className="fw-bold mb-1 text-primary" style={{fontSize: '12px'}}>BÊN THỰC HIỆN (BÊN B): {contract.studentName || contract.providerName || studentProfile?.fullName || 'N/A'}</p>
-                  <p className="mb-0" style={{fontSize: '11px'}}>Số CCCD: {maskInfo(contract.citizenId || contract.studentCitizenId || studentProfile?.citizenId) || (isClient ? 'Chưa cập nhật' : '')}</p>
-                  <p className="mb-0" style={{fontSize: '11px'}}>Số điện thoại: {maskInfo(contract.studentPhone || contract.phone || studentProfile?.phone || studentProfile?.phoneNumber) || (isClient ? 'Chưa cập nhật' : '')}</p>
+                  <p className="fw-bold mb-1 text-primary" style={{fontSize: '12px'}}>BÊN THỰC HIỆN (BÊN B): {contract.providerInfo?.displayName || contract.providerName || 'N/A'}</p>
+                  {contract.providerInfo?.citizenId && (
+                    <p className="mb-0" style={{fontSize: '11px'}}>Số CCCD: {maskInfo(contract.providerInfo.citizenId)}</p>
+                  )}
+                  {contract.providerInfo?.phoneNumber && (
+                    <p className="mb-0" style={{fontSize: '11px'}}>Số điện thoại: {maskInfo(contract.providerInfo.phoneNumber)}</p>
+                  )}
                 </div>
 
                 <div className="details-section">

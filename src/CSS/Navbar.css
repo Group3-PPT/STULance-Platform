@@ -64,17 +64,78 @@
 
 @media (max-width: 991px) {
     .navbar-collapse {
-        background: rgba(15, 23, 42, 0.95);
-        margin-top: 15px;
+        background: rgba(15, 23, 42, 0.98);
+        margin-top: 12px;
         padding: 20px;
         border-radius: 15px;
         border: 1px solid rgba(255, 255, 255, 0.08);
-        backdrop-filter: blur(16px);
+        backdrop-filter: blur(20px);
     }
-    .mx-auto {
+
+    /* Nav links */
+    .nav-links-main {
         margin-left: 0 !important;
-        margin-bottom: 20px;
+        margin-right: 0 !important;
+        margin-bottom: 16px;
+        text-align: left;
     }
+
+    .nav-links-main .nav-link {
+        padding: 10px 0;
+        font-size: 0.95rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        color: rgba(255, 255, 255, 0.7) !important;
+    }
+
+    .nav-links-main .nav-link:last-child {
+        border-bottom: none;
+    }
+
+    .nav-links-main .nav-link:hover {
+        color: #fff !important;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 8px;
+        padding-left: 8px;
+        padding-right: 8px;
+    }
+
+    /* Action items - horizontal layout */
+    .nav-actions-mobile {
+        flex-direction: row !important;
+        flex-wrap: wrap;
+        gap: 10px !important;
+        align-items: center;
+        justify-content: flex-start;
+        padding-top: 14px;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    /* Wallet */
+    .nav-actions-mobile > a[href="/payment"] {
+        display: flex !important;
+        padding: 6px 12px !important;
+        border-radius: 20px;
+        background: rgba(34,197,94,0.1);
+        border: 1px solid rgba(34,197,94,0.2);
+        font-size: 0.8rem;
+        order: 0;
+    }
+
+    /* Bell */
+    .nav-actions-mobile > .position-relative {
+        order: 1;
+    }
+
+    /* Dropdown (avatar) */
+    .nav-actions-mobile > .dropdown {
+        order: 2;
+    }
+
+    /* Button */
+    .nav-actions-mobile > .btn {
+        order: 3;
+    }
+
     .navbar-dark .navbar-nav .nav-link.active::after {
         display: none;
     }

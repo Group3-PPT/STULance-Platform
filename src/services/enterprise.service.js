@@ -29,18 +29,18 @@ export const enterpriseService = {
     getPublicProfile: (enterpriseId) => api.get(`/v1/enterprises/${enterpriseId}/public`).then(res => res.data),
 
     /**
-     * Lấy danh sách tất cả doanh nghiệp trên hệ thống (Dùng cho trang chủ/tìm kiếm)
+     * Lấy danh sách tất cả doanh nghiệp (Dùng cho trang chủ/tìm kiếm)
      * Endpoint: GET /api/v1/enterprises/public
      */
     getAllEnterprises: () => {
-        const token = localStorage.getItem('accessToken');
-        if (token) {
+        const role = localStorage.getItem('userRole');
+        if (role === 'ADMIN' || role === 'pPDY5Dnk') {
             return api.get('/v1/enterprises').then(res => res.data);
         }
-        return axios.get('/api/v1/enterprises/public', {
-            headers: { 'X-API-KEY': 'STULANCE_SECRET_API_KEY_2026' }
-        }).then(res => res.data);
+        return enterpriseService.getAllPublicEnterprises();
     },
+
+    getAllPublicEnterprises: () => axios.get('/api/v1/enterprises/public').then(res => res.data),
 
 
     // --- DÀNH CHO ADMIN (Hệ thống quản trị) ---

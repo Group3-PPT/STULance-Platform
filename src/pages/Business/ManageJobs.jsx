@@ -47,7 +47,21 @@ const ManageJobs = () => {
     setError(null);
     try {
       const res = await jobService.getMyJobs();
-      if (res.success) setJobs(res.data || []);
+      if (res.success) {
+        const jobList = res.data || [];
+        const enriched = await Promise.allSettled(
+          jobList.map(async (job) => {
+            try {
+              const bidRes = await bidService.getJobBids(job.jobId);
+              const bidCount = Array.isArray(bidRes?.data) ? bidRes.data.length : (job.bidCount || 0);
+              return { ...job, bidCount };
+            } catch {
+              return { ...job, bidCount: job.bidCount || 0 };
+            }
+          })
+        );
+        setJobs(enriched.map(r => r.status === 'fulfilled' ? r.value : r.reason).filter(Boolean));
+      }
     } catch (err) {
       if (err.response?.status === 404) setError("Chức năng này chưa sẵn sàng.");
       else setError("Không thể tải danh sách bài đăng.");
@@ -68,8 +82,18 @@ const ManageJobs = () => {
             ...c,
             hasStudentSigned: isLocked || c.hasStudentSigned || c.studentSignedAt || false,
             hasEnterpriseSigned: isLocked || c.hasEnterpriseSigned || c.enterpriseSignedAt || false,
+            progressPercent: c.progressPercent || 0,
           };
         });
+
+        const progressPromises = enriched
+          .filter(c => c.status === 'IN_PROGRESS' || c.status === 'DELIVERED' || c.status === 'COMPLETED')
+          .map(c => contractService.getProgress(c.contractId).then(res => {
+            const progressData = res?.data;
+            if (progressData) c.progressPercent = progressData.progressPercent || 0;
+          }).catch(() => {}));
+
+        await Promise.allSettled(progressPromises);
         setContracts(enriched);
       }
     } catch (err) {
@@ -299,7 +323,10 @@ const ManageJobs = () => {
   const formatMoney = (val) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val || 0);
 
   const filteredJobs = jobs.filter(j => (j.title || '').toLowerCase().includes(searchTerm.toLowerCase()));
-  const filteredContracts = contracts.filter(c => (c.contractName || c.studentName || '').toLowerCase().includes(searchTerm.toLowerCase()));
+  const filteredContracts = contracts.filter(c => {
+    const partnerName = c.studentName || c.providerName || c.clientName || '';
+    return (c.contractName || partnerName || '').toLowerCase().includes(searchTerm.toLowerCase());
+  });
   const filteredOrders = serviceOrders.filter(o => (o.serviceName || o.studentName || o.description || '').toLowerCase().includes(searchTerm.toLowerCase()));
 
   const totalBids = jobs.reduce((sum, j) => sum + (j.bidCount || 0), 0);
@@ -536,6 +563,9 @@ const ManageJobs = () => {
                   const st = getContractStatusConfig(c.status);
                   const hasStudentSigned = c.hasStudentSigned || c.studentSignedAt;
                   const hasEnterpriseSigned = c.hasEnterpriseSigned || c.enterpriseSignedAt;
+                  const partnerName = c.studentName || c.providerName || c.clientName || 'N/A';
+                  const progress = c.progressPercent || 0;
+                  const isBothSigned = hasStudentSigned && hasEnterpriseSigned;
                   return (
                     <div key={c.contractId} className="mj-contract-card">
                       <div className="d-flex align-items-center gap-4 flex-fill">
@@ -548,8 +578,19 @@ const ManageJobs = () => {
                             <span className="mj-contract-id">#{c.contractId?.substring(0, 8)}</span>
                           </div>
                           <p className="mj-contract-student mb-0">
-                            <User size={12} className="me-1" /> {c.studentName || 'N/A'}
+                            <User size={12} className="me-1" /> {partnerName}
                           </p>
+                          {(c.status === 'IN_PROGRESS' || c.status === 'DELIVERED' || c.status === 'COMPLETED') && (
+                            <div className="mt-2" style={{maxWidth: 200}}>
+                              <div className="d-flex justify-content-between mb-1">
+                                <span className="x-small text-white-50">Tiến độ</span>
+                                <span className="x-small fw-bold text-primary">{progress}%</span>
+                              </div>
+                              <div className="w-100" style={{height: 4, borderRadius: 4, background: 'rgba(255,255,255,0.08)'}}>
+                                <div style={{width: `${progress}%`, height: '100%', borderRadius: 4, background: progress >= 100 ? '#10b981' : '#3b82f6', transition: 'width 0.3s'}} />
+                              </div>
+                            </div>
+                          )}
                         </div>
                       </div>
 

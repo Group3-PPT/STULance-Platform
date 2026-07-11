@@ -27,7 +27,7 @@ const processQueue = (error, token = null) => {
 
 const clearAuth = () => {
     localStorage.removeItem('accessToken');
-    localStorage.removeItem('refreshToken');
+    sessionStorage.removeItem('refreshToken');
     localStorage.removeItem('userRole');
     localStorage.removeItem('userId');
     localStorage.removeItem('lastActivity');
@@ -78,7 +78,7 @@ api.interceptors.response.use(
         originalRequest._retry = true;
         isRefreshing = true;
 
-        const oldRefreshToken = localStorage.getItem('refreshToken');
+        const oldRefreshToken = sessionStorage.getItem('refreshToken');
         if (!oldRefreshToken) {
             isRefreshing = false;
             clearAuth();
@@ -98,7 +98,7 @@ api.interceptors.response.use(
             if (!accessToken) throw new Error("No accessToken in response");
 
             localStorage.setItem('accessToken', accessToken);
-            if (refreshToken) localStorage.setItem('refreshToken', refreshToken);
+            if (refreshToken) sessionStorage.setItem('refreshToken', refreshToken);
             localStorage.setItem('tokenRefreshedAt', Date.now().toString());
             localStorage.setItem('lastActivity', Date.now().toString());
 

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Container, Form, Button, Spinner } from 'react-bootstrap';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { ShieldCheck, FileText, AlertCircle, ChevronLeft } from 'lucide-react';
+import { authService } from '../services/authService';
 import '../CSS/Privacy.css';
 
 const Policy = () => {
@@ -23,18 +24,33 @@ const Policy = () => {
 
     setLoading(true);
     try {
-      const acceptedPolicies = JSON.parse(localStorage.getItem('acceptedPolicies') || '{}');
-      acceptedPolicies[policyVersion] = { acceptedAt: Date.now(), email };
-      localStorage.setItem('acceptedPolicies', JSON.stringify(acceptedPolicies));
+      const res = await authService.acceptPolicy({ email, password, policyVersion });
+      const result = res?.data?.data || res?.data;
+
+      const tokenToSave = result?.accessToken || result?.token;
+      if (!tokenToSave) {
+        alert("Lỗi: Server không trả về Token sau khi chấp thuận!");
+        return;
+      }
+
+      localStorage.setItem('accessToken', tokenToSave);
+      sessionStorage.setItem('refreshToken', result?.refreshToken || '');
+
+      const roleValue = result?.roleId || result?.roleName || result?.role || '';
+      localStorage.setItem('userRole', roleValue);
 
       sessionStorage.removeItem('pendingPolicyEmail');
       sessionStorage.removeItem('pendingPolicyPassword');
 
-      alert("Chấp thuận chính sách thành công! Vui lòng đăng nhập lại.");
-      navigate('/login');
+      window.dispatchEvent(new Event("local-storage-update"));
+
+      if (roleValue === 'STUDENT' || roleValue === 'odl1dDNm') { navigate('/dashboardlancer'); }
+      else if (roleValue === 'ENTERPRISE' || roleValue === 'Jx7ze2Kd') { navigate('/manage-jobs'); }
+      else if (roleValue === 'ADMIN' || roleValue === 'pPDY5Dnk') { navigate('/admin'); }
+      else { navigate('/'); }
     } catch (error) {
       console.error("Lỗi chấp thuận chính sách:", error);
-      alert("Không thể lưu chấp thuận. Vui lòng thử lại.");
+      alert("Không thể chấp thuận chính sách. Vui lòng thử lại.");
     } finally {
       setLoading(false);
     }
