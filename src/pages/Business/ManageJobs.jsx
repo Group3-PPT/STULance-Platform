@@ -12,6 +12,7 @@ import { bidService } from "../../services/bidservice";
 import { contractService } from "../../services/contractservice";
 import { serviceOrderService } from "../../services/serviceorderservice";
 import { dashboardService } from "../../services/dashboardService";
+import { unwrapList } from '../../services/responseUtils';
 import '../../CSS/ManageJobs.css';
 
 const ManageJobs = () => {
@@ -48,12 +49,13 @@ const ManageJobs = () => {
     try {
       const res = await jobService.getMyJobs();
       if (res.success) {
-        const jobList = res.data || [];
+        const jobList = Array.isArray(res.data) ? res.data : (res.data?.items || []);
         const enriched = await Promise.allSettled(
           jobList.map(async (job) => {
             try {
               const bidRes = await bidService.getJobBids(job.jobId);
-              const bidCount = Array.isArray(bidRes?.data) ? bidRes.data.length : (job.bidCount || 0);
+              const bidArr = Array.isArray(bidRes?.data) ? bidRes.data : (bidRes?.data?.items || []);
+              const bidCount = bidArr.length || (job.bidCount || 0);
               return { ...job, bidCount };
             } catch {
               return { ...job, bidCount: job.bidCount || 0 };
@@ -74,22 +76,22 @@ const ManageJobs = () => {
     setLoading(true);
     try {
       const res = await contractService.getMyContracts();
-      if (res.success) {
-        const contractList = res.data || [];
+      const contractList = Array.isArray(res?.data) ? res.data : (res?.data?.items || unwrapList(res));
+      if (contractList.length > 0 || res?.success !== false) {
         const enriched = contractList.map(c => {
           const isLocked = Boolean(c.isContentLocked || c.contentLockedAt);
           return {
             ...c,
             hasStudentSigned: isLocked || c.hasStudentSigned || c.studentSignedAt || false,
             hasEnterpriseSigned: isLocked || c.hasEnterpriseSigned || c.enterpriseSignedAt || false,
-            progressPercent: c.progressPercent || 0,
+            progressPercent: c.status === 'COMPLETED' ? 100 : (c.progressPercent || 0),
           };
         });
 
         const progressPromises = enriched
-          .filter(c => c.status === 'IN_PROGRESS' || c.status === 'DELIVERED' || c.status === 'COMPLETED')
+          .filter(c => c.status === 'IN_PROGRESS' || c.status === 'DELIVERED')
           .map(c => contractService.getProgress(c.contractId).then(res => {
-            const progressData = res?.data;
+            const progressData = unwrapList(res).length > 0 ? unwrapList(res)[0] : (res?.data || null);
             if (progressData) c.progressPercent = progressData.progressPercent || 0;
           }).catch(() => {}));
 
@@ -119,7 +121,7 @@ const ManageJobs = () => {
     setLoading(true);
     try {
       const res = await serviceOrderService.getEnterpriseOrders();
-      setServiceOrders(res.data || []);
+      setServiceOrders(Array.isArray(res.data) ? res.data : (res.data?.items || []));
     } catch (err) {
       console.error("Lỗi tải đơn dịch vụ:", err);
     } finally {
@@ -210,7 +212,7 @@ const ManageJobs = () => {
     setBidsLoading(true);
     try {
       const res = await bidService.getJobBids(job.jobId);
-      setBids(res.data || []);
+      setBids(unwrapList(res));
     } catch (err) {
       setBids([]);
     } finally {
@@ -580,17 +582,15 @@ const ManageJobs = () => {
                           <p className="mj-contract-student mb-0">
                             <User size={12} className="me-1" /> {partnerName}
                           </p>
-                          {(c.status === 'IN_PROGRESS' || c.status === 'DELIVERED' || c.status === 'COMPLETED') && (
-                            <div className="mt-2" style={{maxWidth: 200}}>
-                              <div className="d-flex justify-content-between mb-1">
-                                <span className="x-small text-white-50">Tiến độ</span>
-                                <span className="x-small fw-bold text-primary">{progress}%</span>
-                              </div>
-                              <div className="w-100" style={{height: 4, borderRadius: 4, background: 'rgba(255,255,255,0.08)'}}>
-                                <div style={{width: `${progress}%`, height: '100%', borderRadius: 4, background: progress >= 100 ? '#10b981' : '#3b82f6', transition: 'width 0.3s'}} />
-                              </div>
+                          <div className="mt-2" style={{maxWidth: 200}}>
+                            <div className="d-flex justify-content-between mb-1">
+                              <span className="x-small text-white-50">Tiến độ</span>
+                              <span className="x-small fw-bold" style={{color: progress >= 100 ? '#10b981' : '#3b82f6'}}>{progress}%</span>
                             </div>
-                          )}
+                            <div className="w-100" style={{height: 4, borderRadius: 4, background: 'rgba(255,255,255,0.08)'}}>
+                              <div style={{width: `${progress}%`, height: '100%', borderRadius: 4, background: progress >= 100 ? '#10b981' : progress > 0 ? '#3b82f6' : 'rgba(255,255,255,0.15)', transition: 'width 0.3s'}} />
+                            </div>
+                          </div>
                         </div>
                       </div>
 

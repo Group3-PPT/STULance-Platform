@@ -15,7 +15,7 @@ export const studentServiceService = {
 
     // --- DÀNH CHO SINH VIÊN (Người bán) ---
     /** Lấy danh sách dịch vụ của chính mình */
-    getMyServices: () => api.get('/v1/student-services/me').then(res => res.data),
+    getMyServices: (params) => api.get('/v1/student-services/me', { params }).then(res => res.data),
 
     /** Tạo dịch vụ mới */
     createService: (data) => api.post('/v1/student-services', data).then(res => res.data),
@@ -29,7 +29,7 @@ export const studentServiceService = {
 
     // --- DÀNH CHO ADMIN (Quản trị viên) ---
     /** Admin lấy toàn bộ danh sách dịch vụ hệ thống */
-    adminGetAll: () => api.get('/v1/student-services/admin').then(res => res.data),
+    adminGetAll: (params) => api.get('/v1/student-services/admin', { params }).then(res => res.data),
 
     /** Admin xem chi tiết dịch vụ bất kỳ */
     adminGetDetail: (id) => api.get(`/v1/student-services/admin/${id}`).then(res => res.data),

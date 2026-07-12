@@ -20,7 +20,7 @@ export const paymentService = {
      * Lấy lịch sử giao dịch của tôi (Nạp tiền, Thanh toán, Nhận tiền)
      * Endpoint: GET /api/v1/payments/me
      */
-    getMyPayments: () => api.get('/v1/payments/me').then(res => res.data),
+    getMyPayments: (params) => api.get('/v1/payments/me', { params }).then(res => res.data),
 
     /** 
      * Xem chi tiết một giao dịch cụ thể

@@ -6,6 +6,7 @@ import {
   Eye, RefreshCw, Search, User, DollarSign, Clock
 } from 'lucide-react';
 import { contractService } from '../../services/contractservice';
+import { unwrapList } from '../../services/responseUtils';
 import '../../CSS/ManageJobs.css';
 
 const ManageContracts = () => {
@@ -22,7 +23,7 @@ const ManageContracts = () => {
     setLoading(true);
     try {
       const res = await contractService.adminGetAllContracts();
-      setContracts(res.data || []);
+      setContracts(unwrapList(res));
     } catch (err) {
       console.error("Lỗi tải hợp đồng:", err);
     } finally {

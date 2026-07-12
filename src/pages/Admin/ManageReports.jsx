@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { adminService } from '../../services/adminservice';
 import { reportService } from '../../services/reportService';
+import { unwrapList } from '../../services/responseUtils';
 import '../../CSS/ManageReports.css'; 
 
 const ManageReports = () => {
@@ -29,9 +30,9 @@ const ManageReports = () => {
         adminService.getAllServiceOrders(),
         reportService.adminGetAllReports()
       ]);
-      if (contractsRes.success) setContracts(contractsRes.data || []);
-      if (ordersRes.success) setOrders(ordersRes.data || []);
-      if (reportsRes.success !== false) setReports(reportsRes.data || reportsRes || []);
+      if (contractsRes.success) setContracts(unwrapList(contractsRes));
+      if (ordersRes.success) setOrders(unwrapList(ordersRes));
+      if (reportsRes.success !== false) setReports(unwrapList(reportsRes));
     } catch (err) {
       console.error("Lỗi tải dữ liệu:", err);
     } finally {

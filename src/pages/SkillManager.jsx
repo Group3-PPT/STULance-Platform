@@ -3,6 +3,7 @@ import { Badge, Form, ListGroup, InputGroup, Button, Spinner } from 'react-boots
 import { Search, Plus, XCircle, Loader2, Info } from 'lucide-react';
 import { studentService } from '../../services/studentservice';
 import { skillService } from '../../services/skillservice';
+import { unwrapList } from '../services/responseUtils';
 
 const SkillManager = () => {
   const [mySkills, setMySkills] = useState([]); // Kỹ năng hiện tại của SV
@@ -20,8 +21,8 @@ const SkillManager = () => {
           studentService.getMySkills(),
           skillService.getApprovedSkills()
         ]);
-        setMySkills(myRes.data || []);
-        setSystemSkills(sysRes.data || []);
+        setMySkills(unwrapList(myRes));
+        setSystemSkills(unwrapList(sysRes));
       } catch (err) {
         console.error("Lỗi tải kỹ năng");
       }

@@ -14,8 +14,8 @@ export const savedItemsService = {
         api.delete(`/v1/saved-items/jobs/${jobId}`).then(res => res.data),
 
     /** Lấy danh sách tất cả công việc tôi đã lưu */
-    getMySavedJobs: () => 
-        api.get('/v1/saved-items/jobs/me').then(res => res.data),
+    getMySavedJobs: (params) => 
+        api.get('/v1/saved-items/jobs/me', { params }).then(res => res.data),
 
 
     // ==========================================
@@ -31,8 +31,8 @@ export const savedItemsService = {
         api.delete(`/v1/saved-items/student-services/${serviceId}`).then(res => res.data),
 
     /** Lấy danh sách tất cả dịch vụ tôi đã lưu */
-    getMySavedServices: () => 
-        api.get('/v1/saved-items/student-services/me').then(res => res.data),
+    getMySavedServices: (params) => 
+        api.get('/v1/saved-items/student-services/me', { params }).then(res => res.data),
 
 
     // ==========================================

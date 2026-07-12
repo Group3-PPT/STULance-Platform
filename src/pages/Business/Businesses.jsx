@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Button, Badge, Modal } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
-import { Building2, ShieldCheck, Eye, Loader2, MapPin, Globe, User, X } from 'lucide-react';
+import { Building2, ShieldCheck, Eye, Loader2, MapPin, Globe, User, X,Star } from 'lucide-react';
 import { enterpriseService } from '../../services/enterprise.service';
+import { unwrapList } from '../../services/responseUtils';
 import '../../CSS/Businesses.css';
 
 const Businesses = () => {
@@ -15,8 +16,8 @@ const Businesses = () => {
         const fetchEnterprises = async () => {
             try {
                 const res = await enterpriseService.getAllPublicEnterprises();
-                const data = res?.data || res || [];
-                setCompanies(Array.isArray(data) ? data : []);
+                const data = unwrapList(res);
+                setCompanies(data);
             } catch (err) {
                 console.error("Lỗi tải danh sách doanh nghiệp:", err);
             } finally {
@@ -57,7 +58,7 @@ const Businesses = () => {
                         <Col lg={4} md={6} key={biz.enterpriseId || idx}>
                             <div className="glass-card biz-card p-4 text-center h-100 d-flex flex-column">
                                 <div className="stu-avatar-wrap mb-3 mx-auto">
-                                    <img src={getLogo(biz)} alt={biz.companyName} className="stu-avatar-img" />
+                                    <img src={getLogo(biz)} alt={biz.companyName} className="stu-avatar-img" loading="lazy" />
                                     {biz.verificationStatus === 'VERIFIED' && (
                                         <div className="stu-verified-badge">
                                             <ShieldCheck size={12} fill="#10b981" color="white" />
@@ -73,6 +74,15 @@ const Businesses = () => {
                                     <p className="x-small text-white-50 mb-3">
                                         <MapPin size={12} className="me-1"/> {biz.address}
                                     </p>
+                                )}
+                                {biz.averageRating > 0 && (
+                                    <div className="d-flex align-items-center justify-content-center gap-1 mb-2">
+                                        {[...Array(5)].map((_, i) => (
+                                            <Star key={i} size={11} className={i < Math.round(biz.averageRating) ? 'text-warning' : 'text-white-50'} fill={i < Math.round(biz.averageRating) ? '#f59e0b' : 'none'} />
+                                        ))}
+                                        <span className="x-small fw-bold text-warning ms-1">{biz.averageRating}</span>
+                                        {biz.reviewCount > 0 && <span className="x-small text-white-50">({biz.reviewCount})</span>}
+                                    </div>
                                 )}
 
                                 <div className="mt-auto pt-3 border-top border-white border-opacity-10">
@@ -114,6 +124,7 @@ const Businesses = () => {
                                         src={getLogo(selectedEnterprise)}
                                         alt={selectedEnterprise.companyName}
                                         style={{ width: 72, height: 72, borderRadius: 12, objectFit: 'cover', border: '3px solid rgba(255,255,255,0.1)' }}
+                                        loading="lazy"
                                     />
                                     <div>
                                         <h4 className="fw-bold text-white mb-1">{selectedEnterprise.companyName}</h4>

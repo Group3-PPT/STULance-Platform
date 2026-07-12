@@ -4,143 +4,246 @@
     z-index: 10;
 }
 
-.tiktok-card {
-    position: relative;
-    aspect-ratio: 9 / 13.5;
-    border-radius: 18px !important;
+/* --- SERVICE CARD VERTICAL (Dwellys style) --- */
+.svc-card-v {
+    border-radius: 14px;
     overflow: hidden;
-    border: 1px solid rgba(255, 255, 255, 0.06) !important;
-    cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    background: rgba(15, 23, 42, 0.5);
+    background: rgba(15, 23, 42, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    animation: fadeInUp 0.6s ease forwards;
+    opacity: 0;
+    position: relative;
 }
 
-.tiktok-bg-img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    opacity: 0.7;
-    transition: 0.4s ease;
-}
-
-.tiktok-card:hover {
-    transform: translateY(-8px);
-    border-color: rgba(59, 130, 246, 0.3) !important;
-    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
-}
-
-.tiktok-card:hover .tiktok-bg-img {
-    opacity: 0.9;
-    transform: scale(1.05);
-}
-
-.tiktok-overlay-content {
+.svc-card-v::before {
+    content: '';
     position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    padding: 15px 12px;
-    background: linear-gradient(to top, 
-        rgba(0, 0, 0, 0.9) 0%, 
-        rgba(0, 0, 0, 0.5) 60%, 
-        transparent 100%);
+    inset: 0;
+    border-radius: 14px;
+    padding: 1px;
+    background: linear-gradient(135deg, rgba(59,130,246,0.2), transparent 50%, rgba(139,92,246,0.15));
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.4s;
     z-index: 2;
 }
 
-.author-tag {
+.svc-card-v:hover::before { opacity: 1; }
+
+.svc-card-v:hover {
+    transform: translateY(-8px) scale(1.01);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4), 0 0 30px rgba(59, 130, 246, 0.08);
+    border-color: rgba(59, 130, 246, 0.3);
+}
+
+/* Image section */
+.svc-card-v-img {
+    position: relative;
+    height: 200px;
+    overflow: hidden;
+}
+
+.svc-card-v-img img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+}
+
+.svc-card-v:hover .svc-card-v-img img {
+    transform: scale(1.06);
+}
+
+/* Badges top row */
+.svc-card-v-badges-top {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    right: 12px;
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
+    z-index: 3;
 }
 
-.author-tag span {
-    font-size: 11px;
-    opacity: 0.9;
+.svc-badge-category {
+    background: rgba(59, 130, 246, 0.9);
+    color: #fff;
+    font-size: 0.6rem;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 8px;
+    backdrop-filter: blur(8px);
 }
 
-.play-indicator {
-    width: 16px;
-    height: 16px;
-    background: var(--primary-blue);
+.svc-badge-zap {
+    width: 28px;
+    height: 28px;
     border-radius: 50%;
+    background: rgba(59, 130, 246, 0.85);
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 0 8px rgba(59, 130, 246, 0.4);
+    color: #fff;
+    flex-shrink: 0;
+    backdrop-filter: blur(8px);
 }
 
-.service-card-title {
-    font-size: 12.5px;
-    line-height: 1.4;
-    margin-bottom: 4px;
-    font-weight: 500;
+.svc-badge-verified {
+    background: rgba(34, 197, 94, 0.85);
+    color: #fff;
+    font-size: 0.55rem;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    margin-left: auto;
+    backdrop-filter: blur(8px);
+}
+
+/* Price tag overlapping image */
+.svc-card-v-price-tag {
+    position: absolute;
+    bottom: 12px;
+    left: 12px;
+    background: rgba(16, 185, 129, 0.9);
+    color: #fff;
+    font-size: 0.85rem;
+    font-weight: 800;
+    padding: 6px 14px;
+    border-radius: 10px;
+    z-index: 3;
+    backdrop-filter: blur(8px);
+    letter-spacing: 0.3px;
+}
+
+.svc-card-v-price-tag small {
+    font-size: 0.55rem;
+    font-weight: 600;
+    opacity: 0.8;
+}
+
+/* Heart button overlapping image */
+.svc-card-v-heart {
+    position: absolute;
+    bottom: 12px;
+    right: 12px;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #334155;
+    z-index: 3;
+    transition: all 0.3s;
+    backdrop-filter: blur(8px);
+    cursor: pointer;
+    border: none;
+    padding: 0;
+}
+
+.svc-card-v-heart:hover,
+.svc-card-v-heart.saved {
+    background: #ef4444;
+    color: #fff;
+    transform: scale(1.1);
+}
+
+.svc-card-v-heart .spinner {
+    animation: rotate 1s linear infinite;
+}
+
+/* Body section */
+.svc-card-v-body {
+    padding: 14px 16px 16px;
+}
+
+.svc-card-v-location {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.68rem;
+    color: rgba(255, 255, 255, 0.45);
+    margin-bottom: 6px;
+}
+
+.svc-card-v-title {
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 10px;
+    line-height: 1.35;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
-    text-shadow: 0 1px 3px rgba(0,0,0,0.5);
 }
 
-.tiktok-side-actions {
-    position: absolute;
-    right: 8px;
-    bottom: 95px;
+.svc-card-v-author {
     display: flex;
-    flex-direction: column;
-    gap: 12px;
-    z-index: 5;
-}
-
-.action-circle {
-    display: flex;
-    flex-direction: column;
     align-items: center;
-    gap: 2px;
-    cursor: pointer;
-    transition: all 0.2s ease;
+    gap: 6px;
+    margin-bottom: 10px;
 }
 
-.action-circle:hover {
-    transform: scale(1.15);
+.svc-card-v-author img {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 1.5px solid rgba(59, 130, 246, 0.3);
 }
 
-.action-circle span {
-    font-size: 10px;
-    font-weight: bold;
-    text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+.svc-card-v-author-name {
+    font-size: 0.72rem;
+    color: rgba(255, 255, 255, 0.7);
+    font-weight: 500;
 }
 
-.active-heart {
-    filter: drop-shadow(0 0 8px rgba(255, 77, 73, 0.6));
+.svc-card-v-author-dot {
+    color: rgba(255, 255, 255, 0.2);
+    font-size: 0.7rem;
 }
 
-.service-price-tag {
-    font-size: 14px;
-    font-weight: 800;
-    color: #fff;
+.svc-card-v-author-time {
+    font-size: 0.65rem;
+    color: rgba(255, 255, 255, 0.35);
+    display: flex;
+    align-items: center;
+    gap: 3px;
 }
 
-.btn-buy-now-sm {
-    background: var(--primary-blue);
-    color: white;
-    border: none;
-    padding: 4px 14px;
-    border-radius: 50px;
-    font-weight: 700;
-    font-size: 10px;
-    transition: 0.2s;
-    text-transform: uppercase;
-    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+.svc-card-v-divider {
+    height: 1px;
+    background: rgba(255, 255, 255, 0.06);
+    margin-bottom: 10px;
 }
 
-.btn-buy-now-sm:hover {
-    background: white;
-    color: var(--primary-blue);
-    box-shadow: 0 2px 8px rgba(255, 255, 255, 0.2);
+.svc-card-v-stats {
+    display: flex;
+    align-items: center;
+    gap: 16px;
 }
 
-.text-white-80 {
-    color: rgba(255, 255, 255, 0.85);
+.svc-card-v-stat {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.7rem;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.svc-card-v-stat svg {
+    color: rgba(255, 255, 255, 0.35);
 }
 
 .text-primary-glow {
@@ -148,11 +251,18 @@
     text-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
 }
 
-.spinner {
-    animation: rotate 1s linear infinite;
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes rotate {
     from { transform: rotate(0deg); }
     to { transform: rotate(360deg); }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .svc-card-v-img { height: 180px; }
+    .svc-card-v-body { padding: 12px 14px 14px; }
 }

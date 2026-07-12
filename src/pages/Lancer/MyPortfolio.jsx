@@ -7,6 +7,7 @@ import {
   User, Eye, FolderOpen, GripVertical 
 } from 'lucide-react';
 import { portfolioService } from '../../services/portfolioservice';
+import { unwrapList } from '../../services/responseUtils';
 import '../../CSS/Portfolio.css';
 
 const MyPortfolio = () => {
@@ -27,7 +28,7 @@ const MyPortfolio = () => {
     try {
       const res = await portfolioService.getMyPortfolios();
       if (res.success) {
-        setPortfolios(res.data || []);
+        setPortfolios(unwrapList(res));
       }
     } catch (err) {
       console.error("Lỗi tải danh sách dự án:", err);

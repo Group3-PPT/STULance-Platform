@@ -9,7 +9,7 @@ export const jobService = {
      * Lấy danh sách việc làm đã được duyệt công khai
      * Endpoint: GET /api/v1/jobs
      */
-    getAllPublicJobs: () => api.get('/v1/jobs').then(res => res.data),
+    getAllPublicJobs: (params) => api.get('/v1/jobs', { params }).then(res => res.data),
 
     /** 
      * Xem chi tiết một bài đăng tuyển dụng công khai
@@ -32,7 +32,7 @@ export const jobService = {
      * Lấy danh sách tin tuyển dụng của doanh nghiệp đang đăng nhập
      * Endpoint: GET /api/v1/jobs/me
      */
-    getMyJobs: () => api.get('/v1/jobs/me').then(res => res.data),
+    getMyJobs: (params) => api.get('/v1/jobs/me', { params }).then(res => res.data),
 
     /** 
      * Xem chi tiết tin tuyển dụng (Dành cho chủ sở hữu)
@@ -61,7 +61,7 @@ export const jobService = {
      * Admin lấy toàn bộ danh sách việc làm hệ thống
      * Endpoint: GET /api/v1/jobs/admin
      */
-    adminGetAllJobs: () => api.get('/v1/jobs/admin').then(res => res.data),
+    adminGetAllJobs: (params) => api.get('/v1/jobs/admin', { params }).then(res => res.data),
 
     /** 
      * Admin xem chi tiết tin tuyển dụng bất kỳ

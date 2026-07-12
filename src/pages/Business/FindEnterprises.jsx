@@ -5,6 +5,7 @@ import {
   MapPin, X, Mail, Globe, Hash, Users, User
 } from 'lucide-react';
 import { enterpriseService } from '../../services/enterprise.service';
+import { unwrapList } from '../../services/responseUtils';
 import '../../CSS/Businesses.css';
 
 const FindEnterprises = () => {
@@ -20,8 +21,8 @@ const FindEnterprises = () => {
         setLoading(true);
         try {
             const res = await enterpriseService.getAllPublicEnterprises();
-            const data = res?.data || res || [];
-            setEnterprises(Array.isArray(data) ? data : []);
+            const data = unwrapList(res);
+            setEnterprises(data);
         } catch (err) {
             console.error("Lỗi tải danh sách doanh nghiệp:", err);
         } finally {
@@ -90,7 +91,7 @@ const FindEnterprises = () => {
                                 <Col lg={4} md={6} key={ent.enterpriseId || idx}>
                                     <div className="glass-card biz-card p-4 text-center h-100 d-flex flex-column">
                                         <div className="stu-avatar-wrap mb-3 mx-auto">
-                                            <img src={getLogo(ent)} alt={ent.companyName} className="stu-avatar-img" />
+                                            <img src={getLogo(ent)} alt={ent.companyName} className="stu-avatar-img" loading="lazy" />
                                             {ent.verificationStatus === 'VERIFIED' && (
                                                 <div className="stu-verified-badge">
                                                     <ShieldCheck size={12} fill="#10b981" color="white" />
@@ -106,6 +107,15 @@ const FindEnterprises = () => {
                                             <p className="x-small text-white-50 mb-3">
                                                 <MapPin size={12} className="me-1"/> {ent.address}
                                             </p>
+                                        )}
+                                        {ent.averageRating > 0 && (
+                                            <div className="d-flex align-items-center justify-content-center gap-1 mb-2">
+                                                {[...Array(5)].map((_, i) => (
+                                                    <Star key={i} size={11} className={i < Math.round(ent.averageRating) ? 'text-warning' : 'text-white-50'} fill={i < Math.round(ent.averageRating) ? '#f59e0b' : 'none'} />
+                                                ))}
+                                                <span className="x-small fw-bold text-warning ms-1">{ent.averageRating}</span>
+                                                {ent.reviewCount > 0 && <span className="x-small text-white-50">({ent.reviewCount})</span>}
+                                            </div>
                                         )}
 
                                         <div className="mt-auto pt-3 border-top border-white border-opacity-10">
@@ -147,6 +157,7 @@ const FindEnterprises = () => {
                                     <img
                                         src={getLogo(selectedEnterprise)}
                                         alt={selectedEnterprise.companyName}
+                                        loading="lazy"
                                         style={{ width: 72, height: 72, borderRadius: 12, objectFit: 'cover', border: '3px solid rgba(255,255,255,0.1)' }}
                                     />
                                     <div>

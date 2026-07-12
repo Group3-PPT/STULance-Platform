@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Table, Badge, Form, Spinner, Dropdown, Modal, Row, Col } from 'react-bootstrap';
 import { Search, MoreVertical, Eye, Calendar, Loader2, Building2, ShieldAlert, CheckCircle, XCircle, PauseCircle, Lock, Archive, RefreshCw, Clock, DollarSign, Users, MapPin } from 'lucide-react';
 import { jobService } from "../../services/jobservice";
+import { unwrapList } from '../../services/responseUtils';
 import '../../CSS/ManagePosts.css';
 
 const ManagePosts = () => {
@@ -16,7 +17,7 @@ const ManagePosts = () => {
     setLoading(true);
     try {
       const res = await jobService.adminGetAllJobs();
-      if (res.success) setPosts(res.data || []);
+      if (res.success) setPosts(unwrapList(res));
     } catch (err) { console.error("Lỗi tải bài đăng:", err); } 
     finally { setLoading(false); }
   };

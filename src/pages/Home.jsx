@@ -65,7 +65,11 @@ const Home = () => {
             if (!res) return [];
             if (Array.isArray(res)) return res;
             const d = res?.data;
-            return Array.isArray(d) ? d : [];
+            if (Array.isArray(d)) return d;
+            if (d?.items && Array.isArray(d.items)) return d.items;
+            if (d?.data && Array.isArray(d.data)) return d.data;
+            if (d?.data?.items && Array.isArray(d.data.items)) return d.data.items;
+            return [];
           };
           if (jobsRes) setRandomJobs(unwrapList(jobsRes).slice(0, 6));
           if (servicesRes) setRandomServices(unwrapList(servicesRes).slice(0, 6));
@@ -272,6 +276,7 @@ const Home = () => {
                             <img 
                               src={svc.sampleImageUrl || 'https://via.placeholder.com/400x300/0f172a/3b82f6?text=Service'} 
                               alt={svc.title} 
+                              loading="lazy"
                             />
                             {svc.recommendationReason && (
                               <div className="svc-card-h-tag">
@@ -289,16 +294,11 @@ const Home = () => {
                             <h6 className="svc-card-h-title">{svc.title}</h6>
                             <p className="svc-card-h-desc">{svc.description}</p>
                             <div className="svc-card-h-meta">
-                              <div className="svc-card-h-rating">
-                                {[...Array(5)].map((_, i) => (
-                                  <Star key={i} size={11} className={i < 4 ? 'text-warning' : 'text-white-50'} fill={i < 4 ? '#f59e0b' : 'none'}/>
-                                ))}
-                              </div>
                               <span><Clock size={11}/> {svc.deliveryDays} ngày</span>
                             </div>
                             <div className="svc-card-h-bottom">
                               <div className="svc-card-h-author">
-                                <img src={svc.studentAvatarUrl || 'https://ui-avatars.com/api/?name=S&background=0D8ABC&color=fff'} alt="" />
+                                <img src={svc.studentAvatarUrl || 'https://ui-avatars.com/api/?name=S&background=0D8ABC&color=fff'} alt="" loading="lazy" />
                                 <span>{svc.studentName}</span>
                               </div>
                               <span className="svc-card-h-price">{formatMoney(svc.price)}<small> VND</small></span>
@@ -374,11 +374,20 @@ const Home = () => {
                       <img
                         src={stu.avatarUrl || 'https://ui-avatars.com/api/?name=S&background=0D8ABC&color=fff&size=80'}
                         alt={stu.fullName}
+                        loading="lazy"
                         style={{width: 56, height: 56, borderRadius: '50%', objectFit: 'cover', border: '2px solid rgba(59,130,246,0.3)', marginBottom: 8}}
                       />
                       <h6 className="text-white fw-bold mb-1" style={{fontSize: '0.8rem'}}>{stu.fullName}</h6>
                       <p className="mb-1" style={{fontSize: '0.65rem', color: 'rgba(255,255,255,0.5)'}}>{stu.major}</p>
                       <p className="mb-2" style={{fontSize: '0.6rem', color: 'rgba(255,255,255,0.4)'}}>{stu.school}</p>
+                      {stu.averageRating > 0 && (
+                        <div className="d-flex align-items-center justify-content-center gap-1 mb-2">
+                          {[...Array(5)].map((_, i) => (
+                            <Star key={i} size={10} className={i < Math.round(stu.averageRating) ? 'text-warning' : 'text-white-50'} fill={i < Math.round(stu.averageRating) ? '#f59e0b' : 'none'} />
+                          ))}
+                          <span className="x-small fw-bold text-warning ms-1" style={{fontSize: '0.6rem'}}>{stu.averageRating}</span>
+                        </div>
+                      )}
                       <div className="d-flex justify-content-center align-items-center pt-2 border-top" style={{borderColor: 'rgba(255,255,255,0.06)'}}>
                         <div className="text-center">
                           <div className="fw-bold text-primary" style={{fontSize: '0.8rem'}}>{stu.gpa?.toFixed(2) || '—'}</div>
@@ -415,6 +424,7 @@ const Home = () => {
                     <img
                       src={biz.logoUrl || 'https://ui-avatars.com/api/?name=E&background=10b981&color=fff&size=80'}
                       alt={biz.companyName}
+                      loading="lazy"
                       style={{width: 56, height: 56, borderRadius: 12, objectFit: 'cover', border: '2px solid rgba(16,185,129,0.3)', marginBottom: 8}}
                     />
                     <h6 className="text-white fw-bold mb-1" style={{fontSize: '0.8rem'}}>{biz.companyName}</h6>
@@ -422,6 +432,14 @@ const Home = () => {
                     {biz.address && (
                       <div className="mb-2" style={{fontSize: '0.6rem', color: 'rgba(255,255,255,0.4)'}}>
                         <MapPin size={10} className="me-1"/>{biz.address}
+                      </div>
+                    )}
+                    {biz.averageRating > 0 && (
+                      <div className="d-flex align-items-center justify-content-center gap-1 mb-2">
+                        {[...Array(5)].map((_, i) => (
+                          <Star key={i} size={10} className={i < Math.round(biz.averageRating) ? 'text-warning' : 'text-white-50'} fill={i < Math.round(biz.averageRating) ? '#f59e0b' : 'none'} />
+                        ))}
+                        <span className="x-small fw-bold text-warning ms-1" style={{fontSize: '0.6rem'}}>{biz.averageRating}</span>
                       </div>
                     )}
                     <div className="d-flex justify-content-center align-items-center pt-2 border-top" style={{borderColor: 'rgba(255,255,255,0.06)'}}>

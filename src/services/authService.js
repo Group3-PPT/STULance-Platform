@@ -174,6 +174,9 @@ export const authService = {
 
     register: (data) => api.post('/v1/auth/register', data),
     verifyOtp: (data) => api.post('/v1/auth/verify-otp', data),
+    resendOtp: (data) => api.post('/v1/auth/resend-otp', data).then(r => r.data),
+    forgotPassword: (data) => api.post('/v1/auth/forgot-password', data).then(r => r.data),
+    resetPassword: (data) => api.post('/v1/auth/reset-password', data).then(r => r.data),
     changePassword: (data) => api.post('/v1/auth/change-password', data).then(r => r.data),
     acceptPolicy: (data) => api.post('/v1/auth/accept-policy', data).then(r => r.data),
 };

@@ -19,7 +19,7 @@ export const adminService = {
     // ==========================================
 
     /** Lấy tất cả tin tuyển dụng hệ thống */
-    getAllJobs: () => api.get('/v1/jobs/admin').then(res => res.data),
+    getAllJobs: (params) => api.get('/v1/jobs/admin', { params }).then(res => res.data),
 
     /** Xem chi tiết tin tuyển dụng dưới quyền Admin */
     getJobDetail: (jobId) => api.get(`/v1/jobs/admin/${jobId}`).then(res => res.data),
@@ -34,7 +34,7 @@ export const adminService = {
     // ==========================================
 
     /** Lấy tất cả gói dịch vụ sinh viên đang rao bán */
-    getAllStudentServices: () => api.get('/v1/student-services/admin').then(res => res.data),
+    getAllStudentServices: (params) => api.get('/v1/student-services/admin', { params }).then(res => res.data),
 
     /** Duyệt hoặc Khóa gói dịch vụ (APPROVED/REJECTED/HIDDEN) */
     updateServiceStatus: (serviceId, status) => 
@@ -46,7 +46,7 @@ export const adminService = {
     // ==========================================
 
     /** Xem các kỹ năng đang chờ duyệt */
-    getPendingSkills: () => api.get('/v1/skills/pending').then(res => res.data),
+    getPendingSkills: (params) => api.get('/v1/skills/pending', { params }).then(res => res.data),
 
     /** Duyệt kỹ năng sinh viên đề xuất */
     approveSkill: (skillId) => api.patch(`/v1/skills/${skillId}/approve`).then(res => res.data),
@@ -66,7 +66,7 @@ export const adminService = {
     // ==========================================
 
     /** Theo dõi toàn bộ hợp đồng trên sàn */
-    getAllContracts: () => api.get('/v1/contracts/admin').then(res => res.data),
+    getAllContracts: (params) => api.get('/v1/contracts/admin', { params }).then(res => res.data),
 
     /** Phân xử tranh chấp hợp đồng giữa DN và SV */
     resolveContractDispute: (contractId, resolutionData) => 
@@ -81,7 +81,7 @@ export const adminService = {
     // ==========================================
 
     /** Xem toàn bộ đơn đặt hàng dịch vụ */
-    getAllServiceOrders: () => api.get('/v1/service-orders/admin').then(res => res.data),
+    getAllServiceOrders: (params) => api.get('/v1/service-orders/admin', { params }).then(res => res.data),
 
     /** Hủy đơn hàng dịch vụ cưỡng chế */
     cancelServiceOrderAdmin: (orderId) => api.patch(`/v1/service-orders/admin/${orderId}/cancel`).then(res => res.data),

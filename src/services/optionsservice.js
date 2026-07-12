@@ -20,9 +20,13 @@ export const optionsService = {
     // 4. Nhóm Dịch vụ & Đơn hàng
     getStudentServiceStatuses: () => api.get('/v1/options/student-service-statuses').then(res => res.data),
     getServiceOrderStatuses: () => api.get('/v1/options/service-order-statuses').then(res => res.data),
-    getServiceOrderBuyerTypes: () => api.get('/v1/options/service-orderbuyer-types').then(res => res.data),
+    getServiceOrderBuyerTypes: () => api.get('/v1/options/service-order-buyer-types').then(res => res.data),
 
     // 5. Nhóm Thanh toán
     getPaymentStatuses: () => api.get('/v1/options/payment-statuses').then(res => res.data),
     getPaymentMethods: () => api.get('/v1/options/payment-methods').then(res => res.data),
+
+    // 6. Nhóm Báo cáo & Rút tiền
+    getReportStatuses: () => api.get('/v1/options/report-statuses').then(res => res.data),
+    getWithdrawalStatuses: () => api.get('/v1/options/withdrawal-statuses').then(res => res.data),
 };

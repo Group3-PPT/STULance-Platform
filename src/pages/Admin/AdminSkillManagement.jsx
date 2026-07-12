@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Table, Badge, Form, Modal, InputGroup } from 'react-bootstrap';
 import { CheckCircle, XCircle, Trash2, Edit, Plus, Search, Layers, Clock, Check, Settings, Loader2, GitMerge, RefreshCw } from 'lucide-react';
 import { skillService } from '../../services/skillservice';
+import { unwrapList } from '../../services/responseUtils';
 import '../../CSS/AdminSkillManagement.css';
 
 const AdminSkillManager = () => {
@@ -27,8 +28,8 @@ const AdminSkillManager = () => {
                 skillService.getPendingSkills(), 
                 skillService.getApprovedSkills()
             ]);
-            setPendingSkills(pRes.data || []);
-            setAllSkills(aRes.data || []);
+            setPendingSkills(unwrapList(pRes));
+            setAllSkills(unwrapList(aRes));
         } catch (err) { 
             console.error("Lỗi tải danh sách:", err); 
         } finally { setLoading(false); }

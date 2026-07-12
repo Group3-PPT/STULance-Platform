@@ -6,6 +6,7 @@ import {
   ChevronRight, X
 } from 'lucide-react';
 import { studentServiceService } from '../../services/studentserviceservice';
+import { unwrapList } from '../../services/responseUtils';
 import '../../CSS/ManageStudentServices.css';
 
 const ManageStudentServices = () => {
@@ -21,7 +22,7 @@ const ManageStudentServices = () => {
     try {
       const res = await studentServiceService.adminGetAll();
       if (res.success) {
-        setServices(res.data || []);
+        setServices(unwrapList(res));
       }
     } catch (err) {
       console.error("Lỗi tải dịch vụ hệ thống:", err);

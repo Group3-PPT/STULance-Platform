@@ -1,8 +1,8 @@
 import api from './api';
 
 export const skillService = {
-    getApprovedSkills: () => api.get('/v1/skills').then(r => r.data),
-    getPendingSkills: () => api.get('/v1/skills/pending').then(r => r.data),
+    getApprovedSkills: (params) => api.get('/v1/skills', { params }).then(r => r.data),
+    getPendingSkills: (params) => api.get('/v1/skills/pending', { params }).then(r => r.data),
     approveSkill: (id) => api.patch(`/v1/skills/${id}/approve`).then(r => r.data),
     rejectSkill: (id) => api.patch(`/v1/skills/${id}/reject`).then(r => r.data),
     mergeSkill: (sourceId, targetId) => api.patch(`/v1/skills/${sourceId}/merge`, { targetSkillId: targetId }).then(r => r.data),

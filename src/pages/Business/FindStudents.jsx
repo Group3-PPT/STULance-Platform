@@ -5,6 +5,7 @@ import {
   Briefcase, X, Mail, Star, BookOpen, Calendar
 } from 'lucide-react';
 import { studentService } from '../../services/studentservice';
+import { unwrapList } from '../../services/responseUtils';
 import { Link } from 'react-router-dom';
 import '../../CSS/Businesses.css';
 
@@ -22,8 +23,8 @@ const FindStudents = () => {
         setLoading(true);
         try {
             const res = await studentService.getAllPublicStudents();
-            const data = res?.data || res || [];
-            setStudents(Array.isArray(data) ? data : []);
+            const data = unwrapList(res);
+            setStudents(data);
         } catch (err) {
             console.error("Lỗi tải danh sách sinh viên:", err);
         } finally {
@@ -110,7 +111,7 @@ const FindStudents = () => {
                                 <Col lg={4} md={6} key={stu.studentId || idx}>
                                     <div className="glass-card biz-card p-4 text-center h-100 d-flex flex-column">
                                         <div className="stu-avatar-wrap mb-3 mx-auto">
-                                            <img src={getAvatar(stu)} alt={stu.fullName} className="stu-avatar-img" />
+                                            <img src={getAvatar(stu)} alt={stu.fullName} className="stu-avatar-img" loading="lazy" />
                                             {stu.verificationStatus === 'VERIFIED' && (
                                                 <div className="stu-verified-badge">
                                                     <ShieldCheck size={12} fill="#10b981" color="white" />
@@ -129,6 +130,15 @@ const FindStudents = () => {
                                             <p className="x-small text-white-50 mb-2">
                                                 <Star size={12} className="me-1"/> GPA: {stu.gpa.toFixed(2)}
                                             </p>
+                                        )}
+                                        {stu.averageRating > 0 && (
+                                            <div className="d-flex align-items-center justify-content-center gap-1 mb-2">
+                                                {[...Array(5)].map((_, i) => (
+                                                    <Star key={i} size={11} className={i < Math.round(stu.averageRating) ? 'text-warning' : 'text-white-50'} fill={i < Math.round(stu.averageRating) ? '#f59e0b' : 'none'} />
+                                                ))}
+                                                <span className="x-small fw-bold text-warning ms-1">{stu.averageRating}</span>
+                                                {stu.reviewCount > 0 && <span className="x-small text-white-50">({stu.reviewCount})</span>}
+                                            </div>
                                         )}
 
                                         {stu.skills && stu.skills.length > 0 && (
@@ -174,6 +184,7 @@ const FindStudents = () => {
                                     <img
                                         src={getAvatar(selectedStudent)}
                                         alt={selectedStudent.fullName}
+                                        loading="lazy"
                                         style={{ width: 72, height: 72, borderRadius: '50%', objectFit: 'cover', border: '3px solid rgba(255,255,255,0.1)' }}
                                     />
                                     <div>

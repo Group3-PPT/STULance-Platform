@@ -9,6 +9,7 @@ import {
 import { profileService } from '../../services/profileservice';
 import { studentService } from '../../services/studentservice';
 import { portfolioService } from '../../services/portfolioservice';
+import { unwrapList } from '../../services/responseUtils';
 import '../../CSS/Portfolio.css';
 
 const Portfolio = () => {
@@ -42,7 +43,7 @@ const Portfolio = () => {
           portfolioService.getStudentPortfolios(id)
         ]);
         setCombinedData(studentRes?.data || {});
-        setProjects(portRes?.data || []);
+        setProjects(unwrapList(portRes));
         setSkills(studentRes?.data?.skills || []);
       } else {
         const results = await Promise.allSettled([
@@ -63,7 +64,7 @@ const Portfolio = () => {
         setCombinedData(tempInfo);
 
         if (results[2].status === 'fulfilled') setSkills(results[2].value?.data || []);
-        if (results[3].status === 'fulfilled') setProjects(results[3].value?.data || []);
+        if (results[3].status === 'fulfilled') setProjects(unwrapList(results[3].value));
       }
     } catch (err) {
       console.error("Lỗi tải dữ liệu:", err.message);

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Navbar, Nav, Container, Button, NavDropdown, Image, Badge } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
-import { Bell, LogOut, LayoutDashboard, Settings, History, PlusSquare, CheckCheck, Wallet } from 'lucide-react';
+import { Bell, LogOut, LayoutDashboard, Settings, History, PlusSquare, CheckCheck, Wallet, Heart } from 'lucide-react';
 import { authService } from '../services/authService';
 import { enterpriseService } from '../services/enterprise.service';
 import { notificationService } from '../services/notificationService';
@@ -196,6 +196,9 @@ const BusinessNavbar = () => {
               </div>
               <NavDropdown.Item as={Link} to="/manage-jobs">
                 <LayoutDashboard size={18} className="me-3 text-primary" /> Quản lý bài đăng
+              </NavDropdown.Item>
+              <NavDropdown.Item as={Link} to="/saved-services">
+                <Heart size={18} className="me-3 text-danger" /> Dịch vụ đã lưu
               </NavDropdown.Item>
               <NavDropdown.Item as={Link} to="/businesses/business-profile-settings">
                 <Settings size={18} className="me-3 text-primary" /> Cài đặt hồ sơ

@@ -1,5 +1,4 @@
 import api from './api';
-import axios from 'axios';
 
 export const enterpriseService = {
     // --- DÀNH CHO DOANH NGHIỆP (Self-management) ---
@@ -32,15 +31,9 @@ export const enterpriseService = {
      * Lấy danh sách tất cả doanh nghiệp (Dùng cho trang chủ/tìm kiếm)
      * Endpoint: GET /api/v1/enterprises/public
      */
-    getAllEnterprises: () => {
-        const role = localStorage.getItem('userRole');
-        if (role === 'ADMIN' || role === 'pPDY5Dnk') {
-            return api.get('/v1/enterprises').then(res => res.data);
-        }
-        return enterpriseService.getAllPublicEnterprises();
-    },
+    getAllEnterprises: (params) => api.get('/v1/enterprises', { params }).then(res => res.data),
 
-    getAllPublicEnterprises: () => axios.get('/api/v1/enterprises/public').then(res => res.data),
+    getAllPublicEnterprises: (params) => api.get('/v1/enterprises/public', { params }).then(res => res.data),
 
 
     // --- DÀNH CHO ADMIN (Hệ thống quản trị) ---

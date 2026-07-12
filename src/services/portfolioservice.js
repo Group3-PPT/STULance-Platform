@@ -3,7 +3,7 @@ import api from './api';
 export const portfolioService = {
     // Lấy danh sách dự án của tôi (Dành cho trang quản lý)
     // Endpoint: GET /api/v1/portfolios/me
-    getMyPortfolios: () => api.get('/v1/portfolios/me').then(res => res.data),
+    getMyPortfolios: (params) => api.get('/v1/portfolios/me', { params }).then(res => res.data),
 
     // Thêm dự án mới
     // Endpoint: POST /api/v1/portfolios
@@ -20,7 +20,7 @@ export const portfolioService = {
 
     // Xem dự án của sinh viên khác (Dành cho nhà tuyển dụng)
     // Endpoint: GET /api/v1/portfolios/student/{studentId}
-    getStudentPortfolios: (studentId) => api.get(`/v1/portfolios/student/${studentId}`).then(res => res.data)
+    getStudentPortfolios: (studentId, params) => api.get(`/v1/portfolios/student/${studentId}`, { params }).then(res => res.data)
 
     
 };

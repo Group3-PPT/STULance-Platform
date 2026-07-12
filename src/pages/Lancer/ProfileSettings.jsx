@@ -9,6 +9,7 @@ import { profileService } from '../../services/profileservice';
 import { studentService } from '../../services/studentservice';
 import { skillService } from '../../services/skillservice';
 import { authService } from '../../services/authService';
+import { unwrapList } from '../../services/responseUtils';
 import '../../CSS/ProfileSettings.css';
 
 const ProfileSettings = () => {
@@ -48,8 +49,8 @@ const ProfileSettings = () => {
 
       if (results[0].status === 'fulfilled') setBasicInfo(results[0].value.data);
       if (results[1].status === 'fulfilled') setStudentInfo(results[1].value.data);
-      if (results[2].status === 'fulfilled') setMySkills(results[2].value.data || []);
-      if (results[3].status === 'fulfilled') setSystemSkills(results[3].value.data || []);
+      if (results[2].status === 'fulfilled') setMySkills(unwrapList(results[2].value));
+      if (results[3].status === 'fulfilled') setSystemSkills(unwrapList(results[3].value));
       
     } catch (err) {
       console.error("Lỗi khởi tạo dữ liệu");

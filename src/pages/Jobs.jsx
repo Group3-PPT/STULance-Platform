@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Container, Row, Col, Form, Button, Badge, Spinner } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import { Search, Globe, MapPin, Bookmark, Send, Laptop, ShieldCheck, Zap, Loader2, Sparkles, Building2 } from 'lucide-react';
@@ -6,6 +6,7 @@ import { jobService } from '../services/jobservice';
 import { savedItemsService } from '../services/saveditemsservice';
 import { recommendationService } from '../services/recommendationservice';
 import { enterpriseService } from '../services/enterprise.service';
+import { unwrapList } from '../services/responseUtils';
 import '../CSS/Jobs.css';
 
 const Jobs = () => {
@@ -31,7 +32,7 @@ const Jobs = () => {
         const res = await jobService.getAllPublicJobs();
 
         if (res.success) {
-          const data = res.data || [];
+          const data = unwrapList(res);
           setJobs(data);
           if (data.length > 0) setSelectedJob(data[0]);
         }
@@ -39,7 +40,7 @@ const Jobs = () => {
         if (token && isStudent) {
           const savedRes = await savedItemsService.getMySavedJobs();
           if (savedRes.success) {
-            setSavedJobIds(new Set(savedRes.data.map(item => item.jobId)));
+            setSavedJobIds(new Set(unwrapList(savedRes).map(item => item.jobId)));
           }
         }
       } catch (err) {
@@ -206,6 +207,7 @@ const Jobs = () => {
                         <img
                             src={getJobPosterLogo(job)}
                             alt={job.enterpriseName}
+                            loading="lazy"
                             style={{ width: 40, height: 40, borderRadius: '50%', objectFit: 'cover', flexShrink: 0, border: '2px solid rgba(255,255,255,0.1)' }}
                             onError={(e) => { e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(job.enterpriseName || 'D')}&background=0d6efd&color=fff&size=40`; }}
                         />
@@ -318,6 +320,7 @@ const Jobs = () => {
                                 <img
                                     src={getJobPosterLogo(selectedJob)}
                                     alt={getJobPosterName(selectedJob)}
+                                    loading="lazy"
                                     style={{ width: 56, height: 56, borderRadius: '50%', objectFit: 'cover', border: '3px solid rgba(59,130,246,0.3)' }}
                                     onError={(e) => { e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(getJobPosterName(selectedJob))}&background=0d6efd&color=fff&size=56`; }}
                                 />

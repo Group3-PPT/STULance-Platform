@@ -6,6 +6,7 @@ import {
 } from 'recharts';
 import { Download, Calendar, TrendingUp, Users, Briefcase, FileBarChart, Loader2, RefreshCw } from 'lucide-react';
 import { adminService } from '../../services/adminservice';
+import { unwrapList } from '../../services/responseUtils';
 import '../../CSS/AdminReports.css';
 
 const AdminReports = () => {
@@ -23,10 +24,10 @@ const AdminReports = () => {
       ]);
 
       setStats({
-        jobs: jobsRes.success ? (jobsRes.data || []).length : 0,
-        services: servicesRes.success ? (servicesRes.data || []).length : 0,
-        contracts: contractsRes.success ? (contractsRes.data || []).length : 0,
-        orders: ordersRes.success ? (ordersRes.data || []).length : 0
+        jobs: unwrapList(jobsRes).length,
+        services: unwrapList(servicesRes).length,
+        contracts: unwrapList(contractsRes).length,
+        orders: unwrapList(ordersRes).length
       });
     } catch (err) {
       console.error("Lỗi tải báo cáo:", err);

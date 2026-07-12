@@ -30,6 +30,7 @@ import Contract from './pages/Contract';
 import ProfileSettings from './pages/Lancer/ProfileSettings';
 import PostJob from './pages/Business/PostJob';
 import ManageJobs from './pages/Business/ManageJobs';
+import SavedServices from './pages/Business/SavedServices';
 import PostService from './pages/Services/PostService';
 import DashboardLancer from './pages/Lancer/DashboardLancer';
 import Handbook from './pages/Handbook';
@@ -56,39 +57,55 @@ import Policy from './pages/Policy';
 import NotFound from './pages/NotFound';
 import { paymentService } from './services/paymentservice';
 
-const PAGE_TITLES = {
-  '/': 'Trang chủ',
-  '/login': 'Đăng nhập',
-  '/register': 'Đăng ký',
-  '/forgot-password': 'Quên mật khẩu',
-  '/jobs': 'Việc làm',
-  '/businesses': 'Doanh nghiệp',
-  '/services': 'Dịch vụ',
-  '/services-list': 'Danh sách dịch vụ',
-  '/portfolio': 'Portfolio',
-  '/handbook': 'Cẩm nang',
-  '/privacy': 'Chính sách bảo mật',
-  '/policy': 'Điều khoản sử dụng',
-  '/universities': 'Trường đại học',
-  '/dashboardlancer': 'Bảng điều khiển',
-  '/cv-maker': 'Tạo CV',
-  '/profile-settings': 'Cài đặt hồ sơ',
-  '/portfolio-manager': 'Quản lý Portfolio',
-  '/post-service': 'Đăng dịch vụ',
-  '/post-job': 'Đăng việc',
-  '/manage-jobs': 'Quản lý việc',
-  '/find-students': 'Tìm sinh viên',
-  '/find-enterprises': 'Tìm doanh nghiệp',
-  '/payment': 'Thanh toán',
-  '/service-invoice': 'Hóa đơn dịch vụ',
+const PAGE_META = {
+  '/': { title: 'Trang chủ', desc: 'STULance - Nền tảng kết nối sinh viên tài năng với doanh nghiệp. Việc làm thêm, thực tập, freelance chất lượng.' },
+  '/login': { title: 'Đăng nhập', desc: 'Đăng nhập tài khoản STULance để kết nối việc làm và dịch vụ freelance.' },
+  '/register': { title: 'Đăng ký', desc: 'Tạo tài khoản STULance miễn phí - kết nối sinh viên với doanh nghiệp.' },
+  '/forgot-password': { title: 'Quên mật khẩu', desc: 'Khôi phục mật khẩu tài khoản STULance.' },
+  '/jobs': { title: 'Việc làm', desc: 'Tìm việc làm thêm, thực tập, dự án freelance cho sinh viên tại STULance.' },
+  '/businesses': { title: 'Doanh nghiệp', desc: 'Danh sách doanh nghiệp uy tín đang tuyển dụng sinh viên trên STULance.' },
+  '/services': { title: 'Dịch vụ', desc: 'Khám phá dịch vụ freelance từ sinh viên: lập trình, thiết kế, marketing và hơn thế.' },
+  '/services-list': { title: 'Danh sách dịch vụ', desc: 'Tất cả dịch vụ freelance chất lượng từ sinh viên trên STULance.' },
+  '/portfolio': { title: 'Portfolio', desc: 'Xem portfolio và kỹ năng của sinh viên freelancer trên STULance.' },
+  '/handbook': { title: 'Cẩm nang', desc: 'Cẩm nang hướng dẫn freelancing, CV, phỏng vấn cho sinh viên.' },
+  '/privacy': { title: 'Chính sách bảo mật', desc: 'Chính sách bảo mật thông tin người dùng STULance.' },
+  '/policy': { title: 'Điều khoản sử dụng', desc: 'Điều khoản và điều kiện sử dụng nền tảng STULance.' },
+  '/universities': { title: 'Trường đại học', desc: 'Danh sách trường đại học đối tác của STULance.' },
+  '/dashboardlancer': { title: 'Bảng điều khiển', desc: 'Quản lý công việc, hợp đồng và thu nhập freelancer.' },
+  '/cv-maker': { title: 'Tạo CV', desc: 'Tạo CV chuyên nghiệp miễn phí với công cụ AI của STULance.' },
+  '/profile-settings': { title: 'Cài đặt hồ sơ', desc: 'Cập nhật thông tin hồ sơ cá nhân trên STULance.' },
+  '/portfolio-manager': { title: 'Quản lý Portfolio', desc: 'Quản lý và cập nhật portfolio hiển thị với nhà tuyển dụng.' },
+  '/post-service': { title: 'Đăng dịch vụ', desc: 'Đăng bán dịch vụ freelance trên STULance.' },
+  '/post-job': { title: 'Đăng việc', desc: 'Đăng tin tuyển dụng việc làm thêm, thực tập trên STULance.' },
+  '/manage-jobs': { title: 'Quản lý việc làm', desc: 'Quản lý bài đăng việc làm và ứng viên.' },
+  '/saved-services': { title: 'Dịch vụ đã lưu', desc: 'Danh sách dịch vụ freelance bạn đã lưu.' },
+  '/find-students': { title: 'Tìm sinh viên', desc: 'Tìm kiếm sinh viên tài năng phù hợp dự án của bạn.' },
+  '/find-enterprises': { title: 'Tìm doanh nghiệp', desc: 'Tìm doanh nghiệp tuyển dụng thực tập và việc làm.' },
+  '/payment': { title: 'Thanh toán', desc: 'Quản lý ví và giao dịch thanh toán trên STULance.' },
+  '/service-invoice': { title: 'Hóa đơn dịch vụ', desc: 'Chi tiết hóa đơn dịch vụ trên STULance.' },
 };
 
 const useSeo = () => {
   const location = useLocation();
   useEffect(() => {
     const path = location.pathname;
-    const title = PAGE_TITLES[path] || '';
-    document.title = title ? `${title} | STULance` : 'STULance - Kết nối Sinh viên & Doanh nghiệp';
+    const meta = PAGE_META[path];
+    const baseTitle = 'STULance - Kết nối Sinh viên & Doanh nghiệp';
+    document.title = meta ? `${meta.title} | STULance` : baseTitle;
+
+    let descTag = document.querySelector('meta[name="description"]');
+    if (descTag) {
+      descTag.setAttribute('content', meta?.desc || 'Nền tảng kết nối sinh viên tài năng với doanh nghiệp. Việc làm thêm, thực tập, freelance chất lượng.');
+    }
+
+    let ogTitle = document.querySelector('meta[property="og:title"]');
+    if (ogTitle) {
+      ogTitle.setAttribute('content', meta ? `${meta.title} | STULance` : baseTitle);
+    }
+    let ogDesc = document.querySelector('meta[property="og:description"]');
+    if (ogDesc) {
+      ogDesc.setAttribute('content', meta?.desc || 'Nền tảng kết nối sinh viên tài năng với doanh nghiệp.');
+    }
   }, [location.pathname]);
 };
 
@@ -179,6 +196,7 @@ const router = createBrowserRouter([
         children: [
           { path: 'post-job', element: <PostJob /> },
           { path: 'manage-jobs', element: <ManageJobs /> },
+          { path: 'saved-services', element: <SavedServices /> },
           { path: 'businesses/business-profile-settings', element: <BusinessProfileSettings /> },
         ]
       },

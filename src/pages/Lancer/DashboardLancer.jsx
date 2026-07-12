@@ -14,6 +14,7 @@ import { bidService } from '../../services/bidservice';
 import { savedItemsService } from '../../services/saveditemsservice';
 import { serviceOrderService } from '../../services/serviceorderservice';
 import { dashboardService } from '../../services/dashboardService';
+import { unwrapList } from '../../services/responseUtils';
 
 import '../../CSS/Dashboard.css';
 
@@ -80,14 +81,14 @@ const DashboardLancer = () => {
       ]);
 
       if (results[0].status === 'fulfilled') setProfile(results[0].value.data);
-      if (results[1].status === 'fulfilled') { setContracts(results[1].value.data || []); setContractsError(null); }
+      if (results[1].status === 'fulfilled') { setContracts(unwrapList(results[1].value)); setContractsError(null); }
       else { setContractsError("Không thể tải danh sách hợp đồng. Server trả về lỗi."); }
-      if (results[2].status === 'fulfilled') setMyServices(results[2].value.data || []);
-      if (results[3].status === 'fulfilled') setMyBids(results[3].value.data || []);
-      if (results[4].status === 'fulfilled') setSavedJobs(results[4].value.data || []);
-      if (results[5].status === 'fulfilled') setSavedServices(results[5].value.data || []);
-      if (results[6].status === 'fulfilled') setMyOrders(results[6].value.data || []);
-      if (results[7].status === 'fulfilled') setProviderOrders(results[7].value.data || []);
+      if (results[2].status === 'fulfilled') setMyServices(unwrapList(results[2].value));
+      if (results[3].status === 'fulfilled') setMyBids(unwrapList(results[3].value));
+      if (results[4].status === 'fulfilled') setSavedJobs(unwrapList(results[4].value));
+      if (results[5].status === 'fulfilled') setSavedServices(unwrapList(results[5].value));
+      if (results[6].status === 'fulfilled') setMyOrders(unwrapList(results[6].value));
+      if (results[7].status === 'fulfilled') setProviderOrders(unwrapList(results[7].value));
       if (results[8].status === 'fulfilled') setDashboard(results[8].value.data);
     } catch (err) {
       console.error("Lỗi tải Dashboard:", err);
@@ -184,9 +185,15 @@ const DashboardLancer = () => {
             <p className="x-small uppercase-tracking text-white-50">Hệ thống quản lý công việc và dịch vụ</p>
           </div>
           <div className="d-flex align-items-center gap-2">
-            <Button as={Link} to="/portfolio-manager" variant="outline-primary" size="sm" className="x-small fw-bold px-3 py-2">
-              <User size={14} className="me-1" /> XEM PORTFOLIO
-            </Button>
+            {localStorage.getItem('userRole') === 'ENTERPRISE' ? (
+              <Button as={Link} to="/saved-services" variant="outline-primary" size="sm" className="x-small fw-bold px-3 py-2">
+                <Heart size={14} className="me-1" /> DỊCH VỤ ĐÃ LƯU
+              </Button>
+            ) : (
+              <Button as={Link} to="/portfolio-manager" variant="outline-primary" size="sm" className="x-small fw-bold px-3 py-2">
+                <User size={14} className="me-1" /> XEM PORTFOLIO
+              </Button>
+            )}
             <Badge bg="primary" className="shadow-glow px-3 py-2 x-small fw-bold">ID: {profile?.userId?.substring(0, 6)}</Badge>
           </div>
         </div>
@@ -351,7 +358,7 @@ const DashboardLancer = () => {
                                 <span><Clock size={12} className="me-1" /> {new Date(item.updatedAt).toLocaleDateString()}</span>
                                 <span>Đối tác: {item.clientName || item.enterpriseName || 'Enterprise'}</span>
                               </div>
-                              <ProgressBar now={item.status === 'COMPLETED' ? 100 : 40} className="custom-progress-sm" style={{ width: '120px' }} />
+                              <ProgressBar now={item.status === 'COMPLETED' ? 100 : (item.progressPercent || 0)} className="custom-progress-sm" style={{ width: '120px' }} />
                             </Col>
                             <Col md={3} className="text-md-end mt-2 mt-md-0">
                               <div className="small fw-bold text-success mb-2">{formatMoney(item.totalBudget || item.totalAmount)}</div>
@@ -408,6 +415,12 @@ const DashboardLancer = () => {
                           <div>
                             <div className="d-flex align-items-center gap-2 mb-1"><Send size={12} className="text-primary" /><h6 className="fw-bold mb-0 text-white small">{bid.jobTitle}</h6></div>
                             <div className="d-flex gap-3 x-small text-white-50"><span>Chào giá: <strong className="text-success">{formatMoney(bid.bidAmount)}</strong></span></div>
+                            <div className="d-flex align-items-center gap-1 mt-1">
+                              {[...Array(5)].map((_, i) => (
+                                <Star key={i} size={10} className={i < (bid.averageRating || 0) ? 'text-warning' : 'text-white-50'} fill={i < (bid.averageRating || 0) ? '#f59e0b' : 'none'} />
+                              ))}
+                              {bid.averageRating > 0 && <span className="x-small fw-bold text-warning ms-1">{bid.averageRating}</span>}
+                            </div>
                           </div>
                           <div className="text-end">
                             <Badge bg={bid.status === 'ACCEPTED' ? 'success' : 'warning'} className="mb-2 x-small-badge d-block px-3 text-dark">{bid.status}</Badge>
@@ -432,6 +445,12 @@ const DashboardLancer = () => {
                             </div>
                             <div className="x-small text-white-50 mb-1">Khách: <strong>{order.buyerName || 'N/A'}</strong> | {formatMoney(order.orderPrice)}</div>
                             <div className="x-small text-white-50">Ngày đặt: {new Date(order.createdAt).toLocaleDateString()}</div>
+                            <div className="d-flex align-items-center gap-1 mt-1">
+                              {[...Array(5)].map((_, i) => (
+                                <Star key={i} size={10} className={i < (order.averageRating || 0) ? 'text-warning' : 'text-white-50'} fill={i < (order.averageRating || 0) ? '#f59e0b' : 'none'} />
+                              ))}
+                              {order.averageRating > 0 && <span className="x-small fw-bold text-warning ms-1">{order.averageRating}</span>}
+                            </div>
                             {order.requirements && <div className="x-small text-info mt-2 fst-italic">Yêu cầu: {order.requirements}</div>}
                           </div>
                           <div className="text-end">

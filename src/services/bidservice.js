@@ -6,7 +6,7 @@ export const bidService = {
     // ==========================================
     
     /** Lấy danh sách các công việc mình đã ứng tuyển */
-    getMyBids: () => api.get('/v1/bids/me').then(res => res.data),
+    getMyBids: (params) => api.get('/v1/bids/me', { params }).then(res => res.data),
 
     /** Xem chi tiết một đơn ứng tuyển của mình */
     getMyBidDetail: (bidId) => api.get(`/v1/bids/me/${bidId}`).then(res => res.data),
@@ -29,7 +29,7 @@ export const bidService = {
     // ==========================================
 
     /** Xem danh sách tất cả các ứng viên đã ứng tuyển vào 1 dự án của mình */
-    getJobBids: (jobId) => api.get(`/v1/bids/jobs/${jobId}`).then(res => res.data),
+    getJobBids: (jobId, params) => api.get(`/v1/bids/jobs/${jobId}`, { params }).then(res => res.data),
 
     /** Chấp nhận một sinh viên (Giao dự án) */
     acceptBid: (bidId) => api.patch(`/v1/bids/${bidId}/accept`).then(res => res.data),
@@ -43,7 +43,7 @@ export const bidService = {
     // ==========================================
 
     /** Lấy toàn bộ danh sách đấu thầu trên hệ thống */
-    adminGetAllBids: () => api.get('/v1/bids/admin').then(res => res.data),
+    adminGetAllBids: (params) => api.get('/v1/bids/admin', { params }).then(res => res.data),
 
     /** Xem chi tiết thầu bất kỳ */
     adminGetBidDetail: (bidId) => api.get(`/v1/bids/admin/${bidId}`).then(res => res.data),

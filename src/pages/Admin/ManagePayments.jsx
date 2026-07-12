@@ -4,6 +4,7 @@ import { Wallet, ShieldCheck, TrendingUp, Landmark, Loader2, RefreshCw, FileText
 import { adminService } from '../../services/adminservice';
 import { withdrawalService } from '../../services/withdrawalService';
 import { serviceOrderService } from '../../services/serviceorderservice';
+import { unwrapList } from '../../services/responseUtils';
 import '../../CSS/ManagePayments.css';
 
 const TABS = { TRANSACTIONS: 'transactions', WITHDRAWALS: 'withdrawals' };
@@ -33,8 +34,8 @@ const ManagePayments = () => {
         adminService.getAllContracts(),
         serviceOrderService.adminGetAllOrders()
       ]);
-      if (contractsRes.success) setContracts(contractsRes.data || []);
-      if (ordersRes.success !== false) setOrders(ordersRes.data || ordersRes || []);
+      if (contractsRes.success) setContracts(unwrapList(contractsRes));
+      if (ordersRes.success !== false) setOrders(unwrapList(ordersRes));
     } catch (err) {
       console.error('Lỗi tải dữ liệu:', err);
     } finally {
@@ -46,7 +47,7 @@ const ManagePayments = () => {
     setLoading(true);
     try {
       const res = await withdrawalService.adminGetAllWithdrawals();
-      setWithdrawals(res.data || []);
+      setWithdrawals(unwrapList(res));
     } catch (err) {
       console.error('Lỗi tải withdrawals:', err);
     } finally {

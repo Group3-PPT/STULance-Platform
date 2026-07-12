@@ -13,16 +13,14 @@ export const serviceOrderService = {
         api.post(`/v1/service-orders/services/${serviceId}`, data).then(res => res.data),
 
     /** Lấy tất cả đơn hàng mà tôi đã mua */
-    getMyBuyerOrders: () => 
-        api.get('/v1/service-orders/buyer/me').then(res => res.data),
+    getMyBuyerOrders: (params) => 
+        api.get('/v1/service-orders/buyer/me', { params }).then(res => res.data),
 
-    /** (Dành riêng cho doanh nghiệp) Lấy đơn hàng đã mua */
-    getEnterpriseOrders: () => 
-        api.get('/v1/service-orders/enterprise/me').then(res => res.data),
+    getEnterpriseOrders: (params) => 
+        api.get('/v1/service-orders/enterprise/me', { params }).then(res => res.data),
 
-    /** (Dành riêng cho sinh viên đi mua) Lấy đơn hàng đã mua */
-    getStudentBuyerOrders: () => 
-        api.get('/v1/service-orders/student/me').then(res => res.data),
+    getStudentBuyerOrders: (params) => 
+        api.get('/v1/service-orders/student/me', { params }).then(res => res.data),
 
 
     // ==========================================
@@ -30,8 +28,8 @@ export const serviceOrderService = {
     // ==========================================
 
     /** Lấy danh sách các đơn hàng khách đã đặt dịch vụ của mình */
-    getMyProviderOrders: () => 
-        api.get('/v1/service-orders/provider/me').then(res => res.data),
+    getMyProviderOrders: (params) => 
+        api.get('/v1/service-orders/provider/me', { params }).then(res => res.data),
 
     /** Chấp nhận thực hiện đơn hàng */
     acceptOrder: (orderId) => 
@@ -60,8 +58,8 @@ export const serviceOrderService = {
     // ==========================================
 
     /** Admin lấy toàn bộ danh sách đơn hàng dịch vụ hệ thống */
-    adminGetAllOrders: () => 
-        api.get('/v1/service-orders/admin').then(res => res.data),
+    adminGetAllOrders: (params) => 
+        api.get('/v1/service-orders/admin', { params }).then(res => res.data),
 
     /** Admin xem chi tiết đơn hàng */
     adminGetOrderDetail: (orderId) => 

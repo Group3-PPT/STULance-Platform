@@ -4,6 +4,7 @@ import { UserCheck, UserX, Mail, Calendar, Search, Loader2, RefreshCw, Building2
 import { studentService } from '../../services/studentservice';
 import { enterpriseService } from '../../services/enterprise.service';
 import { adminService } from '../../services/adminservice';
+import { unwrapList } from '../../services/responseUtils';
 import '../../CSS/ManageAccounts.css';
 
 const STATUS_CONFIG = {
@@ -31,7 +32,7 @@ const ManageAccounts = () => {
       const usersList = [];
 
       if (studentsRes.status === 'fulfilled') {
-        const students = studentsRes.value?.data || studentsRes.value || [];
+        const students = unwrapList(studentsRes.value);
         if (Array.isArray(students)) {
           students.forEach(s => {
             usersList.push({
@@ -48,7 +49,7 @@ const ManageAccounts = () => {
       }
 
       if (enterprisesRes.status === 'fulfilled') {
-        const enterprises = enterprisesRes.value?.data || enterprisesRes.value || [];
+        const enterprises = unwrapList(enterprisesRes.value);
         if (Array.isArray(enterprises)) {
           enterprises.forEach(e => {
             usersList.push({
