@@ -386,7 +386,10 @@ const DashboardLancer = () => {
                                 <span><Clock size={12} className="me-1" /> {new Date(item.updatedAt).toLocaleDateString()}</span>
                                 <span>Đối tác: {item.clientName || item.enterpriseName || 'Enterprise'}</span>
                               </div>
-                              <ProgressBar now={item.status === 'COMPLETED' ? 100 : (item.progressPercent || 0)} className="custom-progress-sm" style={{ width: '120px' }} />
+                              <div className="d-flex align-items-center gap-2">
+                                <ProgressBar now={item.status === 'COMPLETED' ? 100 : (item.progressPercent || 0)} className="custom-progress-sm flex-grow-1" style={{ width: '120px' }} />
+                                <span className="x-small fw-bold text-primary-glow">{item.status === 'COMPLETED' ? 100 : (item.progressPercent || 0)}%</span>
+                              </div>
                             </Col>
                             <Col md={3} className="text-md-end mt-2 mt-md-0">
                               <div className="small fw-bold text-success mb-2">{formatMoney(item.totalBudget || item.totalAmount)}</div>

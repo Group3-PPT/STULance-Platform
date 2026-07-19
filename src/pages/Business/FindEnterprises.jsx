@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Container, Row, Col, Button, Badge, Form, InputGroup, Modal } from 'react-bootstrap';
 import {
   Search, Building2, ShieldCheck, Eye, Filter, Loader2, RefreshCw,
-  MapPin, X, Mail, Globe, Hash, Users, User
+  MapPin, X, Mail, Globe, Hash, Users, User, Star
 } from 'lucide-react';
 import { enterpriseService } from '../../services/enterprise.service';
 import PaginationBar from '../../components/PaginationBar';

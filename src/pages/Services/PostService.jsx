@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Container, Row, Col, Form, Button, InputGroup, Spinner } from 'react-bootstrap';
-import { Image as ImageIcon, DollarSign, Clock, Layout, Loader2, Send, ListChecks } from 'lucide-react';
+import { Image as ImageIcon, DollarSign, Clock, Layout, Loader2, Send, ListChecks, Upload, X } from 'lucide-react';
 import { studentServiceService } from '../../services/studentserviceservice';
 import '../../CSS/PostService.css';
 
@@ -8,6 +8,9 @@ const PostService = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState('');
+  const fileInputRef = useRef(null);
 
   const [formData, setFormData] = useState({
     Title: '',
@@ -16,7 +19,6 @@ const PostService = () => {
     Price: 0,
     DeliveryDays: 1,
     Features: '',
-    SampleImageFile: '',
     SaveAsDraft: false
   });
 
@@ -44,11 +46,6 @@ const PostService = () => {
         if (!value || Number(value) < 1) newErrors.DeliveryDays = 'Tối thiểu 1 ngày';
         else delete newErrors.DeliveryDays;
         break;
-      case 'SampleImageFile':
-        if (!value) newErrors.SampleImageFile = 'Vui lòng nhập URL ảnh mẫu';
-        else if (!/^https?:\/\/.+/.test(value)) newErrors.SampleImageFile = 'URL không hợp lệ (bắt đầu bằng http:// hoặc https://)';
-        else delete newErrors.SampleImageFile;
-        break;
       default: break;
     }
     setErrors(newErrors);
@@ -66,31 +63,53 @@ const PostService = () => {
     if (touched[name]) validate(name, newVal);
   };
 
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      alert('Vui lòng chọn file ảnh (JPG, PNG, WebP)');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Kích thước ảnh tối đa 5MB');
+      return;
+    }
+    setImageFile(file);
+    const reader = new FileReader();
+    reader.onloadend = () => setImagePreview(reader.result);
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemoveImage = () => {
+    setImageFile(null);
+    setImagePreview('');
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    ['Title', 'Category', 'Description', 'Price', 'DeliveryDays', 'SampleImageFile'].forEach(f => validate(f, formData[f]));
+    ['Title', 'Category', 'Description', 'Price', 'DeliveryDays'].forEach(f => validate(f, formData[f]));
     if (Object.keys(errors).length > 0) {
-      setTouched({ Title: true, Category: true, Description: true, Price: true, DeliveryDays: true, SampleImageFile: true });
+      setTouched({ Title: true, Category: true, Description: true, Price: true, DeliveryDays: true });
       return;
     }
 
     setIsSaving(true);
 
-    const payload = {
-      Title: formData.Title,
-      Category: formData.Category,
-      Description: formData.Description,
-      Price: Number(formData.Price),
-      DeliveryDays: parseInt(formData.DeliveryDays),
-      Features: formData.Features,
-      SampleImageFile: formData.SampleImageFile,
-      SaveAsDraft: formData.SaveAsDraft
-    };
-
     try {
-      await studentServiceService.createService(payload);
-      alert(formData.SaveAsDraft ? "Đã lưu bản nháp thành công!" : "🎉 Dịch vụ đã được đăng và đang chờ duyệt!");
+      const fd = new FormData();
+      fd.append('Title', formData.Title);
+      fd.append('Category', formData.Category);
+      fd.append('Description', formData.Description);
+      fd.append('Price', Number(formData.Price));
+      fd.append('DeliveryDays', parseInt(formData.DeliveryDays));
+      fd.append('Features', formData.Features || '');
+      fd.append('SaveAsDraft', formData.SaveAsDraft);
+      if (imageFile) fd.append('SampleImageFile', imageFile);
+
+      await studentServiceService.createService(fd);
+      alert(formData.SaveAsDraft ? "Đã lưu bản nháp thành công!" : "Dịch vụ đã được đăng và đang chờ duyệt!");
     } catch (err) {
       alert("Lỗi: " + (err.response?.data?.message || "Không thể xử lý yêu cầu"));
     } finally {
@@ -165,29 +184,44 @@ const PostService = () => {
 
               <div className="glass-card p-4">
                 <h5 className="text-primary-glow mb-4 d-flex align-items-center gap-2">
-                  <ImageIcon size={20} /> 2. Ảnh mẫu (URL)
+                  <ImageIcon size={20} /> 2. Ảnh mẫu
                 </h5>
                 <Form.Group>
-                  <Form.Control 
-                    name="SampleImageFile"
-                    className={`post-input ${touched.SampleImageFile && errors.SampleImageFile ? 'is-invalid' : ''}`}
-                    placeholder="https://example.com/image.jpg"
-                    value={formData.SampleImageFile} 
-                    onChange={handleInputChange} onBlur={() => handleBlur('SampleImageFile')}
-                  />
-                  {touched.SampleImageFile && errors.SampleImageFile && <div className="invalid-feedback d-block">{errors.SampleImageFile}</div>}
-                </Form.Group>
-                {formData.SampleImageFile && (
-                  <div className="mt-3 rounded-4 overflow-hidden border border-white border-opacity-10">
-                    <img 
-                      src={formData.SampleImageFile} 
-                      alt="Preview" 
-                      className="w-100" 
-                      style={{maxHeight: '300px', objectFit: 'cover'}}
-                      onError={(e) => { e.target.style.display = 'none'; }}
-                    />
+                  <div 
+                    className="file-upload-zone text-center p-4 rounded-4 border border-dashed"
+                    style={{ 
+                      border: '2px dashed rgba(255,255,255,0.15)', 
+                      background: 'rgba(255,255,255,0.02)',
+                      cursor: 'pointer',
+                      transition: '0.3s'
+                    }}
+                    onClick={() => fileInputRef.current?.click()}
+                    onDragOver={(e) => { e.preventDefault(); e.currentTarget.style.borderColor = 'var(--primary-blue)'; }}
+                    onDragLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.15)'; }}
+                    onDrop={(e) => { e.preventDefault(); e.currentTarget.style.borderColor = 'rgba(255,255,255,0.15)'; handleFileChange({ target: { files: e.dataTransfer.files } }); }}
+                  >
+                    {imagePreview ? (
+                      <div className="position-relative">
+                        <img src={imagePreview} alt="Preview" className="rounded-3" style={{ maxHeight: '250px', objectFit: 'cover', width: '100%' }} />
+                        <Button 
+                          variant="danger" size="sm" 
+                          className="position-absolute top-0 end-0 m-2 rounded-circle d-flex align-items-center justify-content-center"
+                          style={{ width: '32px', height: '32px' }}
+                          onClick={(e) => { e.stopPropagation(); handleRemoveImage(); }}
+                        >
+                          <X size={16} />
+                        </Button>
+                      </div>
+                    ) : (
+                      <>
+                        <Upload size={36} className="text-primary mb-2 opacity-50" />
+                        <p className="mb-1 text-white-50 small">Kéo thả ảnh vào đây hoặc <span className="text-primary fw-bold">Chọn file</span></p>
+                        <p className="mb-0 text-white-25 x-small">JPG, PNG, WebP (tối đa 5MB)</p>
+                      </>
+                    )}
                   </div>
-                )}
+                  <input ref={fileInputRef} type="file" accept="image/*" className="d-none" onChange={handleFileChange} />
+                </Form.Group>
               </div>
             </Col>
 

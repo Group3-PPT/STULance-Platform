@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Container, Row, Col, Form, Button, InputGroup, Spinner } from 'react-bootstrap';
-import { Info, UserCheck, FileText, Save, Loader2, Send } from 'lucide-react';
+import { Info, UserCheck, FileText, Save, Loader2, Send, Image as ImageIcon, Upload, X } from 'lucide-react';
 import { jobService } from "../../services/jobservice"; 
 import '../../CSS/PostJob.css';
 
@@ -8,6 +8,9 @@ const PostJob = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState('');
+  const fileInputRef = useRef(null);
 
   const [formData, setFormData] = useState({
     title: '',
@@ -70,10 +73,32 @@ const PostJob = () => {
     if (touched[name]) validate(name, newVal);
   };
 
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      alert('Vui lòng chọn file ảnh (JPG, PNG, WebP)');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Kích thước ảnh tối đa 5MB');
+      return;
+    }
+    setImageFile(file);
+    const reader = new FileReader();
+    reader.onloadend = () => setImagePreview(reader.result);
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemoveImage = () => {
+    setImageFile(null);
+    setImagePreview('');
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
   const handleSubmit = async (e) => {
   e.preventDefault();
   
-  // Validate all fields
   ['title', 'deadline', 'description', 'contactName', 'contactInfo', 'salary'].forEach(f => validate(f, formData[f]));
   
   if (Object.keys(errors).length > 0) {
@@ -84,29 +109,29 @@ const PostJob = () => {
   setIsSaving(true);
 
   try {
-    const payload = {
-      ...formData,
-      // THÊM TRƯỜNG NÀY ĐỂ FIX LỖI 400
-      requesterType: "ENTERPRISE", 
-      
-      salary: Number(formData.salary),
-      quantity: Number(formData.quantity),
-      deadline: new Date(formData.deadline).toISOString(),
-    };
+    const fd = new FormData();
+    fd.append('title', formData.title);
+    fd.append('jobType', formData.jobType);
+    fd.append('salary', Number(formData.salary));
+    fd.append('quantity', Number(formData.quantity));
+    fd.append('deadline', new Date(formData.deadline).toISOString());
+    fd.append('description', formData.description);
+    fd.append('requirements', formData.requirements || '');
+    fd.append('benefits', formData.benefits || '');
+    fd.append('contactName', formData.contactName);
+    fd.append('contactInfo', formData.contactInfo);
+    fd.append('saveAsDraft', formData.saveAsDraft);
+    fd.append('requesterType', 'ENTERPRISE');
+    if (imageFile) fd.append('thumbnailFile', imageFile);
 
-    console.log("Dữ liệu chuẩn gửi đi:", payload);
-
-    const res = await jobService.postJob(payload);
+    const res = await jobService.postJob(fd);
 
     if (res.success) {
-      alert("🎉 Đăng tin thành công!");
-      // Reset form...
+      alert("Đăng tin thành công!");
     }
   } catch (err) {
-    // Hiện lỗi chi tiết từ Server để dễ debug
     const serverMsg = err.response?.data?.message || "Lỗi không xác định";
     alert("Lỗi: " + serverMsg);
-    console.error("Chi tiết lỗi 400:", err.response?.data);
   } finally {
     setIsSaving(false);
   }
@@ -225,6 +250,49 @@ const PostJob = () => {
                   </Form.Group>
                 </Col>
               </Row>
+            </div>
+
+            {/* 5. ẢNH ĐẠI DIỆN */}
+            <div className="form-section-wrapper mb-5">
+              <div className="section-header-title mb-4 d-flex align-items-center gap-2 text-primary-glow fw-bold uppercase-tracking">
+                <ImageIcon size={20} /> 5. Ảnh đại diện tin tuyển dụng
+              </div>
+              <Form.Group>
+                <div 
+                  className="text-center p-4 rounded-4"
+                  style={{ 
+                    border: '2px dashed rgba(255,255,255,0.15)', 
+                    background: 'rgba(255,255,255,0.02)',
+                    cursor: 'pointer',
+                    transition: '0.3s'
+                  }}
+                  onClick={() => fileInputRef.current?.click()}
+                  onDragOver={(e) => { e.preventDefault(); e.currentTarget.style.borderColor = 'var(--primary-blue)'; }}
+                  onDragLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.15)'; }}
+                  onDrop={(e) => { e.preventDefault(); e.currentTarget.style.borderColor = 'rgba(255,255,255,0.15)'; handleFileChange({ target: { files: e.dataTransfer.files } }); }}
+                >
+                  {imagePreview ? (
+                    <div className="position-relative">
+                      <img src={imagePreview} alt="Preview" className="rounded-3" style={{ maxHeight: '250px', objectFit: 'cover', width: '100%' }} />
+                      <Button 
+                        variant="danger" size="sm" 
+                        className="position-absolute top-0 end-0 m-2 rounded-circle d-flex align-items-center justify-content-center"
+                        style={{ width: '32px', height: '32px' }}
+                        onClick={(e) => { e.stopPropagation(); handleRemoveImage(); }}
+                      >
+                        <X size={16} />
+                      </Button>
+                    </div>
+                  ) : (
+                    <>
+                      <Upload size={36} className="text-primary mb-2 opacity-50" />
+                      <p className="mb-1 text-white-50 small">Kéo thả ảnh vào đây hoặc <span className="text-primary fw-bold">Chọn file</span></p>
+                      <p className="mb-0 text-white-25 x-small">JPG, PNG, WebP (tối đa 5MB)</p>
+                    </>
+                  )}
+                </div>
+                <input ref={fileInputRef} type="file" accept="image/*" className="d-none" onChange={handleFileChange} />
+              </Form.Group>
             </div>
 
             <div className="d-flex align-items-center justify-content-between mt-5 pt-4 border-top border-white-10">
