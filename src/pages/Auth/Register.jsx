@@ -177,7 +177,7 @@ const handleRegister = async (e) => {
           {!isOtpSent ? (
             <>
               <div className="text-center mb-4">
-                <h3 className="text-success fw-bold">Đăng ký Thành viên</h3>
+                <h3 className="text-primary fw-bold">Đăng ký Thành viên</h3>
                 <p className="text-white-50 small">Tham gia cộng đồng Freelancer sinh viên</p>
               </div>
 
@@ -196,7 +196,7 @@ const handleRegister = async (e) => {
                       <span>{role.roleName === 'STUDENT' ? 'Sinh viên' : 'Doanh nghiệp'}</span>
                     </div>
                   ))}
-                  {roles.length === 0 && <Spinner animation="border" size="sm" variant="success" />}
+                  {roles.length === 0 && <Spinner animation="border" size="sm" variant="primary" />}
                 </div>
               </div>
 
@@ -204,7 +204,7 @@ const handleRegister = async (e) => {
                 <Form.Group className="mb-3 auth-input-group">
                   <Form.Label className="small text-white-80">Email đăng ký</Form.Label>
                   <InputGroup>
-                    <InputGroup.Text className="bg-transparent border-secondary text-success"><Mail size={18} /></InputGroup.Text>
+                    <InputGroup.Text className="bg-transparent border-secondary text-primary"><Mail size={18} /></InputGroup.Text>
                     <Form.Control name="email" type="email" placeholder="name@example.com" onChange={handleChange} required className="bg-transparent text-white border-secondary shadow-none" />
                   </InputGroup>
                 </Form.Group>
@@ -212,7 +212,7 @@ const handleRegister = async (e) => {
                 <Form.Group className="mb-3 auth-input-group">
                   <Form.Label className="small text-white-80">Mật khẩu</Form.Label>
                   <InputGroup>
-                    <InputGroup.Text className="bg-transparent border-secondary text-success"><Lock size={18} /></InputGroup.Text>
+                    <InputGroup.Text className="bg-transparent border-secondary text-primary"><Lock size={18} /></InputGroup.Text>
                     <Form.Control name="password" type={showPass ? "text" : "password"} placeholder="••••••••" onChange={handleChange} 
                     required className="bg-transparent text-white border-secondary shadow-none" />
                     <InputGroup.Text className="bg-transparent border-secondary text-white-50 pointer" onClick={() => setShowPass(!showPass)}>
@@ -224,12 +224,12 @@ const handleRegister = async (e) => {
                 <Form.Group className="mb-4">
                   <Form.Label className="small text-white-80">Xác nhận mật khẩu</Form.Label>
                   <InputGroup>
-                    <InputGroup.Text className="bg-transparent border-secondary text-success"><Lock size={18} /></InputGroup.Text>
+                    <InputGroup.Text className="bg-transparent border-secondary text-primary"><Lock size={18} /></InputGroup.Text>
                     <Form.Control name="confirmPassword" type="password" placeholder="••••••••" onChange={handleChange} required className="bg-transparent text-white border-secondary shadow-none" />
                   </InputGroup>
                 </Form.Group>
 
-                <Button type="submit" variant="success" className="w-100 py-3 fw-bold shadow-glow" disabled={loading || !formData.roleId}>
+                <Button type="submit" variant="primary" className="w-100 py-3 fw-bold shadow-glow" disabled={loading || !formData.roleId}>
                   {loading ? <Spinner size="sm" animation="border" /> : "GỬI MÃ XÁC THỰC"}
                 </Button>
               </Form>
@@ -238,7 +238,7 @@ const handleRegister = async (e) => {
             // --- GIAO DIỆN OTP (GIỮ NGUYÊN) ---
             <div className="text-center py-4">
               <div className="otp-icon-circle mx-auto mb-3">
-                <Smartphone size={40} className="text-success" />
+                <Smartphone size={40} className="text-primary" />
               </div>
               <h4 className="text-white fw-bold">Xác thực OTP</h4>
               <p className="text-white-50 small mb-2">Mã đã được gửi tới <b>{formData.email}</b></p>
@@ -259,14 +259,14 @@ const handleRegister = async (e) => {
                   />
                 ))}
               </div>
-              <Button onClick={handleVerifyOtp} variant="success" className="w-100 py-3 fw-bold mb-3 shadow-glow" disabled={loading || timer === 0}>
+              <Button onClick={handleVerifyOtp} variant="primary" className="w-100 py-3 fw-bold mb-3 shadow-glow" disabled={loading || timer === 0}>
                 {loading ? <Spinner size="sm" /> : "XÁC NHẬN MÃ"}
               </Button>
             </div>
           )}
           <div className="text-center mt-4">
             <span className="text-white-50 small">Đã có tài khoản? </span>
-            <Link to="/login" className="text-success small fw-bold text-decoration-none">Đăng nhập</Link>
+            <Link to="/login" className="text-primary small fw-bold text-decoration-none">Đăng nhập</Link>
           </div>
         </div>
       </Container>
