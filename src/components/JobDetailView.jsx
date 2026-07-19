@@ -47,7 +47,7 @@ const JobDetailView = ({ job }) => {
         </div>
         <Row className="align-items-center">
           <Col md={7}>
-              <div className="hub-detail-price">{job.salary ? job.salary.toLocaleString('vi-VN') + ' VND' : 'Thỏa thuận'}</div>
+              <div className="hub-detail-price">{job.salary ? job.salary.toLocaleString('vi-VN') + ' VND' : 'Chưa cập nhật'}</div>
               <div className="text-muted small mt-1">{job.location || 'Đà Nẵng'} | {job.jobType || 'Freelance'}</div>
           </Col>
           <Col md={5} className="text-end">

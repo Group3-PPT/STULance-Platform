@@ -32,6 +32,7 @@ const clearAuth = () => {
     localStorage.removeItem('userId');
     localStorage.removeItem('lastActivity');
     localStorage.removeItem('tokenRefreshedAt');
+    localStorage.removeItem('loginAttempts');
 };
 
 api.interceptors.request.use(

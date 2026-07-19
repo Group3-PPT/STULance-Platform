@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Table, Badge, Form, InputGroup, Row, Col, Button, Dropdown } from 'react-bootstrap';
 import { UserCheck, UserX, Mail, Calendar, Search, Loader2, RefreshCw, Building2, GraduationCap, CheckCircle, XCircle, Clock, HelpCircle } from 'lucide-react';
 import { studentService } from '../../services/studentservice';
 import { enterpriseService } from '../../services/enterprise.service';
 import { adminService } from '../../services/adminservice';
-import { unwrapList } from '../../services/responseUtils';
+import PaginationBar from '../../components/PaginationBar';
 import '../../CSS/ManageAccounts.css';
 
 const STATUS_CONFIG = {
@@ -20,20 +20,46 @@ const ManageAccounts = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState("Tất cả");
   const [filterStatus, setFilterStatus] = useState("Tất cả");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+  const [studentCount, setStudentCount] = useState(0);
+  const [businessCount, setBusinessCount] = useState(0);
+  const [verifiedCount, setVerifiedCount] = useState(0);
+  const [pendingCount, setPendingCount] = useState(0);
+  const pageSize = 20;
 
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async (page = 1, keyword = '', status = '', type = '') => {
     setLoading(true);
     try {
-      const [studentsRes, enterprisesRes] = await Promise.allSettled([
-        studentService.getAllStudents(),
-        enterpriseService.getAllEnterprises()
-      ]);
-
       const usersList = [];
+      let totalStudents = 0;
+      let totalEnterprises = 0;
 
-      if (studentsRes.status === 'fulfilled') {
-        const students = unwrapList(studentsRes.value);
-        if (Array.isArray(students)) {
+      const fetchStudentParams = { page, pageSize };
+      if (keyword) fetchStudentParams.keyword = keyword;
+      if (status) fetchStudentParams.status = status;
+
+      const fetchEntParams = { page, pageSize };
+      if (keyword) fetchEntParams.keyword = keyword;
+      if (status) fetchEntParams.status = status;
+
+      const shouldFetchStudents = type !== 'Doanh nghiệp';
+      const shouldFetchEnterprises = type !== 'Sinh viên';
+
+      const promises = [];
+      if (shouldFetchStudents) promises.push(studentService.getAllStudents(fetchStudentParams));
+      if (shouldFetchEnterprises) promises.push(enterpriseService.getAllEnterprises(fetchEntParams));
+
+      const results = await Promise.allSettled(promises);
+
+      let resultIdx = 0;
+      if (shouldFetchStudents) {
+        const studentsRes = results[resultIdx++];
+        if (studentsRes.status === 'fulfilled' && studentsRes.value?.data) {
+          const data = studentsRes.value.data;
+          const students = data.items || [];
+          totalStudents = data.totalItems || 0;
           students.forEach(s => {
             usersList.push({
               id: s.studentId || s.id,
@@ -48,9 +74,12 @@ const ManageAccounts = () => {
         }
       }
 
-      if (enterprisesRes.status === 'fulfilled') {
-        const enterprises = unwrapList(enterprisesRes.value);
-        if (Array.isArray(enterprises)) {
+      if (shouldFetchEnterprises) {
+        const enterprisesRes = results[resultIdx++];
+        if (enterprisesRes.status === 'fulfilled' && enterprisesRes.value?.data) {
+          const data = enterprisesRes.value.data;
+          const enterprises = data.items || [];
+          totalEnterprises = data.totalItems || 0;
           enterprises.forEach(e => {
             usersList.push({
               id: e.enterpriseId || e.id,
@@ -66,14 +95,21 @@ const ManageAccounts = () => {
       }
 
       setUsers(usersList);
+      setStudentCount(totalStudents);
+      setBusinessCount(totalEnterprises);
+      setVerifiedCount(usersList.filter(u => u.status === 'VERIFIED').length);
+      setPendingCount(usersList.filter(u => u.status === 'PENDING').length);
+      setTotalItems(totalStudents + totalEnterprises);
+      setTotalPages(Math.max(totalStudents, totalEnterprises) > 0 ? Math.ceil((totalStudents + totalEnterprises) / pageSize) : 1);
+      setCurrentPage(page);
     } catch (err) {
       console.error("Lỗi tải danh sách:", err);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  useEffect(() => { fetchUsers(); }, []);
+  useEffect(() => { fetchUsers(1); }, [fetchUsers]);
 
   const handleVerify = async (user) => {
     if (!window.confirm(`Duyệt xác thực "${user.name}"?`)) return;
@@ -84,7 +120,7 @@ const ManageAccounts = () => {
         await adminService.verifyEnterprise(user.id, 'VERIFIED');
       }
       alert("Duyệt thành công!");
-      fetchUsers();
+      fetchUsers(currentPage, searchTerm, filterStatus === 'Tất cả' ? '' : filterStatus, filterType);
     } catch (err) {
       alert("Lỗi: " + (err.response?.data?.message || err.message));
     }
@@ -99,7 +135,7 @@ const ManageAccounts = () => {
         await adminService.verifyEnterprise(user.id, 'REJECTED');
       }
       alert("Đã từ chối!");
-      fetchUsers();
+      fetchUsers(currentPage, searchTerm, filterStatus === 'Tất cả' ? '' : filterStatus, filterType);
     } catch (err) {
       alert("Lỗi: " + (err.response?.data?.message || err.message));
     }
@@ -113,25 +149,34 @@ const ManageAccounts = () => {
       } else {
         await adminService.verifyEnterprise(user.id, 'PENDING');
       }
-      fetchUsers();
+      fetchUsers(currentPage, searchTerm, filterStatus === 'Tất cả' ? '' : filterStatus, filterType);
     } catch (err) {
       alert("Lỗi: " + (err.response?.data?.message || err.message));
     }
   };
 
-  const filteredUsers = users.filter(user => {
-    const typeMatch = filterType === "Tất cả" || user.type === filterType;
-    const statusMatch = filterStatus === "Tất cả" || user.status === filterStatus;
-    const searchMatch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (user.id && user.id.toLowerCase().includes(searchTerm.toLowerCase()));
-    return typeMatch && statusMatch && searchMatch;
-  });
+  const handleFilterTypeChange = (type) => {
+    setFilterType(type);
+    setCurrentPage(1);
+    fetchUsers(1, searchTerm, filterStatus === 'Tất cả' ? '' : filterStatus, type);
+  };
 
-  const studentCount = users.filter(u => u.type === 'Sinh viên').length;
-  const businessCount = users.filter(u => u.type === 'Doanh nghiệp').length;
-  const verifiedCount = users.filter(u => u.status === 'VERIFIED').length;
-  const pendingCount = users.filter(u => u.status === 'PENDING').length;
+  const handleFilterStatusChange = (status) => {
+    setFilterStatus(status);
+    setCurrentPage(1);
+    fetchUsers(1, searchTerm, status === 'Tất cả' ? '' : status, filterType);
+  };
+
+  const handleSearch = () => {
+    setCurrentPage(1);
+    fetchUsers(1, searchTerm, filterStatus === 'Tất cả' ? '' : filterStatus, filterType);
+  };
+
+  const handlePageChange = (page) => {
+    fetchUsers(page, searchTerm, filterStatus === 'Tất cả' ? '' : filterStatus, filterType);
+  };
+
+  const filteredUsers = users;
 
   return (
     <div className="acc-manage-container animate-fade-in">
@@ -149,12 +194,12 @@ const ManageAccounts = () => {
           <div className="d-flex gap-2 justify-content-md-end align-items-center flex-wrap">
             <div className="d-flex gap-1 glass-card p-1">
               {["Tất cả", "Sinh viên", "Doanh nghiệp"].map(t => (
-                <button key={t} className={`post-tab-btn ${filterType === t ? 'active' : ''}`} style={{fontSize: '12px', padding: '6px 14px'}} onClick={() => setFilterType(t)}>{t}</button>
+                <button key={t} className={`post-tab-btn ${filterType === t ? 'active' : ''}`} style={{fontSize: '12px', padding: '6px 14px'}} onClick={() => handleFilterTypeChange(t)}>{t}</button>
               ))}
             </div>
             <div className="d-flex gap-1 glass-card p-1">
               {["Tất cả", "UNVERIFIED", "PENDING", "VERIFIED", "REJECTED"].map(s => (
-                <button key={s} className={`post-tab-btn ${filterStatus === s ? 'active' : ''}`} style={{fontSize: '11px', padding: '5px 10px'}} onClick={() => setFilterStatus(s)}>
+                <button key={s} className={`post-tab-btn ${filterStatus === s ? 'active' : ''}`} style={{fontSize: '11px', padding: '5px 10px'}} onClick={() => handleFilterStatusChange(s)}>
                   {s === "Tất cả" ? s : STATUS_CONFIG[s]?.label || s}
                 </button>
               ))}
@@ -169,9 +214,10 @@ const ManageAccounts = () => {
                 style={{fontSize: '12px'}}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
               />
             </InputGroup>
-            <button className="btn-icon-table text-white-50" title="Làm mới" onClick={fetchUsers}><RefreshCw size={16}/></button>
+            <button className="btn-icon-table text-white-50" title="Làm mới" onClick={handleSearch}><RefreshCw size={16}/></button>
           </div>
         </Col>
       </Row>
@@ -250,6 +296,14 @@ const ManageAccounts = () => {
             </tbody>
           </Table>
         )}
+      </div>
+
+      <div className="mt-3">
+        <PaginationBar
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={handlePageChange}
+        />
       </div>
     </div>
   );

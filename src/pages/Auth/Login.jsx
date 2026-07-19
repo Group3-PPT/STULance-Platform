@@ -1,16 +1,52 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Container, Form, Button, InputGroup, Spinner } from 'react-bootstrap';
 import { useNavigate, Link } from 'react-router-dom';
 import { Mail, Lock, LogIn, ChevronLeft } from 'lucide-react';
 import { authService } from '../../services/authService'; 
 import '../../CSS/Login.css';
 
+const MAX_ATTEMPTS = 5;
+const LOCKOUT_MINUTES = 15;
+
 const Login = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [attempts, setAttempts] = useState(() => {
+    const saved = localStorage.getItem('loginAttempts');
+    if (saved) {
+      const data = JSON.parse(saved);
+      if (data.lockUntil && Date.now() < data.lockUntil) {
+        return { count: data.count, lockUntil: data.lockUntil };
+      }
+      localStorage.removeItem('loginAttempts');
+    }
+    return { count: 0, lockUntil: null };
+  });
+
+  const isLocked = attempts.lockUntil && Date.now() < attempts.lockUntil;
+  const remainingMinutes = isLocked ? Math.ceil((attempts.lockUntil - Date.now()) / 60000) : 0;
+
+  useEffect(() => {
+    if (isLocked) {
+      const timer = setInterval(() => {
+        if (Date.now() >= attempts.lockUntil) {
+          setAttempts({ count: 0, lockUntil: null });
+          localStorage.removeItem('loginAttempts');
+          clearInterval(timer);
+        }
+      }, 1000);
+      return () => clearInterval(timer);
+    }
+  }, [isLocked, attempts.lockUntil]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
+
+    if (isLocked) {
+      alert(`Tài khoản bị khóa tạm thời. Vui lòng thử lại sau ${remainingMinutes} phút.`);
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -19,6 +55,10 @@ const Login = () => {
 
       const res = await authService.login({ email, password });
       const result = res.data.data;
+
+      // Đăng nhập thành công → reset attempts
+      setAttempts({ count: 0, lockUntil: null });
+      localStorage.removeItem('loginAttempts');
 
       if (!result) {
         alert("Lỗi: Server không trả về dữ liệu!");
@@ -68,7 +108,19 @@ const Login = () => {
     } catch (error) {
       console.error("Lỗi đăng nhập:", error);
       const errorMsg = error.response?.data?.message || "Email hoặc mật khẩu không chính xác!";
-      alert("Đăng nhập thất bại: " + errorMsg);
+
+      // Tăng số lần thử sai
+      const newCount = attempts.count + 1;
+      if (newCount >= MAX_ATTEMPTS) {
+        const lockUntil = Date.now() + LOCKOUT_MINUTES * 60 * 1000;
+        setAttempts({ count: newCount, lockUntil });
+        localStorage.setItem('loginAttempts', JSON.stringify({ count: newCount, lockUntil }));
+        alert(`Đăng nhập thất bại quá ${MAX_ATTEMPTS} lần. Tài khoản bị khóa ${LOCKOUT_MINUTES} phút.`);
+      } else {
+        setAttempts({ ...attempts, count: newCount });
+        localStorage.setItem('loginAttempts', JSON.stringify({ count: newCount, lockUntil: null }));
+        alert(`Đăng nhập thất bại: ${errorMsg}\nCòn lại ${MAX_ATTEMPTS - newCount} lần thử.`);
+      }
     } finally {
       setLoading(false);
     }
@@ -129,14 +181,24 @@ const Login = () => {
               type="submit" 
               variant="primary" 
               className="w-100 py-3 fw-bold mb-3 shadow-glow btn-main-login"
-              disabled={loading}
+              disabled={loading || isLocked}
             >
               {loading ? (
                 <Spinner animation="border" size="sm" />
+              ) : isLocked ? (
+                <>Khóa tạm thời - Thử lại sau {remainingMinutes} phút</>
               ) : (
                 <><LogIn size={18} className="me-2" /> VÀO HỆ THỐNG</>
               )}
             </Button>
+
+            {attempts.count > 0 && !isLocked && (
+              <div className="text-center mb-3">
+                <span className="x-small text-warning">
+                  Sai mật khẩu {attempts.count}/{MAX_ATTEMPTS} lần
+                </span>
+              </div>
+            )}
           </Form>
 
           <div className="social-divider my-4">

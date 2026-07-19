@@ -1,13 +1,22 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Container, Row, Col, Form, Button, Badge, Spinner } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
-import { Search, Globe, MapPin, Bookmark, Send, Laptop, ShieldCheck, Zap, Loader2, Sparkles, Building2 } from 'lucide-react';
+import { Search, Globe, MapPin, Bookmark, Send, Laptop, ShieldCheck, Zap, Loader2, Sparkles, Building2, Filter, X } from 'lucide-react';
 import { jobService } from '../services/jobservice';
 import { savedItemsService } from '../services/saveditemsservice';
 import { recommendationService } from '../services/recommendationservice';
 import { enterpriseService } from '../services/enterprise.service';
-import { unwrapList } from '../services/responseUtils';
+import PaginationBar from '../components/PaginationBar';
 import '../CSS/Jobs.css';
+
+const JOB_TYPES = ['Tất cả', 'Part-time', 'Full-time', 'Freelance', 'Thực tập'];
+const SALARY_RANGES = [
+  { label: 'Tất cả', min: 0, max: Infinity },
+  { label: 'Dưới 5 triệu', min: 0, max: 5000000 },
+  { label: '5 - 10 triệu', min: 5000000, max: 10000000 },
+  { label: '10 - 20 triệu', min: 10000000, max: 20000000 },
+  { label: 'Trên 20 triệu', min: 20000000, max: Infinity },
+];
 
 const Jobs = () => {
   const [jobs, setJobs] = useState([]);
@@ -21,37 +30,67 @@ const Jobs = () => {
   const [actionLoading, setActionLoading] = useState(null);
   const [aiMatching, setAiMatching] = useState(false);
 
+  const [selectedJobType, setSelectedJobType] = useState('Tất cả');
+  const [selectedSalaryRange, setSelectedSalaryRange] = useState(0);
+  const selectedJobRef = useRef(null);
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+  const pageSize = 12;
+
   const token = localStorage.getItem('accessToken');
   const userRole = localStorage.getItem('userRole');
   const isStudent = userRole === 'STUDENT';
 
-  useEffect(() => {
-    const fetchJobs = async () => {
-      try {
-        setLoading(true);
-        const res = await jobService.getAllPublicJobs();
+  const fetchJobs = useCallback(async (page = 1, keyword = '') => {
+    try {
+      setLoading(true);
+      const res = await jobService.getAllPublicJobs({
+        page,
+        pageSize,
+        keyword: keyword || undefined
+      });
 
-        if (res.success) {
-          const data = unwrapList(res);
-          setJobs(data);
-          if (data.length > 0) setSelectedJob(data[0]);
+      if (res.success && res.data) {
+        const data = res.data;
+        let jobList = data.items || [];
+
+        if (selectedJobType !== 'Tất cả') {
+          jobList = jobList.filter(j => j.jobType === selectedJobType);
+        }
+        const salary = SALARY_RANGES[selectedSalaryRange];
+        if (salary.min > 0 || salary.max < Infinity) {
+          jobList = jobList.filter(j => j.salary >= salary.min && j.salary < salary.max);
         }
 
-        if (token && isStudent) {
-          const savedRes = await savedItemsService.getMySavedJobs();
-          if (savedRes.success) {
-            setSavedJobIds(new Set(unwrapList(savedRes).map(item => item.jobId)));
-          }
+        setJobs(jobList);
+        setTotalPages(data.totalPages || 1);
+        setTotalItems(jobList.length);
+        setCurrentPage(data.page || 1);
+        if (jobList.length > 0 && !selectedJobRef.current) {
+          setSelectedJob(jobList[0]);
+          selectedJobRef.current = jobList[0];
         }
-      } catch (err) {
-        console.error("Lỗi lấy dữ liệu:", err);
-        setError("Không thể tải danh sách việc làm.");
-      } finally {
-        setLoading(false);
       }
-    };
-    fetchJobs();
-  }, []);
+
+      if (token && isStudent) {
+        const savedRes = await savedItemsService.getMySavedJobs();
+        if (savedRes.success) {
+          const savedData = savedRes.data;
+          const savedList = savedData?.items || (Array.isArray(savedData) ? savedData : []);
+          setSavedJobIds(new Set(savedList.map(item => item.jobId)));
+        }
+      }
+    } catch (err) {
+      console.error("Lỗi lấy dữ liệu:", err);
+      setError("Không thể tải danh sách việc làm.");
+    } finally {
+      setLoading(false);
+    }
+  }, [token, isStudent, selectedJobType, selectedSalaryRange]);
+
+  useEffect(() => { fetchJobs(1); }, []);
 
   useEffect(() => {
     if (selectedJob?.enterpriseId) {
@@ -78,10 +117,14 @@ const Jobs = () => {
     }
   };
 
-  const filteredJobs = jobs.filter(job =>
-    job.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    job.enterpriseName?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const handleSearch = () => {
+    setCurrentPage(1);
+    fetchJobs(1, searchTerm);
+  };
+
+  const handlePageChange = (page) => {
+    fetchJobs(page, searchTerm);
+  };
 
   const handleToggleSave = async (jobId) => {
     if (!token || !isStudent) return;
@@ -120,7 +163,10 @@ const Jobs = () => {
       const res = await recommendationService.getMyRecommendations();
       if (res.success && res.data?.jobs) {
         setJobs(res.data.jobs);
-        if (res.data.jobs.length > 0) setSelectedJob(res.data.jobs[0]);
+        if (res.data.jobs.length > 0) {
+          setSelectedJob(res.data.jobs[0]);
+          selectedJobRef.current = res.data.jobs[0];
+        }
         alert(`AI đã tìm được ${res.data.jobs.length} việc làm phù hợp với bạn!`);
       }
     } catch (err) {
@@ -168,22 +214,51 @@ const Jobs = () => {
         {/* --- THANH FILTER --- */}
         <div className="hub-top-filter glass-card p-3 mb-4 border-0">
           <Row className="g-2 align-items-center">
-            <Col md={9}>
+            <Col md={4}>
               <div className="hub-search-wrapper position-relative">
                 <Search size={18} className="hub-search-icon text-white-50" style={{position:'absolute', left:'15px', top:'13px'}}/>
                 <Form.Control
-                  placeholder="Tìm kiếm dự án, công nghệ, doanh nghiệp..."
+                  placeholder="Tìm dự án, công nghệ, doanh nghiệp..."
                   className="hub-input ps-5 bg-dark-input text-white border-0"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
                 />
               </div>
             </Col>
-            <Col md={3}>
-                <Button variant="primary" className="w-100 fw-bold h-100 shadow-glow" onClick={handleAIMatching} disabled={aiMatching}>
-                   {aiMatching ? <Loader2 className="spinner me-2" size={16}/> : <Sparkles size={16} className="me-2"/>}
-                   {aiMatching ? 'ĐANG PHÂN TÍCH...' : 'AI MATCHING'}
-                </Button>
+            <Col md={2}>
+              <Form.Select
+                className="bg-dark-input text-white border-0 rounded-pill py-2"
+                value={selectedJobType}
+                onChange={(e) => setSelectedJobType(e.target.value)}
+              >
+                {JOB_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+              </Form.Select>
+            </Col>
+            <Col md={2}>
+              <Form.Select
+                className="bg-dark-input text-white border-0 rounded-pill py-2"
+                value={selectedSalaryRange}
+                onChange={(e) => setSelectedSalaryRange(Number(e.target.value))}
+              >
+                {SALARY_RANGES.map((r, i) => <option key={i} value={i}>{r.label}</option>)}
+              </Form.Select>
+            </Col>
+            <Col md={2}>
+              <Button variant="primary" className="w-100 fw-bold h-100 shadow-glow rounded-pill" onClick={handleSearch}>
+                <Filter size={16} className="me-1"/> Tìm kiếm
+              </Button>
+            </Col>
+            <Col md={2}>
+              <Button
+                variant="outline-info"
+                className="w-100 fw-bold h-100 rounded-pill"
+                onClick={handleAIMatching}
+                disabled={aiMatching}
+              >
+                {aiMatching ? <Loader2 className="spinner me-1" size={14}/> : <Sparkles size={14} className="me-1"/>}
+                {aiMatching ? 'AI...' : 'AI Matching'}
+              </Button>
             </Col>
           </Row>
         </div>
@@ -194,14 +269,14 @@ const Jobs = () => {
           {/* CỘT TRÁI: DANH SÁCH TÓM TẮT (SIDEBAR) */}
           <div className="hub-sidebar-list flex-shrink-0" style={{width: '400px'}}>
             <div className="sidebar-header-text mb-3 opacity-50 x-small uppercase-tracking">
-                TÌM THẤY {filteredJobs.length} KẾT QUẢ
+                TÌM THẤY {totalItems} KẾT QUẢ
             </div>
-            <div className="sidebar-scroll-area overflow-auto" style={{maxHeight: 'calc(100vh - 250px)'}}>
-                {filteredJobs.map((job) => (
+            <div className="sidebar-scroll-area overflow-auto" style={{maxHeight: 'calc(100vh - 350px)'}}>
+                {jobs.map((job) => (
                 <div
                     key={job.jobId}
                     className={`hub-sidebar-item glass-card p-3 mb-2 border-0 pointer transition-all ${selectedJob?.jobId === job.jobId ? 'active-job' : ''}`}
-                    onClick={() => setSelectedJob(job)}
+                    onClick={() => { setSelectedJob(job); selectedJobRef.current = job; }}
                 >
                     <div className="d-flex gap-3">
                         <img
@@ -239,7 +314,7 @@ const Jobs = () => {
                             </div>
                             <h6 className="fw-bold text-white mb-1 line-clamp-1" style={{fontSize: '0.85rem'}}>{job.title}</h6>
                             <div className="fw-bold mb-1" style={{fontSize: '0.8rem', color: '#22c55e'}}>
-                                {job.salary > 0 ? `${job.salary.toLocaleString()} VND` : "Thỏa thuận"}
+                                {job.salary > 0 ? `${job.salary.toLocaleString()} VND` : "Chưa có lương"}
                             </div>
                             <div className="d-flex align-items-center gap-1">
                                 <Building2 size={10} style={{color: 'rgba(255,255,255,0.4)'}}/>
@@ -250,6 +325,12 @@ const Jobs = () => {
                 </div>
                 ))}
             </div>
+
+            <PaginationBar
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={handlePageChange}
+            />
           </div>
 
           {/* CỘT PHẢI: CHI TIẾT CÔNG VIỆC */}

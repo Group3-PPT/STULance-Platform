@@ -4,98 +4,71 @@
     z-index: 10;
 }
 
-.biz-nav-item {
+.settings-sidebar {
+    border-radius: 20px !important;
+}
+
+.settings-nav-item {
     display: flex;
     align-items: center;
     gap: 15px;
-    padding: 14px 20px;
+    padding: 12px 20px;
+    border-radius: 12px;
     color: rgba(255, 255, 255, 0.5);
-    border-radius: 14px;
     cursor: pointer;
+    transition: 0.3s;
     font-weight: 600;
     font-size: 14px;
-    transition: 0.3s;
     margin-bottom: 8px;
 }
 
-.biz-nav-item:hover {
+.settings-nav-item:hover {
     background: rgba(255, 255, 255, 0.04);
     color: white;
 }
 
-.biz-nav-item.active {
+.settings-nav-item.active {
     background: rgba(59, 130, 246, 0.15);
     color: #60a5fa;
 }
 
-.settings-banner-area {
-    height: 220px;
+.avatar-wrapper {
     position: relative;
-    background: #000;
+    width: 140px;
+    height: 140px;
 }
 
-.settings-banner-img {
+.avatar-img {
     width: 100%;
     height: 100%;
+    border-radius: 50%;
     object-fit: cover;
-    opacity: 0.4;
+    border: 4px solid var(--primary-blue);
+    padding: 4px;
+    background: var(--dark-bg);
 }
 
-.btn-change-banner {
+.upload-icon-btn {
     position: absolute;
-    top: 20px;
-    right: 20px;
-    background: rgba(0, 0, 0, 0.6);
-    color: white;
-    padding: 8px 15px;
-    border-radius: 8px;
-    font-size: 12px;
-    cursor: pointer;
-    backdrop-filter: blur(8px);
-    border: 1px solid rgba(255, 255, 255, 0.15);
-}
-
-.settings-logo-overlap {
-    position: absolute;
-    bottom: -40px;
-    left: 40px;
-    width: 120px;
-    height: 120px;
-    background: white !important;
-    padding: 10px;
-    border-radius: 20px !important;
-    border: 4px solid var(--dark-bg) !important;
-    z-index: 20;
-}
-
-.settings-logo-overlap img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-}
-
-.btn-change-logo {
-    position: absolute;
-    bottom: -5px;
-    right: -5px;
+    bottom: 5px;
+    right: 5px;
     background: var(--primary-blue);
     color: white;
-    width: 32px;
-    height: 32px;
+    width: 38px;
+    height: 38px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
     border: 3px solid var(--dark-bg);
+    transition: 0.3s;
 }
 
-.biz-label {
-    font-size: 11px;
-    font-weight: 800;
-    color: rgba(255, 255, 255, 0.35);
-    margin-bottom: 10px;
-    letter-spacing: 1px;
+.upload-icon-btn:hover {
+    transform: scale(1.1);
+    background: white;
+    color: var(--primary-blue);
 }
 
 .biz-input {
@@ -121,21 +94,21 @@
 .settings-input {
     background: rgba(255, 255, 255, 0.04) !important;
     border: 1px solid rgba(255, 255, 255, 0.08) !important;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.15) !important;
-    border-top: none !important;
-    border-left: none !important;
-    border-right: none !important;
     color: white !important;
     padding: 12px 15px !important;
-    border-radius: 8px 8px 0 0 !important;
+    border-radius: 12px !important;
     transition: 0.3s !important;
 }
 
 .settings-input:focus {
     background: rgba(255, 255, 255, 0.06) !important;
     border-color: var(--primary-blue) !important;
-    border-bottom-color: var(--primary-blue) !important;
-    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.15) !important;
+    box-shadow: 0 0 15px rgba(59, 130, 246, 0.15) !important;
+}
+
+.settings-input option {
+    background: #0f172a;
+    color: white;
 }
 
 .animate-fade-in {
@@ -149,6 +122,16 @@
 
 @media (max-width: 991px) {
     .biz-settings-page { padding-top: 80px; }
-    .settings-logo-overlap { left: 50%; transform: translateX(-50%); }
-    .btn-change-banner { display: none; }
+    .settings-sidebar {
+        position: static !important;
+        margin-bottom: 30px;
+        display: flex;
+        overflow-x: auto;
+        gap: 10px;
+        white-space: nowrap;
+    }
+    .settings-nav-item {
+        margin-bottom: 0;
+        padding: 10px 20px;
+    }
 }

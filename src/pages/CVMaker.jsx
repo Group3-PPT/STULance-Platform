@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { scoreMyCV, improveMyCV, suggestImprovements, generateObjective } from '../services/cvService';
 import { cvService as cvApi } from '../services/cvApiService';
+import PaginationBar from '../components/PaginationBar';
 import '../CSS/CVMaker.css';
 
 const EMPTY_CV = {
@@ -44,6 +45,11 @@ const CVMaker = () => {
   const [loadingHistory, setLoadingHistory] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
   const [defaultId, setDefaultId] = useState(null);
+
+  const [cvPage, setCvPage] = useState(1);
+  const [cvTotalPages, setCvTotalPages] = useState(1);
+  const [cvTotalItems, setCvTotalItems] = useState(0);
+  const cvPageSize = 10;
 
   useEffect(() => {
     localStorage.setItem('stulance_cv_current', JSON.stringify(cv));
@@ -194,19 +200,31 @@ const CVMaker = () => {
     }
   };
 
-  const openHistoryModal = async () => {
+  const openHistoryModal = async (page = 1) => {
     setShowHistory(true);
     setLoadingHistory(true);
     try {
-      const data = await cvApi.getMyCvs();
-      if (data && Array.isArray(data)) {
-        setHistory(data);
+      const res = await cvApi.getMyCvs({ page, pageSize: cvPageSize });
+      if (res && res.data) {
+        const data = res.data;
+        setHistory(data.items || []);
+        setCvTotalPages(data.totalPages || 1);
+        setCvTotalItems(data.totalItems || 0);
+        setCvPage(data.page || 1);
+      } else if (Array.isArray(res)) {
+        setHistory(res);
+        setCvTotalPages(1);
+        setCvTotalItems(res.length);
       }
     } catch (err) {
       console.error('Fetch history error:', err);
     } finally {
       setLoadingHistory(false);
     }
+  };
+
+  const handleCvPageChange = (page) => {
+    openHistoryModal(page);
   };
 
   const openAiModal = async (type) => {
@@ -602,7 +620,7 @@ const CVMaker = () => {
       {/* HISTORY MODAL */}
       <Modal show={showHistory} onHide={() => setShowHistory(false)} centered className="cv-history-modal">
         <Modal.Header className="cv-ai-header">
-          <Modal.Title className="d-flex align-items-center gap-2 text-white"><History size={18} /> Lịch sử CV</Modal.Title>
+          <Modal.Title className="d-flex align-items-center gap-2 text-white"><History size={18} /> Lịch sử CV ({cvTotalItems})</Modal.Title>
           <Button variant="link" className="text-white-50" onClick={() => setShowHistory(false)}><X size={20} /></Button>
         </Modal.Header>
         <Modal.Body className="cv-ai-body">
@@ -649,6 +667,11 @@ const CVMaker = () => {
               ))}
             </div>
           )}
+          <PaginationBar
+            currentPage={cvPage}
+            totalPages={cvTotalPages}
+            onPageChange={handleCvPageChange}
+          />
         </Modal.Body>
       </Modal>
     </Container>

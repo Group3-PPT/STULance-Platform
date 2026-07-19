@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Container, Badge, Button, Row, Col, Modal, Spinner, Form } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import {
@@ -6,7 +6,7 @@ import {
   Eye, RefreshCw, Search, User, DollarSign, Clock
 } from 'lucide-react';
 import { contractService } from '../../services/contractservice';
-import { unwrapList } from '../../services/responseUtils';
+import PaginationBar from '../../components/PaginationBar';
 import '../../CSS/ManageJobs.css';
 
 const ManageContracts = () => {
@@ -18,20 +18,34 @@ const ManageContracts = () => {
   const [resolving, setResolving] = useState(false);
   const [resolveAction, setResolveAction] = useState('');
   const [resolveNote, setResolveNote] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+  const pageSize = 15;
 
-  const fetchContracts = async () => {
+  const fetchContracts = useCallback(async (page = 1, keyword = '') => {
     setLoading(true);
     try {
-      const res = await contractService.adminGetAllContracts();
-      setContracts(unwrapList(res));
+      const res = await contractService.adminGetAllContracts({
+        page,
+        pageSize,
+        keyword: keyword || undefined
+      });
+      if (res.success && res.data) {
+        const data = res.data;
+        setContracts(data.items || []);
+        setTotalPages(data.totalPages || 1);
+        setTotalItems(data.totalItems || 0);
+        setCurrentPage(data.page || 1);
+      }
     } catch (err) {
       console.error("Lỗi tải hợp đồng:", err);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  useEffect(() => { fetchContracts(); }, []);
+  useEffect(() => { fetchContracts(1); }, [fetchContracts]);
 
   const getStatusConfig = (status) => {
     const map = {
@@ -50,9 +64,14 @@ const ManageContracts = () => {
 
   const formatMoney = (val) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val || 0);
 
-  const filteredContracts = contracts.filter(c =>
-    (c.contractName || c.studentName || c.enterpriseName || c.contractId || '').toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const handleSearch = () => {
+    setCurrentPage(1);
+    fetchContracts(1, searchTerm);
+  };
+
+  const handlePageChange = (page) => {
+    fetchContracts(page, searchTerm);
+  };
 
   const handleResolveDispute = async () => {
     if (!resolveAction || !selectedContract) return;
@@ -82,7 +101,7 @@ const ManageContracts = () => {
             <h1 className="fw-bold display-6 mb-1">
               Quản lý <span className="text-primary-glow">Hợp đồng</span>
             </h1>
-            <p className="text-white-50 mb-0">Xem và xử lý tranh chấp hợp đồng</p>
+            <p className="text-white-50 mb-0">Xem và xử lý tranh chấp hợp đồng ({totalItems} hợp đồng)</p>
           </div>
         </div>
 
@@ -93,9 +112,10 @@ const ManageContracts = () => {
               placeholder="Tìm kiếm hợp đồng..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
             />
           </div>
-          <Button variant="outline-primary" size="sm" onClick={fetchContracts}>
+          <Button variant="outline-primary" size="sm" onClick={handleSearch}>
             <RefreshCw size={14} className="me-1" /> Tải lại
           </Button>
         </div>
@@ -104,14 +124,15 @@ const ManageContracts = () => {
           <div className="text-center py-5">
             <Loader2 className="spinner text-primary" size={40} />
           </div>
-        ) : filteredContracts.length === 0 ? (
+        ) : contracts.length === 0 ? (
           <div className="mj-empty-state">
             <Handshake size={48} className="text-white-50 mb-3" />
             <p className="text-white-50">Không có hợp đồng nào</p>
           </div>
         ) : (
+          <>
           <div className="mj-contract-list">
-            {filteredContracts.map((c) => {
+            {contracts.map((c) => {
               const st = getStatusConfig(c.status);
               return (
                 <div key={c.contractId} className="mj-contract-card">
@@ -149,6 +170,13 @@ const ManageContracts = () => {
               );
             })}
           </div>
+
+          <PaginationBar
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={handlePageChange}
+          />
+          </>
         )}
 
         {/* MODAL XỬ LÝ TRANH CHẤP */}

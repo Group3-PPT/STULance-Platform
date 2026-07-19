@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Table, Badge, Row, Col, Spinner, Modal, Button } from 'react-bootstrap';
 import { 
   ShieldAlert, Eye, CheckCircle, 
@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 import { adminService } from '../../services/adminservice';
 import { reportService } from '../../services/reportService';
-import { unwrapList } from '../../services/responseUtils';
+import PaginationBar from '../../components/PaginationBar';
 import '../../CSS/ManageReports.css'; 
 
 const ManageReports = () => {
@@ -18,29 +18,43 @@ const ManageReports = () => {
   const [filter, setFilter] = useState("Tất cả");
   const [searchTerm, setSearchTerm] = useState("");
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+  const pageSize = 20;
+
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [selectedDispute, setSelectedDispute] = useState(null);
   const [resolving, setResolving] = useState(false);
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async (page = 1, keyword = '', status = '') => {
     setLoading(true);
     try {
+      const params = { page, pageSize };
+      if (keyword) params.keyword = keyword;
+      if (status) params.status = status;
+
       const [contractsRes, ordersRes, reportsRes] = await Promise.all([
-        adminService.getAllContracts(),
-        adminService.getAllServiceOrders(),
-        reportService.adminGetAllReports()
+        adminService.getAllContracts({ page, pageSize }),
+        adminService.getAllServiceOrders({ page, pageSize }),
+        reportService.adminGetAllReports(params)
       ]);
-      if (contractsRes.success) setContracts(unwrapList(contractsRes));
-      if (ordersRes.success) setOrders(unwrapList(ordersRes));
-      if (reportsRes.success !== false) setReports(unwrapList(reportsRes));
+      if (contractsRes.success && contractsRes.data) setContracts(contractsRes.data.items || []);
+      if (ordersRes.success && ordersRes.data) setOrders(ordersRes.data.items || []);
+      if (reportsRes.success && reportsRes.data) {
+        setReports(reportsRes.data.items || []);
+        setTotalPages(reportsRes.data.totalPages || 1);
+        setTotalItems(reportsRes.data.totalItems || 0);
+        setCurrentPage(reportsRes.data.page || 1);
+      }
     } catch (err) {
       console.error("Lỗi tải dữ liệu:", err);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  useEffect(() => { fetchData(); }, []);
+  useEffect(() => { fetchData(1); }, [fetchData]);
 
   const disputes = [
     ...reports.map(r => ({
@@ -99,10 +113,7 @@ const ManageReports = () => {
 
   const filteredDisputes = disputes.filter(r => {
     const statusMatch = filter === "Tất cả" || r.status === filter;
-    const searchMatch = r.id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      r.reporter.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      r.reported.toLowerCase().includes(searchTerm.toLowerCase());
-    return statusMatch && searchMatch;
+    return statusMatch;
   });
 
   const newCount = disputes.filter(d => d.status === 'Mới').length;
@@ -111,6 +122,19 @@ const ManageReports = () => {
   const handleViewDetail = (dispute) => {
     setSelectedDispute(dispute);
     setShowDetailModal(true);
+  };
+
+  const handleFilterChange = (st) => {
+    setFilter(st);
+  };
+
+  const handleSearch = () => {
+    setCurrentPage(1);
+    fetchData(1, searchTerm);
+  };
+
+  const handlePageChange = (page) => {
+    fetchData(page, searchTerm);
   };
 
   const handleResolve = async (dispute, resolutionType) => {
@@ -136,7 +160,7 @@ const ManageReports = () => {
 
       alert("Đã xử lý khiếu nại thành công!");
       setShowDetailModal(false);
-      fetchData();
+      fetchData(currentPage, searchTerm);
     } catch (err) {
       alert("Lỗi xử lý: " + (err.response?.data?.message || "Không xác định"));
     } finally {
@@ -169,10 +193,12 @@ const ManageReports = () => {
               placeholder="Tìm ID hoặc người dùng..." 
               className="w-100 bg-dark-input text-white border-0 rounded-3 ps-4 py-2"
               style={{fontSize: '13px'}}
+              value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
             />
           </div>
-          <button className="btn-icon-table text-white-50" title="Làm mới" onClick={fetchData}><RefreshCw size={16}/></button>
+          <button className="btn-icon-table text-white-50" title="Làm mới" onClick={handleSearch}><RefreshCw size={16}/></button>
         </div>
       </div>
 
@@ -181,7 +207,7 @@ const ManageReports = () => {
           <button 
             key={st}
             className={`report-tab-btn ${filter === st ? 'active' : ''}`}
-            onClick={() => setFilter(st)}
+            onClick={() => handleFilterChange(st)}
           >
             {st}
           </button>
@@ -192,6 +218,7 @@ const ManageReports = () => {
         {loading ? (
           <div className="text-center py-5"><Loader2 className="spinner text-primary" size={40}/></div>
         ) : (
+          <>
           <Table responsive variant="dark" className="mb-0 report-custom-table align-middle">
             <thead>
               <tr>
@@ -238,6 +265,15 @@ const ManageReports = () => {
               )}
             </tbody>
           </Table>
+
+          <div className="p-3 border-top" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
+            <PaginationBar
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={handlePageChange}
+            />
+          </div>
+          </>
         )}
       </div>
 

@@ -28,6 +28,12 @@ const ServiceInvoice = () => {
   // 2. Xử lý Tạo Đơn Hàng (Không tạo hợp đồng tại đây)
   const handleConfirmOrder = async () => {
     if (!service) return;
+
+    if (service.status === 'BLOCKED' || service.status === 'HIDDEN') {
+      alert("Dịch vụ này hiện không khả dụng để mua.");
+      return;
+    }
+
     setIsProcessing(true);
     try {
       const myRoleId = localStorage.getItem('userRole');

@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Button, Badge, Modal } from 'react-bootstrap';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Container, Row, Col, Button, Badge, Modal, Form, InputGroup } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
-import { Building2, ShieldCheck, Eye, Loader2, MapPin, Globe, User, X,Star } from 'lucide-react';
+import { Building2, ShieldCheck, Eye, Loader2, MapPin, Globe, User, X, Star, Search, RefreshCw } from 'lucide-react';
 import { enterpriseService } from '../../services/enterprise.service';
-import { unwrapList } from '../../services/responseUtils';
+import PaginationBar from '../../components/PaginationBar';
 import '../../CSS/Businesses.css';
 
 const Businesses = () => {
@@ -11,21 +11,45 @@ const Businesses = () => {
     const [loading, setLoading] = useState(true);
     const [selectedEnterprise, setSelectedEnterprise] = useState(null);
     const [showModal, setShowModal] = useState(false);
+    const [searchTerm, setSearchTerm] = useState('');
 
-    useEffect(() => {
-        const fetchEnterprises = async () => {
-            try {
-                const res = await enterpriseService.getAllPublicEnterprises();
-                const data = unwrapList(res);
-                setCompanies(data);
-            } catch (err) {
-                console.error("Lỗi tải danh sách doanh nghiệp:", err);
-            } finally {
-                setLoading(false);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const [totalItems, setTotalItems] = useState(0);
+    const pageSize = 12;
+
+    const fetchEnterprises = useCallback(async (page = 1, keyword = '') => {
+        setLoading(true);
+        try {
+            const res = await enterpriseService.getAllPublicEnterprises({
+                page,
+                pageSize,
+                keyword: keyword || undefined
+            });
+            if (res.success && res.data) {
+                const data = res.data;
+                setCompanies(data.items || []);
+                setTotalPages(data.totalPages || 1);
+                setTotalItems(data.totalItems || 0);
+                setCurrentPage(data.page || 1);
             }
-        };
-        fetchEnterprises();
+        } catch (err) {
+            console.error("Lỗi tải danh sách doanh nghiệp:", err);
+        } finally {
+            setLoading(false);
+        }
     }, []);
+
+    useEffect(() => { fetchEnterprises(1); }, [fetchEnterprises]);
+
+    const handleSearch = () => {
+        setCurrentPage(1);
+        fetchEnterprises(1, searchTerm);
+    };
+
+    const handlePageChange = (page) => {
+        fetchEnterprises(page, searchTerm);
+    };
 
     const getLogo = (ent) => {
         if (ent.logoUrl) return ent.logoUrl;
@@ -49,8 +73,35 @@ const Businesses = () => {
                         Kết nối với <span className="text-primary-glow">Doanh nghiệp</span>
                     </h1>
                     <p className="text-white-50 mx-auto mt-3" style={{ maxWidth: '700px' }}>
-                        Khám phá {companies.length}+ doanh nghiệp uy tín đang tìm kiếm nhân sự trên hệ thống.
+                        Khám phá {totalItems}+ doanh nghiệp uy tín đang tìm kiếm nhân sự trên hệ thống.
                     </p>
+                </div>
+
+                <div className="glass-card p-3 mb-5 mx-auto shadow-lg" style={{maxWidth: '600px', borderRadius: '16px'}}>
+                    <Row className="g-2 align-items-center">
+                        <Col md={9}>
+                            <InputGroup className="bg-dark-input rounded-pill overflow-hidden border-0">
+                                <InputGroup.Text className="bg-transparent border-0 text-primary"><Search size={18}/></InputGroup.Text>
+                                <Form.Control
+                                    placeholder="Tìm theo tên công ty, địa chỉ..."
+                                    className="bg-transparent border-0 text-white shadow-none py-2"
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                                />
+                            </InputGroup>
+                        </Col>
+                        <Col md={3}>
+                            <Button variant="primary" className="w-100 rounded-pill fw-bold py-2" onClick={handleSearch}>
+                                <Search size={16} className="me-1"/> Tìm
+                            </Button>
+                        </Col>
+                    </Row>
+                </div>
+
+                <div className="d-flex justify-content-between align-items-center mb-4">
+                    <p className="text-white-50 mb-0">Tìm thấy <strong className="text-white">{totalItems}</strong> doanh nghiệp</p>
+                    <button className="btn-icon-table text-white-50" title="Làm mới" onClick={() => fetchEnterprises(currentPage, searchTerm)}><RefreshCw size={16}/></button>
                 </div>
 
                 <Row className="g-4">
@@ -111,6 +162,12 @@ const Businesses = () => {
                         Chưa có doanh nghiệp nào trên hệ thống.
                     </div>
                 )}
+
+                <PaginationBar
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={handlePageChange}
+                />
             </Container>
 
             {/* MODAL CHI TIẾT */}

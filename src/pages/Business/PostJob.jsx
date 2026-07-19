@@ -6,14 +6,13 @@ import '../../CSS/PostJob.css';
 
 const PostJob = () => {
   const [isSaving, setIsSaving] = useState(false);
-  const [salaryType, setSalaryType] = useState('deal');
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
 
   const [formData, setFormData] = useState({
     title: '',
     jobType: 'Freelance',
-    salary: 0,
+    salary: '',
     quantity: 1,
     deadline: '',
     description: '',
@@ -51,7 +50,7 @@ const PostJob = () => {
         else delete newErrors.contactInfo;
         break;
       case 'salary':
-        if (salaryType === 'fixed' && (!value || Number(value) < 100000)) newErrors.salary = 'Lương tối thiểu 100,000 VND';
+        if (!value || Number(value) < 100000) newErrors.salary = 'Lương tối thiểu 100,000 VND';
         else delete newErrors.salary;
         break;
       default: break;
@@ -75,8 +74,7 @@ const PostJob = () => {
   e.preventDefault();
   
   // Validate all fields
-  ['title', 'deadline', 'description', 'contactName', 'contactInfo'].forEach(f => validate(f, formData[f]));
-  if (salaryType === 'fixed') validate('salary', formData.salary);
+  ['title', 'deadline', 'description', 'contactName', 'contactInfo', 'salary'].forEach(f => validate(f, formData[f]));
   
   if (Object.keys(errors).length > 0) {
     setTouched({ title: true, deadline: true, description: true, contactName: true, contactInfo: true, salary: true });
@@ -91,7 +89,7 @@ const PostJob = () => {
       // THÊM TRƯỜNG NÀY ĐỂ FIX LỖI 400
       requesterType: "ENTERPRISE", 
       
-      salary: salaryType === 'deal' ? 0 : Number(formData.salary),
+      salary: Number(formData.salary),
       quantity: Number(formData.quantity),
       deadline: new Date(formData.deadline).toISOString(),
     };
@@ -152,26 +150,13 @@ const PostJob = () => {
                     </Form.Select>
                   </Form.Group>
                 </Col>
-                <Col md={3}>
+                <Col md={6}>
                   <Form.Group>
-                    <Form.Label className="small-label">HÌNH THỨC LƯƠNG</Form.Label>
-                    <Form.Select className="post-input" value={salaryType} onChange={(e) => {
-                      setSalaryType(e.target.value);
-                      if (e.target.value === 'fixed') validate('salary', formData.salary);
-                      else { const e2 = { ...errors }; delete e2.salary; setErrors(e2); }
-                    }}>
-                      <option value="deal">Thỏa thuận</option>
-                      <option value="fixed">Cố định (VND)</option>
-                    </Form.Select>
-                  </Form.Group>
-                </Col>
-                <Col md={3}>
-                  <Form.Group>
-                    <Form.Label className="small-label">SỐ TIỀN</Form.Label>
+                    <Form.Label className="small-label">LƯƠNG / PHÍ DỰ ÁN (VND) <span className="text-danger">*</span></Form.Label>
                     <Form.Control 
                       name="salary" type="number" className={`post-input ${touched.salary && errors.salary ? 'is-invalid' : ''}`}
-                      disabled={salaryType === 'deal'}
                       value={formData.salary} onChange={handleChange} onBlur={() => handleBlur('salary')}
+                      placeholder="Nhập số tiền (tối thiểu 100,000 VND)"
                     />
                     {touched.salary && errors.salary && <div className="invalid-feedback d-block">{errors.salary}</div>}
                   </Form.Group>

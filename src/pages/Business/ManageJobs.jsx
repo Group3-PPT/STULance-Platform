@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Container, Badge, Button, Row, Col, Modal, Spinner, Tabs, Tab, Form } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import {
@@ -12,7 +12,7 @@ import { bidService } from "../../services/bidservice";
 import { contractService } from "../../services/contractservice";
 import { serviceOrderService } from "../../services/serviceorderservice";
 import { dashboardService } from "../../services/dashboardService";
-import { unwrapList } from '../../services/responseUtils';
+import PaginationBar from '../../components/PaginationBar';
 import '../../CSS/ManageJobs.css';
 
 const ManageJobs = () => {
@@ -43,13 +43,29 @@ const ManageJobs = () => {
   const [createForm, setCreateForm] = useState({ workContent: '', startDate: '', endDate: '', acceptanceCriteria: '' });
   const [creatingSubmit, setCreatingSubmit] = useState(false);
 
-  const fetchMyJobs = async () => {
+  const [jobsPagination, setJobsPagination] = useState({ page: 1, totalPages: 1, totalItems: 0 });
+  const [ordersPagination, setOrdersPagination] = useState({ page: 1, totalPages: 1, totalItems: 0 });
+  const [contractsPagination, setContractsPagination] = useState({ page: 1, totalPages: 1, totalItems: 0 });
+  const pageSize = 12;
+
+  const fetchMyJobs = useCallback(async (page = 1, keyword = '') => {
     setLoading(true);
     setError(null);
     try {
-      const res = await jobService.getMyJobs();
-      if (res.success) {
-        const jobList = Array.isArray(res.data) ? res.data : (res.data?.items || []);
+      const res = await jobService.getMyJobs({
+        page,
+        pageSize,
+        keyword: keyword || undefined
+      });
+      if (res.success && res.data) {
+        const data = res.data;
+        const jobList = data.items || [];
+        setJobsPagination({
+          page: data.page || 1,
+          totalPages: data.totalPages || 1,
+          totalItems: data.totalItems || 0
+        });
+
         const enriched = await Promise.allSettled(
           jobList.map(async (job) => {
             try {
@@ -70,14 +86,25 @@ const ManageJobs = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const fetchContracts = async () => {
+  const fetchContracts = useCallback(async (page = 1, keyword = '') => {
     setLoading(true);
     try {
-      const res = await contractService.getMyContracts();
-      const contractList = Array.isArray(res?.data) ? res.data : (res?.data?.items || unwrapList(res));
-      if (contractList.length > 0 || res?.success !== false) {
+      const res = await contractService.getMyContracts({
+        page,
+        pageSize,
+        keyword: keyword || undefined
+      });
+      if (res.success && res.data) {
+        const data = res.data;
+        const contractList = data.items || [];
+        setContractsPagination({
+          page: data.page || 1,
+          totalPages: data.totalPages || 1,
+          totalItems: data.totalItems || 0
+        });
+
         const enriched = contractList.map(c => {
           const isLocked = Boolean(c.isContentLocked || c.contentLockedAt);
           return {
@@ -91,7 +118,7 @@ const ManageJobs = () => {
         const progressPromises = enriched
           .filter(c => c.status === 'IN_PROGRESS' || c.status === 'DELIVERED')
           .map(c => contractService.getProgress(c.contractId).then(res => {
-            const progressData = unwrapList(res).length > 0 ? unwrapList(res)[0] : (res?.data || null);
+            const progressData = Array.isArray(res?.data) ? res.data[0] : (res?.data || null);
             if (progressData) c.progressPercent = progressData.progressPercent || 0;
           }).catch(() => {}));
 
@@ -103,12 +130,37 @@ const ManageJobs = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  const fetchServiceOrders = useCallback(async (page = 1, keyword = '') => {
+    setLoading(true);
+    try {
+      const res = await serviceOrderService.getEnterpriseOrders({
+        page,
+        pageSize,
+        keyword: keyword || undefined
+      });
+      if (res.success && res.data) {
+        const data = res.data;
+        setServiceOrders(data.items || []);
+        setOrdersPagination({
+          page: data.page || 1,
+          totalPages: data.totalPages || 1,
+          totalItems: data.totalItems || 0
+        });
+      }
+    } catch (err) {
+      console.error("Lỗi tải đơn dịch vụ:", err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    if (activeTab === 'jobs') fetchMyJobs();
-    else if (activeTab === 'contracts') fetchContracts();
-    else if (activeTab === 'orders') fetchServiceOrders();
+    if (activeTab === 'jobs') fetchMyJobs(1);
+    else if (activeTab === 'contracts') fetchContracts(1);
+    else if (activeTab === 'orders') fetchServiceOrders(1);
+    setSearchTerm('');
   }, [activeTab]);
 
   useEffect(() => {
@@ -117,21 +169,17 @@ const ManageJobs = () => {
       .catch(() => {});
   }, []);
 
-  const fetchServiceOrders = async () => {
-    setLoading(true);
-    try {
-      const res = await serviceOrderService.getEnterpriseOrders();
-      setServiceOrders(Array.isArray(res.data) ? res.data : (res.data?.items || []));
-    } catch (err) {
-      console.error("Lỗi tải đơn dịch vụ:", err);
-    } finally {
-      setLoading(false);
-    }
+  const handleTabSearch = () => {
+    if (activeTab === 'jobs') fetchMyJobs(1, searchTerm);
+    else if (activeTab === 'contracts') fetchContracts(1, searchTerm);
+    else if (activeTab === 'orders') fetchServiceOrders(1, searchTerm);
   };
 
-  useEffect(() => {
-    if (activeTab === 'orders') fetchServiceOrders();
-  }, [activeTab]);
+  const handleTabPageChange = (page) => {
+    if (activeTab === 'jobs') fetchMyJobs(page, searchTerm);
+    else if (activeTab === 'contracts') fetchContracts(page, searchTerm);
+    else if (activeTab === 'orders') fetchServiceOrders(page, searchTerm);
+  };
 
   const handleCreateContractFromBid = (bidId) => {
     setCreateContractType('bid');
@@ -161,9 +209,9 @@ const ManageJobs = () => {
       }
       alert("Tạo hợp đồng thành công!");
       setShowCreateContractModal(false);
-      fetchMyJobs();
-      fetchContracts();
-      fetchServiceOrders();
+      fetchMyJobs(jobsPagination.page);
+      fetchContracts(contractsPagination.page);
+      fetchServiceOrders(ordersPagination.page);
     } catch (err) {
       alert("Lỗi: " + (err.response?.data?.message || "Không thể tạo hợp đồng"));
     } finally {
@@ -212,7 +260,9 @@ const ManageJobs = () => {
     setBidsLoading(true);
     try {
       const res = await bidService.getJobBids(job.jobId);
-      setBids(unwrapList(res));
+      const bidData = res?.data;
+      const bidList = bidData?.items || (Array.isArray(bidData) ? bidData : []);
+      setBids(bidList);
     } catch (err) {
       setBids([]);
     } finally {
@@ -268,7 +318,7 @@ const ManageJobs = () => {
       });
       alert("Cập nhật thành công!");
       setShowEditModal(false);
-      fetchMyJobs();
+      fetchMyJobs(jobsPagination.page);
     } catch (err) {
       alert("Lỗi: " + (err.response?.data?.message || "Không thể cập nhật"));
     }
@@ -324,13 +374,6 @@ const ManageJobs = () => {
 
   const formatMoney = (val) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val || 0);
 
-  const filteredJobs = jobs.filter(j => (j.title || '').toLowerCase().includes(searchTerm.toLowerCase()));
-  const filteredContracts = contracts.filter(c => {
-    const partnerName = c.studentName || c.providerName || c.clientName || '';
-    return (c.contractName || partnerName || '').toLowerCase().includes(searchTerm.toLowerCase());
-  });
-  const filteredOrders = serviceOrders.filter(o => (o.serviceName || o.studentName || o.description || '').toLowerCase().includes(searchTerm.toLowerCase()));
-
   const totalBids = jobs.reduce((sum, j) => sum + (j.bidCount || 0), 0);
 
   return (
@@ -358,7 +401,7 @@ const ManageJobs = () => {
               </div>
               <div className="flex-fill">
                 <p className="mj-stat-label">Tổng bài đăng</p>
-                <h3 className="mj-stat-value">{jobs.length}</h3>
+                <h3 className="mj-stat-value">{jobsPagination.totalItems}</h3>
               </div>
               <TrendingUp size={16} className="text-success opacity-50" />
             </div>
@@ -394,7 +437,7 @@ const ManageJobs = () => {
               </div>
               <div className="flex-fill">
                 <p className="mj-stat-label">Hợp đồng</p>
-                <h3 className="mj-stat-value text-warning">{contracts.length}</h3>
+                <h3 className="mj-stat-value text-warning">{contractsPagination.totalItems}</h3>
               </div>
               <FileText size={16} className="text-info opacity-50" />
             </div>
@@ -404,9 +447,9 @@ const ManageJobs = () => {
         {/* TABS + SEARCH */}
         <div className="d-flex justify-content-between align-items-center mb-4">
           <Tabs activeKey={activeTab} onSelect={(k) => { setActiveTab(k); setSearchTerm(''); }} className="mj-tabs">
-            <Tab eventKey="jobs" title={<span><Briefcase size={14} className="me-1" /> Bài đăng ({jobs.length})</span>} />
-            <Tab eventKey="orders" title={<span><FileText size={14} className="me-1" /> Đơn dịch vụ ({serviceOrders.length})</span>} />
-            <Tab eventKey="contracts" title={<span><Handshake size={14} className="me-1" /> Hợp đồng ({contracts.length})</span>} />
+            <Tab eventKey="jobs" title={<span><Briefcase size={14} className="me-1" /> Bài đăng ({jobsPagination.totalItems})</span>} />
+            <Tab eventKey="orders" title={<span><FileText size={14} className="me-1" /> Đơn dịch vụ ({ordersPagination.totalItems})</span>} />
+            <Tab eventKey="contracts" title={<span><Handshake size={14} className="me-1" /> Hợp đồng ({contractsPagination.totalItems})</span>} />
           </Tabs>
           <div className="mj-search">
             <Search size={16} className="text-white-50" />
@@ -414,6 +457,7 @@ const ManageJobs = () => {
               placeholder="Tìm kiếm..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleTabSearch()}
             />
           </div>
         </div>
@@ -427,13 +471,13 @@ const ManageJobs = () => {
           <div className="mj-empty-state">
             <AlertTriangle size={48} className="text-warning mb-3" />
             <p className="text-white-50 mb-3">{error}</p>
-            <Button variant="outline-primary" onClick={activeTab === 'jobs' ? fetchMyJobs : activeTab === 'orders' ? fetchServiceOrders : fetchContracts}>
+            <Button variant="outline-primary" onClick={() => handleTabPageChange(1)}>
               <RefreshCw size={16} className="me-1" /> Thử lại
             </Button>
           </div>
         ) : activeTab === 'jobs' ? (
           <>
-            {filteredJobs.length === 0 ? (
+            {jobs.length === 0 ? (
               <div className="mj-empty-state">
                 <Briefcase size={48} className="text-white-50 mb-3" />
                 <p className="text-white-50">Chưa có bài đăng nào</p>
@@ -441,7 +485,7 @@ const ManageJobs = () => {
               </div>
             ) : (
               <Row className="g-3">
-                {filteredJobs.map((job) => {
+                {jobs.map((job) => {
                   const st = getStatusConfig(job.status);
                   return (
                     <Col xl={4} md={6} key={job.jobId}>
@@ -459,7 +503,7 @@ const ManageJobs = () => {
                           <span className="mj-job-meta">{job.location || 'Remote'}</span>
                         </div>
                         <div className="d-flex justify-content-between align-items-center mb-3">
-                          <span className="mj-job-price">{job.salary > 0 ? formatMoney(job.salary) : 'Thỏa thuận'}</span>
+                          <span className="mj-job-price">{job.salary > 0 ? formatMoney(job.salary) : 'Chưa có lương'}</span>
                           <span className="mj-job-meta">
                             <Users size={12} className="me-1" /> {job.bidCount || 0} ứng viên
                           </span>
@@ -481,17 +525,23 @@ const ManageJobs = () => {
                 })}
               </Row>
             )}
+
+            <PaginationBar
+              currentPage={jobsPagination.page}
+              totalPages={jobsPagination.totalPages}
+              onPageChange={handleTabPageChange}
+            />
           </>
         ) : activeTab === 'orders' ? (
           <>
-            {filteredOrders.length === 0 ? (
+            {serviceOrders.length === 0 ? (
               <div className="mj-empty-state">
                 <FileText size={48} className="text-white-50 mb-3" />
                 <p className="text-white-50">Chưa có đơn dịch vụ nào</p>
               </div>
             ) : (
               <div className="mj-contract-list">
-                {filteredOrders.map((order) => {
+                {serviceOrders.map((order) => {
                   const st = getOrderStatusConfig(order.status);
                   return (
                     <div key={order.orderId} className="mj-contract-card">
@@ -551,17 +601,23 @@ const ManageJobs = () => {
                 })}
               </div>
             )}
+
+            <PaginationBar
+              currentPage={ordersPagination.page}
+              totalPages={ordersPagination.totalPages}
+              onPageChange={handleTabPageChange}
+            />
           </>
         ) : (
           <>
-            {filteredContracts.length === 0 ? (
+            {contracts.length === 0 ? (
               <div className="mj-empty-state">
                 <Handshake size={48} className="text-white-50 mb-3" />
                 <p className="text-white-50">Chưa có hợp đồng nào</p>
               </div>
             ) : (
               <div className="mj-contract-list">
-                {filteredContracts.map((c) => {
+                {contracts.map((c) => {
                   const st = getContractStatusConfig(c.status);
                   const hasStudentSigned = c.hasStudentSigned || c.studentSignedAt;
                   const hasEnterpriseSigned = c.hasEnterpriseSigned || c.enterpriseSignedAt;
@@ -625,6 +681,12 @@ const ManageJobs = () => {
                 })}
               </div>
             )}
+
+            <PaginationBar
+              currentPage={contractsPagination.page}
+              totalPages={contractsPagination.totalPages}
+              onPageChange={handleTabPageChange}
+            />
           </>
         )}
       </Container>
@@ -665,7 +727,7 @@ const ManageJobs = () => {
                         <h6 className="fw-bold text-white mb-1">{bid.studentName || bid.student?.fullName || 'Ứng viên'}</h6>
                         <div className="d-flex flex-wrap gap-3 x-small text-white-50 mb-2">
                           <span className="d-flex align-items-center gap-1">
-                            <DollarSign size={12} /> {bid.bidAmount ? formatMoney(bid.bidAmount) : 'Thỏa thuận'}
+                            <DollarSign size={12} /> {bid.bidAmount ? formatMoney(bid.bidAmount) : 'Chưa có'}
                           </span>
                           <span className="d-flex align-items-center gap-1">
                             <Calendar size={12} /> {bid.expectedDays || '?'} ngày

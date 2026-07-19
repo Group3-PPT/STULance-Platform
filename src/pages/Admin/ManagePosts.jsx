@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Table, Badge, Form, Spinner, Dropdown, Modal, Row, Col } from 'react-bootstrap';
 import { Search, MoreVertical, Eye, Calendar, Loader2, Building2, ShieldAlert, CheckCircle, XCircle, PauseCircle, Lock, Archive, RefreshCw, Clock, DollarSign, Users, MapPin } from 'lucide-react';
 import { jobService } from "../../services/jobservice";
-import { unwrapList } from '../../services/responseUtils';
+import PaginationBar from '../../components/PaginationBar';
 import '../../CSS/ManagePosts.css';
 
 const ManagePosts = () => {
@@ -12,17 +12,30 @@ const ManagePosts = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [selectedPost, setSelectedPost] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+  const pageSize = 15;
 
-  const fetchPosts = async () => {
+  const fetchPosts = useCallback(async (page = 1, keyword = '', status = '') => {
     setLoading(true);
     try {
-      const res = await jobService.adminGetAllJobs();
-      if (res.success) setPosts(unwrapList(res));
+      const params = { page, pageSize };
+      if (keyword) params.keyword = keyword;
+      if (status) params.status = status;
+      const res = await jobService.adminGetAllJobs(params);
+      if (res.success && res.data) {
+        const data = res.data;
+        setPosts(data.items || []);
+        setTotalPages(data.totalPages || 1);
+        setTotalItems(data.totalItems || 0);
+        setCurrentPage(data.page || 1);
+      }
     } catch (err) { console.error("Lỗi tải bài đăng:", err); } 
     finally { setLoading(false); }
-  };
+  }, []);
 
-  useEffect(() => { fetchPosts(); }, []);
+  useEffect(() => { fetchPosts(1); }, [fetchPosts]);
 
   const handleViewDetail = (post) => {
     setSelectedPost(post);
@@ -43,7 +56,7 @@ const ManagePosts = () => {
     try {
       const res = await jobService.adminUpdateStatus(id, newStatus);
       if (res.success) {
-        fetchPosts();
+        fetchPosts(currentPage, searchTerm);
       }
     } catch (err) {
       alert("Lỗi: " + (err.response?.data?.message || "Không thể cập nhật"));
@@ -63,13 +76,38 @@ const ManagePosts = () => {
     }
   };
 
-  const filteredPosts = posts.filter(p => {
-    const statusMatch = filter === "Tất cả" || 
-      (filter === "Chờ duyệt" && p.status === "PENDING") ||
-      (filter === "Đang hiển thị" && p.status === "OPEN") ||
-      (filter === "Vi phạm/Khác" && ["REJECTED", "BLOCKED", "PAUSED"].includes(p.status));
-    return statusMatch && (p.title?.toLowerCase() || "").includes(searchTerm.toLowerCase());
-  });
+  const handleFilterChange = (newFilter) => {
+    setFilter(newFilter);
+    setCurrentPage(1);
+    const statusMap = {
+      "Tất cả": '',
+      "Chờ duyệt": 'PENDING',
+      "Đang hiển thị": 'OPEN',
+      "Vi phạm/Khác": 'REJECTED'
+    };
+    fetchPosts(1, searchTerm, statusMap[newFilter] || '');
+  };
+
+  const handleSearch = () => {
+    setCurrentPage(1);
+    const statusMap = {
+      "Tất cả": '',
+      "Chờ duyệt": 'PENDING',
+      "Đang hiển thị": 'OPEN',
+      "Vi phạm/Khác": 'REJECTED'
+    };
+    fetchPosts(1, searchTerm, statusMap[filter] || '');
+  };
+
+  const handlePageChange = (page) => {
+    const statusMap = {
+      "Tất cả": '',
+      "Chờ duyệt": 'PENDING',
+      "Đang hiển thị": 'OPEN',
+      "Vi phạm/Khác": 'REJECTED'
+    };
+    fetchPosts(page, searchTerm, statusMap[filter] || '');
+  };
 
   const pendingCount = posts.filter(p => p.status === "PENDING").length;
   const activeCount = posts.filter(p => p.status === "OPEN").length;
@@ -79,7 +117,7 @@ const ManagePosts = () => {
       <div className="d-flex justify-content-between align-items-center mb-4">
         <div>
           <h2 className="fw-bold mb-1">Kiểm duyệt <span className="text-primary-glow">Việc làm</span></h2>
-          <p className="text-white-50 small mb-0">DRAFT → PENDING → OPEN | Kiểm soát vi phạm.</p>
+          <p className="text-white-50 small mb-0">DRAFT → PENDING → OPEN | Kiểm soát vi phạm. ({totalItems} bài đăng)</p>
         </div>
         <div className="d-flex gap-3 align-items-center">
           <div className="d-flex gap-3">
@@ -94,20 +132,25 @@ const ManagePosts = () => {
           </div>
           <div className="adm-search-wrapper" style={{ width: '280px', position: 'relative' }}>
             <Search size={16} className="text-white-50" style={{ position:'absolute', left:'12px', top:'11px' }}/>
-            <input type="text" placeholder="Tìm tiêu đề..." className="w-100 bg-dark-input text-white border-0 rounded-3 ps-4 py-2" style={{fontSize: '13px'}} onChange={e => setSearchTerm(e.target.value)} />
+            <input type="text" placeholder="Tìm tiêu đề..." className="w-100 bg-dark-input text-white border-0 rounded-3 ps-4 py-2" style={{fontSize: '13px'}}
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && handleSearch()}
+            />
           </div>
-          <button className="btn-icon-table text-white-50" title="Làm mới" onClick={fetchPosts}><RefreshCw size={18}/></button>
+          <button className="btn-icon-table text-white-50" title="Làm mới" onClick={handleSearch}><RefreshCw size={18}/></button>
         </div>
       </div>
 
       <div className="post-filter-tabs glass-card p-2 mb-4 d-flex gap-2">
         {["Tất cả", "Chờ duyệt", "Đang hiển thị", "Vi phạm/Khác"].map(t => (
-          <button key={t} className={`post-tab-btn ${filter === t ? 'active' : ''}`} onClick={() => setFilter(t)}>{t}</button>
+          <button key={t} className={`post-tab-btn ${filter === t ? 'active' : ''}`} onClick={() => handleFilterChange(t)}>{t}</button>
         ))}
       </div>
 
       <div className="glass-card overflow-hidden shadow-lg border-0 min-vh-50">
         {loading ? <div className="text-center py-5"><Loader2 className="spinner text-primary" size={40}/></div> : (
+          <>
           <Table responsive variant="dark" className="mb-0 adm-custom-table align-middle">
             <thead>
               <tr className="text-white-50 x-small uppercase-tracking">
@@ -119,7 +162,7 @@ const ManagePosts = () => {
               </tr>
             </thead>
             <tbody>
-              {filteredPosts.map((post) => (
+              {posts.map((post) => (
                 <tr key={post.jobId} className="border-bottom border-white border-opacity-5">
                   <td className="ps-4">
                     <div className="text-primary-glow fw-bold small">{post.jobId?.substring(0, 8)}</div>
@@ -170,11 +213,20 @@ const ManagePosts = () => {
                   </td>
                 </tr>
               ))}
-              {filteredPosts.length === 0 && (
+              {posts.length === 0 && (
                 <tr><td colSpan="5" className="text-center py-5 text-white-50">Không tìm thấy bài đăng nào.</td></tr>
               )}
             </tbody>
           </Table>
+
+          <div className="p-3 border-top" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
+            <PaginationBar
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={handlePageChange}
+            />
+          </div>
+          </>
         )}
       </div>
 
@@ -206,7 +258,7 @@ const ManagePosts = () => {
                 <Col md={4}>
                   <div className="glass-card p-3">
                     <div className="x-small text-white-50 uppercase-tracking mb-1"><DollarSign size={12} className="me-1"/> Lương</div>
-                    <div className="fw-bold text-warning">{selectedPost.salary ? selectedPost.salary.toLocaleString('vi-VN') + ' VND' : 'Thỏa thuận'}</div>
+                    <div className="fw-bold text-warning">{selectedPost.salary ? selectedPost.salary.toLocaleString('vi-VN') + ' VND' : 'Chưa có lương'}</div>
                   </div>
                 </Col>
                 <Col md={4}>

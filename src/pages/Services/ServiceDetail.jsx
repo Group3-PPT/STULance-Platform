@@ -190,8 +190,11 @@ const ServiceDetail = () => {
                   to="/service-invoice"
                   state={{ service }}
                   variant="primary" className="w-100 py-3 fw-bold hub-btn-pink shadow-glow mb-3"
+                  disabled={service.status === 'BLOCKED' || service.status === 'HIDDEN'}
                 >
-                  TIẾP TỤC THANH TOÁN
+                  {service.status === 'BLOCKED' ? 'DỊCH VỤ ĐÃ BỊ KHÓA' : 
+                   service.status === 'HIDDEN' ? 'DỊCH VỤ KHÔNG KHẢ DỤNG' :
+                   'TIẾP TỤC THANH TOÁN'}
                 </Button>
 
                 <div className="d-flex gap-2">

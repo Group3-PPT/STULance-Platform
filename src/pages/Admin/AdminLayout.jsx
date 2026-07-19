@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Outlet, Link, useLocation } from 'react-router-dom';
+import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
   LayoutDashboard, Users, CreditCard, FileText, 
   BarChart3, LogOut, Bell, Search, Settings, ShieldCheck, Briefcase, CheckCheck, Handshake
@@ -9,9 +9,18 @@ import '../../CSS/AdminLayout.css';
 
 const AdminLayout = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [showNotifications, setShowNotifications] = useState(false);
+
+  useEffect(() => {
+    const handleAuthLost = () => {
+      navigate('/login', { replace: true });
+    };
+    window.addEventListener('local-storage-update', handleAuthLost);
+    return () => window.removeEventListener('local-storage-update', handleAuthLost);
+  }, [navigate]);
 
   useEffect(() => {
     fetchNotifications();

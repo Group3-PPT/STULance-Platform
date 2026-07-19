@@ -15,6 +15,7 @@ import { savedItemsService } from '../../services/saveditemsservice';
 import { serviceOrderService } from '../../services/serviceorderservice';
 import { dashboardService } from '../../services/dashboardService';
 import { unwrapList } from '../../services/responseUtils';
+import PaginationBar from '../../components/PaginationBar';
 
 import '../../CSS/Dashboard.css';
 
@@ -38,6 +39,11 @@ const DashboardLancer = () => {
 
   const [currentPage, setCurrentPage] = useState(1);
   const servicesPerPage = 3;
+
+  const [bidsPage, setBidsPage] = useState(1);
+  const [bidsTotalPages, setBidsTotalPages] = useState(1);
+  const [bidsTotalItems, setBidsTotalItems] = useState(0);
+  const bidsPageSize = 10;
 
   const getContractStatusConfig = (item) => {
     const status = item.status;
@@ -72,7 +78,6 @@ const DashboardLancer = () => {
         profileService.getBasicProfile(),
         contractService.getMyContracts(),
         studentServiceService.getMyServices(),
-        bidService.getMyBids(),
         savedItemsService.getMySavedJobs(),
         savedItemsService.getMySavedServices(),
         serviceOrderService.getMyBuyerOrders(),
@@ -84,12 +89,13 @@ const DashboardLancer = () => {
       if (results[1].status === 'fulfilled') { setContracts(unwrapList(results[1].value)); setContractsError(null); }
       else { setContractsError("Không thể tải danh sách hợp đồng. Server trả về lỗi."); }
       if (results[2].status === 'fulfilled') setMyServices(unwrapList(results[2].value));
-      if (results[3].status === 'fulfilled') setMyBids(unwrapList(results[3].value));
-      if (results[4].status === 'fulfilled') setSavedJobs(unwrapList(results[4].value));
-      if (results[5].status === 'fulfilled') setSavedServices(unwrapList(results[5].value));
-      if (results[6].status === 'fulfilled') setMyOrders(unwrapList(results[6].value));
-      if (results[7].status === 'fulfilled') setProviderOrders(unwrapList(results[7].value));
-      if (results[8].status === 'fulfilled') setDashboard(results[8].value.data);
+      if (results[3].status === 'fulfilled') setSavedJobs(unwrapList(results[3].value));
+      if (results[4].status === 'fulfilled') setSavedServices(unwrapList(results[4].value));
+      if (results[5].status === 'fulfilled') setMyOrders(unwrapList(results[5].value));
+      if (results[6].status === 'fulfilled') setProviderOrders(unwrapList(results[6].value));
+      if (results[7].status === 'fulfilled') setDashboard(results[7].value.data);
+
+      await fetchBids(1);
     } catch (err) {
       console.error("Lỗi tải Dashboard:", err);
     } finally {
@@ -98,6 +104,28 @@ const DashboardLancer = () => {
   };
 
   useEffect(() => { fetchData(); }, []);
+
+  const fetchBids = useCallback(async (page = 1) => {
+    try {
+      const res = await bidService.getMyBids({
+        page,
+        pageSize: bidsPageSize
+      });
+      if (res.success && res.data) {
+        const data = res.data;
+        setMyBids(data.items || []);
+        setBidsTotalPages(data.totalPages || 1);
+        setBidsTotalItems(data.totalItems || 0);
+        setBidsPage(data.page || 1);
+      }
+    } catch (err) {
+      console.error("Lỗi tải bids:", err);
+    }
+  }, []);
+
+  const handleBidsPageChange = (page) => {
+    fetchBids(page);
+  };
 
   const handleWithdraw = async (bidId) => {
     if (!window.confirm("Bạn có chắc chắn muốn rút đơn ứng tuyển này?")) return;
@@ -407,7 +435,7 @@ const DashboardLancer = () => {
                   </div>
                 </Tab>
 
-                <Tab eventKey="bids" title={`Ứng tuyển (${myBids.length})`}>
+                <Tab eventKey="bids" title={`Ứng tuyển (${bidsTotalItems})`}>
                   <div className="p-2">
                     {myBids.map(bid => (
                       <div key={bid.bidId} className="contract-card-item p-3 rounded-4 mb-2 border-white-5">
@@ -430,6 +458,12 @@ const DashboardLancer = () => {
                       </div>
                     ))}
                     {myBids.length === 0 && <p className="text-center py-5 opacity-25 x-small">Trống</p>}
+
+                    <PaginationBar
+                      currentPage={bidsPage}
+                      totalPages={bidsTotalPages}
+                      onPageChange={handleBidsPageChange}
+                    />
                   </div>
                 </Tab>
 

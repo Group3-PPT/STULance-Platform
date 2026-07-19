@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Badge, Modal, Row, Col } from 'react-bootstrap';
 import { 
   Search, CheckCircle, Eye, Loader2, User, DollarSign, Clock, 
@@ -6,7 +6,7 @@ import {
   ChevronRight, X
 } from 'lucide-react';
 import { studentServiceService } from '../../services/studentserviceservice';
-import { unwrapList } from '../../services/responseUtils';
+import PaginationBar from '../../components/PaginationBar';
 import '../../CSS/ManageStudentServices.css';
 
 const ManageStudentServices = () => {
@@ -16,22 +16,33 @@ const ManageStudentServices = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [selectedService, setSelectedService] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+  const pageSize = 15;
 
-  const fetchServices = async () => {
+  const fetchServices = useCallback(async (page = 1, keyword = '', status = '') => {
     setLoading(true);
     try {
-      const res = await studentServiceService.adminGetAll();
-      if (res.success) {
-        setServices(unwrapList(res));
+      const params = { page, pageSize };
+      if (keyword) params.keyword = keyword;
+      if (status) params.status = status;
+      const res = await studentServiceService.adminGetAll(params);
+      if (res.success && res.data) {
+        const data = res.data;
+        setServices(data.items || []);
+        setTotalPages(data.totalPages || 1);
+        setTotalItems(data.totalItems || 0);
+        setCurrentPage(data.page || 1);
       }
     } catch (err) {
       console.error("Lỗi tải dịch vụ hệ thống:", err);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  useEffect(() => { fetchServices(); }, []);
+  useEffect(() => { fetchServices(1); }, [fetchServices]);
 
   const handleViewDetail = (service) => {
     setSelectedService(service);
@@ -51,21 +62,29 @@ const ManageStudentServices = () => {
     try {
       await studentServiceService.adminUpdateStatus(id, newStatus);
       alert("Đã cập nhật trạng thái thành công!");
-      fetchServices();
+      fetchServices(currentPage, searchTerm, filter === 'Tất cả' ? '' : filter === 'Đang bán' ? 'ACTIVE' : filter === 'Đã ẩn' ? 'HIDDEN' : 'BLOCKED');
     } catch (err) {
       alert("Lỗi khi cập nhật trạng thái.");
     }
   };
 
-  const filteredServices = services.filter(s => {
-    const statusMatch = filter === "Tất cả" || 
-      (filter === "Đang bán" && s.status === "ACTIVE") ||
-      (filter === "Đã ẩn" && s.status === "HIDDEN") ||
-      (filter === "Bị khóa" && s.status === "BLOCKED");
-    
-    const searchMatch = (s.title?.toLowerCase() || "").includes(searchTerm.toLowerCase());
-    return statusMatch && searchMatch;
-  });
+  const handleFilterChange = (tab) => {
+    setFilter(tab);
+    setCurrentPage(1);
+    const statusMap = { 'Tất cả': '', 'Đang bán': 'ACTIVE', 'Đã ẩn': 'HIDDEN', 'Bị khóa': 'BLOCKED' };
+    fetchServices(1, searchTerm, statusMap[tab] || '');
+  };
+
+  const handleSearch = () => {
+    setCurrentPage(1);
+    const statusMap = { 'Tất cả': '', 'Đang bán': 'ACTIVE', 'Đã ẩn': 'HIDDEN', 'Bị khóa': 'BLOCKED' };
+    fetchServices(1, searchTerm, statusMap[filter] || '');
+  };
+
+  const handlePageChange = (page) => {
+    const statusMap = { 'Tất cả': '', 'Đang bán': 'ACTIVE', 'Đã ẩn': 'HIDDEN', 'Bị khóa': 'BLOCKED' };
+    fetchServices(page, searchTerm, statusMap[filter] || '');
+  };
 
   const renderStatusBadge = (status) => {
     switch (status) {
@@ -96,7 +115,7 @@ const ManageStudentServices = () => {
   };
 
   const stats = {
-    total: services.length,
+    total: totalItems,
     active: services.filter(s => s.status === 'ACTIVE').length,
     hidden: services.filter(s => s.status === 'HIDDEN').length,
     blocked: services.filter(s => s.status === 'BLOCKED').length,
@@ -121,6 +140,7 @@ const ManageStudentServices = () => {
                 placeholder="Tìm tên dịch vụ..." 
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
               />
             </div>
           </div>
@@ -173,7 +193,7 @@ const ManageStudentServices = () => {
           <button 
             key={tab}
             className={`svc-tab-btn ${filter === tab ? 'active' : ''}`}
-            onClick={() => setFilter(tab)}
+            onClick={() => handleFilterChange(tab)}
           >
             {tab}
           </button>
@@ -186,14 +206,15 @@ const ManageStudentServices = () => {
           <Loader2 className="spinner" size={40} />
           <span>Đang tải...</span>
         </div>
-      ) : filteredServices.length === 0 ? (
+      ) : services.length === 0 ? (
         <div className="svc-empty">
           <Search size={48} />
           <p>Không tìm thấy dịch vụ nào</p>
         </div>
       ) : (
+        <>
         <div className="svc-list">
-          {filteredServices.map((service) => (
+          {services.map((service) => (
             <div key={service.serviceId} className="svc-card">
               {/* Thumbnail */}
               <div className="svc-card-thumb">
@@ -280,6 +301,15 @@ const ManageStudentServices = () => {
             </div>
           ))}
         </div>
+
+        <div className="mt-4">
+          <PaginationBar
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={handlePageChange}
+          />
+        </div>
+        </>
       )}
 
       {/* MODAL CHI TIẾT */}

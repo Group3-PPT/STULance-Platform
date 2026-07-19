@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Container, Row, Col, Button, Badge, Form, InputGroup, Modal } from 'react-bootstrap';
 import {
   Search, Building2, ShieldCheck, Eye, Filter, Loader2, RefreshCw,
   MapPin, X, Mail, Globe, Hash, Users, User
 } from 'lucide-react';
 import { enterpriseService } from '../../services/enterprise.service';
-import { unwrapList } from '../../services/responseUtils';
+import PaginationBar from '../../components/PaginationBar';
 import '../../CSS/Businesses.css';
 
 const FindEnterprises = () => {
@@ -14,27 +14,43 @@ const FindEnterprises = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedEnterprise, setSelectedEnterprise] = useState(null);
     const [showModal, setShowModal] = useState(false);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const [totalItems, setTotalItems] = useState(0);
+    const pageSize = 12;
 
-    useEffect(() => { fetchEnterprises(); }, []);
-
-    const fetchEnterprises = async () => {
+    const fetchEnterprises = useCallback(async (page = 1, keyword = '') => {
         setLoading(true);
         try {
-            const res = await enterpriseService.getAllPublicEnterprises();
-            const data = unwrapList(res);
-            setEnterprises(data);
+            const res = await enterpriseService.getAllPublicEnterprises({
+                page,
+                pageSize,
+                keyword: keyword || undefined
+            });
+            if (res.success && res.data) {
+                const data = res.data;
+                setEnterprises(data.items || []);
+                setTotalPages(data.totalPages || 1);
+                setTotalItems(data.totalItems || 0);
+                setCurrentPage(data.page || 1);
+            }
         } catch (err) {
             console.error("Lỗi tải danh sách doanh nghiệp:", err);
         } finally {
             setLoading(false);
         }
+    }, []);
+
+    useEffect(() => { fetchEnterprises(1); }, [fetchEnterprises]);
+
+    const handleSearch = () => {
+        setCurrentPage(1);
+        fetchEnterprises(1, searchTerm);
     };
 
-    const filtered = enterprises.filter(e => {
-        return (e.companyName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-               (e.description || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-               (e.address || '').toLowerCase().includes(searchTerm.toLowerCase());
-    });
+    const handlePageChange = (page) => {
+        fetchEnterprises(page, searchTerm);
+    };
 
     const getLogo = (ent) => {
         if (ent.logoUrl) return ent.logoUrl;
@@ -50,7 +66,7 @@ const FindEnterprises = () => {
                         Kết nối với <span className="text-primary-glow">Doanh nghiệp</span>
                     </h1>
                     <p className="text-white-50 mx-auto mt-3" style={{ maxWidth: '700px' }}>
-                        Khám phá {enterprises.length}+ doanh nghiệp trên hệ thống.
+                        Khám phá {totalItems}+ doanh nghiệp trên hệ thống.
                     </p>
                 </div>
 
@@ -64,12 +80,13 @@ const FindEnterprises = () => {
                                     className="bg-transparent border-0 text-white shadow-none py-2"
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
+                                    onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
                                 />
                             </InputGroup>
                         </Col>
                         <Col md={4}>
-                            <Button variant="primary" className="w-100 rounded-pill fw-bold py-2" onClick={fetchEnterprises}>
-                                <Filter size={16} className="me-1"/> Làm mới
+                            <Button variant="primary" className="w-100 rounded-pill fw-bold py-2" onClick={handleSearch}>
+                                <Filter size={16} className="me-1"/> Tìm kiếm
                             </Button>
                         </Col>
                     </Row>
@@ -83,11 +100,11 @@ const FindEnterprises = () => {
                 ) : (
                     <>
                         <div className="d-flex justify-content-between align-items-center mb-4">
-                            <p className="text-white-50 mb-0">Tìm thấy <strong className="text-white">{filtered.length}</strong> doanh nghiệp</p>
-                            <button className="btn-icon-table text-white-50" title="Làm mới" onClick={fetchEnterprises}><RefreshCw size={16}/></button>
+                            <p className="text-white-50 mb-0">Tìm thấy <strong className="text-white">{totalItems}</strong> doanh nghiệp</p>
+                            <button className="btn-icon-table text-white-50" title="Làm mới" onClick={() => fetchEnterprises(currentPage, searchTerm)}><RefreshCw size={16}/></button>
                         </div>
                         <Row className="g-4">
-                            {filtered.map((ent, idx) => (
+                            {enterprises.map((ent, idx) => (
                                 <Col lg={4} md={6} key={ent.enterpriseId || idx}>
                                     <div className="glass-card biz-card p-4 text-center h-100 d-flex flex-column">
                                         <div className="stu-avatar-wrap mb-3 mx-auto">
@@ -137,12 +154,18 @@ const FindEnterprises = () => {
                                     </div>
                                 </Col>
                             ))}
-                            {filtered.length === 0 && (
+                            {enterprises.length === 0 && (
                                 <Col xs={12} className="text-center py-5">
                                     <p className="text-white-50">Không tìm thấy doanh nghiệp phù hợp.</p>
                                 </Col>
                             )}
                         </Row>
+
+                        <PaginationBar
+                            currentPage={currentPage}
+                            totalPages={totalPages}
+                            onPageChange={handlePageChange}
+                        />
                     </>
                 )}
             </Container>

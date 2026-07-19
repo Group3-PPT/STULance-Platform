@@ -43,12 +43,29 @@ const ApplyJob = () => {
   // 2. Xử lý Gửi đơn ứng tuyển (Create Bid)
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    const bidAmount = Number(formData.bidAmount);
+    const expectedDays = Number(formData.expectedDays);
+
+    if (!bidAmount || bidAmount <= 0) {
+      alert("Số tiền đặt giá phải lớn hơn 0!");
+      return;
+    }
+    if (!expectedDays || expectedDays <= 0) {
+      alert("Số ngày thực hiện phải lớn hơn 0!");
+      return;
+    }
+    if (!formData.message.trim()) {
+      alert("Vui lòng nhập lời đề nghị!");
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
       const payload = {
-        bidAmount: Number(formData.bidAmount),
-        expectedDays: Number(formData.expectedDays),
+        bidAmount,
+        expectedDays,
         message: formData.message
       };
 

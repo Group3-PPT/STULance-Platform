@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Container, Row, Col, Button, Form, Spinner, Badge, Modal, Tabs, Tab } from 'react-bootstrap';
 import {
   Wallet, ArrowUp, ArrowDown, Loader2, History, Banknote,
@@ -9,6 +9,7 @@ import { paymentService } from '../services/paymentservice';
 import { profileService } from '../services/profileservice';
 import { studentService } from '../services/studentservice';
 import { enterpriseService } from '../services/enterprise.service';
+import PaginationBar from '../components/PaginationBar';
 import '../CSS/Payment.css';
 
 const WITHDRAW_STATUS = {
@@ -51,7 +52,46 @@ const Payment = () => {
   const [activeTab, setActiveTab] = useState('history');
   const [error, setError] = useState(null);
 
+  const [paymentsPage, setPaymentsPage] = useState(1);
+  const [paymentsTotalPages, setPaymentsTotalPages] = useState(1);
+  const [paymentsTotalItems, setPaymentsTotalItems] = useState(0);
+
+  const [withdrawalsPage, setWithdrawalsPage] = useState(1);
+  const [withdrawalsTotalPages, setWithdrawalsTotalPages] = useState(1);
+  const [withdrawalsTotalItems, setWithdrawalsTotalItems] = useState(0);
+  const pageSize = 10;
+
   useEffect(() => { initData(); }, []);
+
+  const fetchPayments = useCallback(async (page = 1) => {
+    try {
+      const res = await paymentService.getMyPayments({ page, pageSize });
+      if (res.success && res.data) {
+        const data = res.data;
+        setPayments(data.items || []);
+        setPaymentsTotalPages(data.totalPages || 1);
+        setPaymentsTotalItems(data.totalItems || 0);
+        setPaymentsPage(data.page || 1);
+      }
+    } catch (err) {
+      console.error("Lỗi tải payments:", err);
+    }
+  }, []);
+
+  const fetchWithdrawals = useCallback(async (page = 1) => {
+    try {
+      const res = await withdrawalService.getMyWithdrawals({ page, pageSize });
+      if (res.success && res.data) {
+        const data = res.data;
+        setWithdrawals(data.items || []);
+        setWithdrawalsTotalPages(data.totalPages || 1);
+        setWithdrawalsTotalItems(data.totalItems || 0);
+        setWithdrawalsPage(data.page || 1);
+      }
+    } catch (err) {
+      console.error("Lỗi tải withdrawals:", err);
+    }
+  }, []);
 
   const initData = async () => {
     setLoading(true);
@@ -75,20 +115,7 @@ const Payment = () => {
         setBalance(financeRes.value.data.walletBalance || 0);
       }
 
-      const [paymentsRes, withdrawalsRes] = await Promise.allSettled([
-        paymentService.getMyPayments(),
-        withdrawalService.getMyWithdrawals()
-      ]);
-
-      if (paymentsRes.status === 'fulfilled') {
-        const pData = paymentsRes.value?.data || paymentsRes.value || [];
-        setPayments(Array.isArray(pData) ? pData : pData.items || []);
-      }
-
-      if (withdrawalsRes.status === 'fulfilled') {
-        const wData = withdrawalsRes.value?.data || withdrawalsRes.value || [];
-        setWithdrawals(Array.isArray(wData) ? wData : wData.items || []);
-      }
+      await Promise.allSettled([fetchPayments(1), fetchWithdrawals(1)]);
     } catch (err) {
       console.error('Lỗi tải dữ liệu:', err);
       setError('Không thể tải dữ liệu tài chính. Vui lòng thử lại.');
@@ -137,7 +164,7 @@ const Payment = () => {
     try {
       await withdrawalService.cancelWithdrawal(id);
       alert('Đã hủy yêu cầu');
-      initData();
+      fetchWithdrawals(withdrawalsPage);
     } catch (err) {
       alert('Lỗi: ' + (err.response?.data?.message || err.message));
     }
@@ -237,8 +264,8 @@ const Payment = () => {
           <Col lg={8}>
             <div className="glass-card p-4 h-100 border-white-10">
               <Tabs activeKey={activeTab} onSelect={(k) => setActiveTab(k)} className="mb-4 custom-tabs">
-                <Tab eventKey="history" title={<span className="fw-bold"><History size={16} className="me-2" />Lịch sử giao dịch</span>}>
-                  <div style={{ maxHeight: '500px', overflowY: 'auto' }}>
+                <Tab eventKey="history" title={<span className="fw-bold"><History size={16} className="me-2" />Lịch sử giao dịch ({paymentsTotalItems})</span>}>
+                  <div>
                     {payments.length === 0 ? (
                       <p className="text-white-50 text-center py-4">Chưa có giao dịch nào</p>
                     ) : (
@@ -271,11 +298,16 @@ const Payment = () => {
                         </div>
                       ))
                     )}
+                    <PaginationBar
+                      currentPage={paymentsPage}
+                      totalPages={paymentsTotalPages}
+                      onPageChange={(page) => fetchPayments(page)}
+                    />
                   </div>
                 </Tab>
 
-                <Tab eventKey="withdrawals" title={<span className="fw-bold"><Banknote size={16} className="me-2" />Yêu cầu rút tiền</span>}>
-                  <div style={{ maxHeight: '500px', overflowY: 'auto' }}>
+                <Tab eventKey="withdrawals" title={<span className="fw-bold"><Banknote size={16} className="me-2" />Yêu cầu rút tiền ({withdrawalsTotalItems})</span>}>
+                  <div>
                     {withdrawals.length === 0 ? (
                       <p className="text-white-50 text-center py-4">Chưa có yêu cầu rút tiền nào</p>
                     ) : (
@@ -317,6 +349,11 @@ const Payment = () => {
                         );
                       })
                     )}
+                    <PaginationBar
+                      currentPage={withdrawalsPage}
+                      totalPages={withdrawalsTotalPages}
+                      onPageChange={(page) => fetchWithdrawals(page)}
+                    />
                   </div>
                 </Tab>
               </Tabs>

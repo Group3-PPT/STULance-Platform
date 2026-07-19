@@ -1,9 +1,9 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Container, Row, Col, Button } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import { Heart, Loader2, ShoppingBag, Search, AlertTriangle, Trash2 } from 'lucide-react';
 import { savedItemsService } from '../../services/saveditemsservice';
-import { unwrapList } from '../../services/responseUtils';
+import PaginationBar from '../../components/PaginationBar';
 import '../../CSS/SavedServices.css';
 
 const SavedServices = () => {
@@ -12,24 +12,47 @@ const SavedServices = () => {
   const [removingId, setRemovingId] = useState(null);
   const [clearing, setClearing] = useState(false);
   const [search, setSearch] = useState('');
-  const [filterCat, setFilterCat] = useState('all');
   const [confirmId, setConfirmId] = useState(null);
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+  const pageSize = 20;
 
   const formatMoney = (val) => new Intl.NumberFormat('vi-VN').format(val || 0);
 
-  const fetchSaved = async () => {
+  const fetchSaved = useCallback(async (page = 1, keyword = '') => {
     setLoading(true);
     try {
-      const res = await savedItemsService.getMySavedServices();
-      setSavedServices(unwrapList(res));
+      const res = await savedItemsService.getMySavedServices({
+        page,
+        pageSize,
+        keyword: keyword || undefined
+      });
+      if (res.success && res.data) {
+        const data = res.data;
+        setSavedServices(data.items || []);
+        setTotalPages(data.totalPages || 1);
+        setTotalItems(data.totalItems || 0);
+        setCurrentPage(data.page || 1);
+      }
     } catch (err) {
       console.error("Lỗi tải dịch vụ đã lưu:", err);
     } finally {
       setLoading(false);
     }
+  }, []);
+
+  useEffect(() => { fetchSaved(1); }, []);
+
+  const handleSearch = () => {
+    setCurrentPage(1);
+    fetchSaved(1, search);
   };
 
-  useEffect(() => { fetchSaved(); }, []);
+  const handlePageChange = (page) => {
+    fetchSaved(page, search);
+  };
 
   const handleRemove = async (e, serviceId) => {
     e.preventDefault();
@@ -38,6 +61,7 @@ const SavedServices = () => {
     try {
       await savedItemsService.unsaveService(serviceId);
       setSavedServices(prev => prev.filter(s => s.serviceId !== serviceId));
+      setTotalItems(prev => prev - 1);
     } catch (err) {
       console.error("Lỗi bỏ lưu:", err);
     } finally {
@@ -50,32 +74,13 @@ const SavedServices = () => {
     setClearing(true);
     try {
       await savedItemsService.clearUnavailableItems();
-      fetchSaved();
+      fetchSaved(currentPage, search);
     } catch (err) {
       console.error("Lỗi dọn danh sách:", err);
     } finally {
       setClearing(false);
     }
   };
-
-  const categories = useMemo(() => {
-    const cats = new Set(savedServices.filter(s => s.category).map(s => s.category));
-    return ['all', ...cats];
-  }, [savedServices]);
-
-  const filtered = useMemo(() => {
-    let list = savedServices;
-    if (filterCat !== 'all') list = list.filter(s => s.category === filterCat);
-    if (search.trim()) {
-      const q = search.toLowerCase();
-      list = list.filter(s =>
-        s.title?.toLowerCase().includes(q) ||
-        s.studentName?.toLowerCase().includes(q) ||
-        s.category?.toLowerCase().includes(q)
-      );
-    }
-    return list;
-  }, [savedServices, search, filterCat]);
 
   const unavailableCount = savedServices.filter(s => s.isAvailable === false).length;
 
@@ -99,7 +104,7 @@ const SavedServices = () => {
             <Heart size={20} className="text-danger" fill="#ef4444" />
             <div>
               <h4 className="saved-header-title">Dịch vụ đã lưu</h4>
-              <p className="saved-header-sub">{savedServices.length} mục quan tâm</p>
+              <p className="saved-header-sub">{totalItems} mục quan tâm</p>
             </div>
           </div>
           <div className="d-flex gap-2 align-items-center">
@@ -120,15 +125,17 @@ const SavedServices = () => {
           <div className="saved-toolbar mb-4">
             <div className="saved-search">
               <Search size={14} className="saved-search-icon" />
-              <input type="text" placeholder="Tìm tên dịch vụ, tác giả..." value={search} onChange={(e) => setSearch(e.target.value)} />
+              <input 
+                type="text" 
+                placeholder="Tìm tên dịch vụ, tác giả..." 
+                value={search} 
+                onChange={(e) => setSearch(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+              />
             </div>
-            <div className="saved-filters">
-              {categories.map(cat => (
-                <button key={cat} className={`saved-filter-chip ${filterCat === cat ? 'active' : ''}`} onClick={() => setFilterCat(cat)}>
-                  {cat === 'all' ? 'Tất cả' : cat}
-                </button>
-              ))}
-            </div>
+            <Button variant="primary" size="sm" className="fw-bold" onClick={handleSearch}>
+              <Search size={14} className="me-1" /> Tìm
+            </Button>
           </div>
         )}
 
@@ -140,14 +147,14 @@ const SavedServices = () => {
             <p className="saved-empty-desc">Khám phá và lưu các dịch vụ bạn quan tâm</p>
             <Button as={Link} to="/services" variant="primary" className="saved-btn-primary">Khám phá dịch vụ</Button>
           </div>
-        ) : filtered.length === 0 ? (
+        ) : savedServices.length === 0 ? (
           <div className="saved-empty">
             <Search size={32} className="text-white-50 mb-2" />
             <p className="text-white-50" style={{ fontSize: '0.85rem' }}>Không tìm thấy dịch vụ phù hợp</p>
           </div>
         ) : (
           <Row xs={1} sm={2} md={3} lg={4} xl={5} className="g-3">
-            {filtered.map((svc, index) => {
+            {savedServices.map((svc, index) => {
               const isUnavail = svc.isAvailable === false;
               const isRemoving = removingId === svc.serviceId;
               const isConfirm = confirmId === svc.serviceId;
@@ -202,6 +209,12 @@ const SavedServices = () => {
             })}
           </Row>
         )}
+
+        <PaginationBar
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={handlePageChange}
+        />
       </Container>
     </div>
   );

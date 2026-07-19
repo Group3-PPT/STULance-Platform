@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Container, Row, Col, Card, Table, Badge, Form, Modal, InputGroup } from 'react-bootstrap';
 import { CheckCircle, XCircle, Trash2, Edit, Plus, Search, Layers, Clock, Check, Settings, Loader2, GitMerge, RefreshCw } from 'lucide-react';
 import { skillService } from '../../services/skillservice';
-import { unwrapList } from '../../services/responseUtils';
+import PaginationBar from '../../components/PaginationBar';
 import '../../CSS/AdminSkillManagement.css';
 
 const AdminSkillManager = () => {
@@ -12,6 +12,14 @@ const AdminSkillManager = () => {
     const [isPendingMode, setIsPendingMode] = useState(true);
     const [loading, setLoading] = useState(false);
 
+    const [pendingPage, setPendingPage] = useState(1);
+    const [pendingTotalPages, setPendingTotalPages] = useState(1);
+    const [pendingTotalItems, setPendingTotalItems] = useState(0);
+    const [allPage, setAllPage] = useState(1);
+    const [allTotalPages, setAllTotalPages] = useState(1);
+    const [allTotalItems, setAllTotalItems] = useState(0);
+    const pageSize = 20;
+
     const [showSkillModal, setShowSkillModal] = useState(false);
     const [showMergeModal, setShowMergeModal] = useState(false);
     
@@ -19,27 +27,47 @@ const AdminSkillManager = () => {
     const [sourceSkill, setSourceSkill] = useState(null);
     const [targetSkillId, setTargetSkillId] = useState('');
 
-    useEffect(() => { fetchData(); }, []);
-
-    const fetchData = async () => {
-        setLoading(true);
+    const fetchPending = useCallback(async (page = 1, keyword = '') => {
         try {
-            const [pRes, aRes] = await Promise.all([
-                skillService.getPendingSkills(), 
-                skillService.getApprovedSkills()
-            ]);
-            setPendingSkills(unwrapList(pRes));
-            setAllSkills(unwrapList(aRes));
-        } catch (err) { 
-            console.error("Lỗi tải danh sách:", err); 
-        } finally { setLoading(false); }
-    };
+            const params = { page, pageSize };
+            if (keyword) params.keyword = keyword;
+            const res = await skillService.getPendingSkills(params);
+            if (res.success && res.data) {
+                setPendingSkills(res.data.items || []);
+                setPendingTotalPages(res.data.totalPages || 1);
+                setPendingTotalItems(res.data.totalItems || 0);
+                setPendingPage(res.data.page || 1);
+            }
+        } catch (err) { console.error("Lỗi tải chờ duyệt:", err); }
+    }, []);
+
+    const fetchAll = useCallback(async (page = 1, keyword = '') => {
+        try {
+            const params = { page, pageSize };
+            if (keyword) params.keyword = keyword;
+            const res = await skillService.getApprovedSkills(params);
+            if (res.success && res.data) {
+                setAllSkills(res.data.items || []);
+                setAllTotalPages(res.data.totalPages || 1);
+                setAllTotalItems(res.data.totalItems || 0);
+                setAllPage(res.data.page || 1);
+            }
+        } catch (err) { console.error("Lỗi tải danh mục:", err); }
+    }, []);
+
+    const fetchData = useCallback(async () => {
+        setLoading(true);
+        await Promise.all([fetchPending(1, searchTerm), fetchAll(1, searchTerm)]);
+        setLoading(false);
+    }, [fetchPending, fetchAll, searchTerm]);
+
+    useEffect(() => { fetchData(); }, []);
 
     const handleApprove = async (id) => {
         if (!window.confirm("Xác nhận đưa kỹ năng này vào danh mục chính thức?")) return;
         try {
             await skillService.approveSkill(id);
-            fetchData();
+            fetchPending(pendingPage, searchTerm);
         } catch (err) { alert("Lỗi khi duyệt kỹ năng."); }
     };
 
@@ -47,7 +75,7 @@ const AdminSkillManager = () => {
         if (!window.confirm("Bạn có chắc muốn từ chối đề xuất này?")) return;
         try {
             await skillService.rejectSkill(id);
-            fetchData();
+            fetchPending(pendingPage, searchTerm);
         } catch (err) { alert("Lỗi khi từ chối."); }
     };
 
@@ -68,7 +96,7 @@ const AdminSkillManager = () => {
                 ? await skillService.updateSkill(currentSkill.skillId, currentSkill.skillName)
                 : await skillService.adminCreateSkill(currentSkill.skillName);
             setShowSkillModal(false);
-            fetchData();
+            fetchAll(allPage, searchTerm);
         } catch (err) { alert("Lỗi khi lưu dữ liệu."); }
     };
 
@@ -76,13 +104,24 @@ const AdminSkillManager = () => {
         if (!window.confirm("Xóa vĩnh viễn kỹ năng này?")) return;
         try {
             await skillService.deleteSkill(id);
-            fetchData();
+            fetchAll(allPage, searchTerm);
         } catch (err) { alert("Không thể xóa kỹ năng đang được sử dụng."); }
     };
 
-    const filtered = (isPendingMode ? pendingSkills : allSkills).filter(s => 
-        s.skillName.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const handleSearch = () => {
+        fetchPending(1, searchTerm);
+        fetchAll(1, searchTerm);
+    };
+
+    const handlePendingPageChange = (page) => {
+        fetchPending(page, searchTerm);
+    };
+
+    const handleAllPageChange = (page) => {
+        fetchAll(page, searchTerm);
+    };
+
+    const filtered = isPendingMode ? pendingSkills : allSkills;
 
     return (
         <div className="adm-dashboard-content py-4 animate-fade-in text-white">
@@ -102,7 +141,7 @@ const AdminSkillManager = () => {
                         <Card className="glass-card border-0 p-3">
                             <div className="d-flex align-items-center">
                                 <div className="adm-icon-box bg-primary bg-opacity-10 text-primary me-3"><Layers size={22}/></div>
-                                <div><p className="x-small text-white-50 mb-0 uppercase-tracking">Hệ thống</p><h3 className="mb-0 fw-bold">{allSkills.length}</h3></div>
+                                <div><p className="x-small text-white-50 mb-0 uppercase-tracking">Hệ thống</p><h3 className="mb-0 fw-bold">{allTotalItems}</h3></div>
                             </div>
                         </Card>
                     </Col>
@@ -110,7 +149,7 @@ const AdminSkillManager = () => {
                         <Card className="glass-card border-0 p-3">
                             <div className="d-flex align-items-center">
                                 <div className="adm-icon-box bg-warning bg-opacity-10 text-warning me-3"><Clock size={22}/></div>
-                                <div><p className="x-small text-white-50 mb-0 uppercase-tracking">Chờ duyệt</p><h3 className="mb-0 text-warning fw-bold">{pendingSkills.length}</h3></div>
+                                <div><p className="x-small text-white-50 mb-0 uppercase-tracking">Chờ duyệt</p><h3 className="mb-0 text-warning fw-bold">{pendingTotalItems}</h3></div>
                             </div>
                         </Card>
                     </Col>
@@ -118,7 +157,7 @@ const AdminSkillManager = () => {
                         <Card className="glass-card border-0 p-3">
                             <div className="d-flex align-items-center">
                                 <div className="adm-icon-box bg-success bg-opacity-10 text-success me-3"><Check size={22}/></div>
-                                <div><p className="x-small text-white-50 mb-0 uppercase-tracking">Tổng cộng</p><h3 className="text-primary-glow mb-0 fw-bold">{allSkills.length + pendingSkills.length}</h3></div>
+                                <div><p className="x-small text-white-50 mb-0 uppercase-tracking">Tổng cộng</p><h3 className="text-primary-glow mb-0 fw-bold">{allTotalItems + pendingTotalItems}</h3></div>
                             </div>
                         </Card>
                     </Col>
@@ -129,17 +168,20 @@ const AdminSkillManager = () => {
                         <div className="d-flex gap-2 bg-dark bg-opacity-50 p-1 rounded-3">
                             <button 
                                 className={`post-tab-btn ${isPendingMode ? 'active' : ''}`}
-                                onClick={()=>setIsPendingMode(true)}
-                            >CHỜ DUYỆT ({pendingSkills.length})</button>
+                                onClick={()=>{setIsPendingMode(true); fetchPending(1, searchTerm);}}
+                            >CHỜ DUYỆT ({pendingTotalItems})</button>
                             <button 
                                 className={`post-tab-btn ${!isPendingMode ? 'active' : ''}`}
-                                onClick={()=>setIsPendingMode(false)}
-                            >DANH MỤC ({allSkills.length})</button>
+                                onClick={()=>{setIsPendingMode(false); fetchAll(1, searchTerm);}}
+                            >DANH MỤC ({allTotalItems})</button>
                         </div>
                         <div className="d-flex gap-2">
                             <InputGroup size="sm" className="rounded" style={{width: '200px'}}>
                                 <InputGroup.Text className="bg-transparent border-0 text-white-50"><Search size={14}/></InputGroup.Text>
-                                <Form.Control className="bg-dark-input border-0 text-white" placeholder="Tìm..." onChange={e=>setSearchTerm(e.target.value)}/>
+                                <Form.Control className="bg-dark-input border-0 text-white" placeholder="Tìm..." value={searchTerm}
+                                    onChange={e=>setSearchTerm(e.target.value)}
+                                    onKeyDown={e=>e.key==='Enter' && handleSearch()}
+                                />
                             </InputGroup>
                             <button className="btn-icon-table text-primary" title="Thêm mới" onClick={()=>{setCurrentSkill({skillId: '', skillName:''}); setShowSkillModal(true)}}><Plus size={18}/></button>
                         </div>
@@ -149,6 +191,7 @@ const AdminSkillManager = () => {
                         {loading ? (
                             <div className="text-center py-5"><Loader2 className="spinner text-primary" size={40}/></div>
                         ) : (
+                            <>
                             <Table responsive variant="dark" className="admin-table-clean mb-0">
                                 <thead>
                                     <tr>
@@ -199,6 +242,15 @@ const AdminSkillManager = () => {
                                     )}
                                 </tbody>
                             </Table>
+
+                            <div className="p-3 border-top" style={{borderColor: 'rgba(255,255,255,0.06)'}}>
+                                <PaginationBar
+                                    currentPage={isPendingMode ? pendingPage : allPage}
+                                    totalPages={isPendingMode ? pendingTotalPages : allTotalPages}
+                                    onPageChange={isPendingMode ? handlePendingPageChange : handleAllPageChange}
+                                />
+                            </div>
+                            </>
                         )}
                     </div>
                 </Card>

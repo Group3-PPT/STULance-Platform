@@ -12,6 +12,7 @@ import { contractSignatureService } from '../services/contractsignatureservice';
 import { paymentService } from '../services/paymentservice';
 import { reportService } from '../services/reportService';
 import { authService } from '../services/authService';
+import html2pdf from 'html2pdf.js';
 import '../CSS/Contract.css';
 
 const Contract = () => {
@@ -142,45 +143,34 @@ const Contract = () => {
     }
   };
 
-  const handleDownload = () => {
+  const handleDownload = async () => {
     const el = document.getElementById('cv-print');
     if (!el) return;
-    const htmlContent = `<!DOCTYPE html>
-<html><head><meta charset="UTF-8"><title>Hợp đồng ${contract?.contractId?.substring(0,8) || ''}</title>
-<style>
-body{font-family:'Times New Roman',serif;margin:40px;color:#000;font-size:13px;line-height:1.6;}
-h5,h6{margin:8px 0;}
-.border-bottom{border-bottom:1px solid #000;}
-.border-dark{border-color:#000!important;}
-.text-center{text-align:center;}
-.fw-bold{font-weight:700;}
-.mb-0{margin-bottom:0;}
-.mb-1{margin-bottom:4px;}
-.mb-2{margin-bottom:8px;}
-.mb-3{margin-bottom:12px;}
-.mb-4{margin-bottom:16px;}
-.mt-3{margin-top:12px;}
-.mt-5{margin-top:20px;}
-.pt-5{padding-top:20px;}
-.pb-3{padding-bottom:12px;}
-.ps-2{padding-left:8px;}
-.italic{font-style:italic;}
-.d-flex{display:flex;justify-content:space-around;}
-.sig-block{text-align:center;width:45%;}
-.stamp-box{border:2px solid #000;padding:10px 20px;display:inline-block;margin:8px 0;}
-.party-info p{margin:2px 0;font-size:12px;}
-.details-section p{margin:3px 0;font-size:12px;}
-.details-section h6{font-size:12px;margin:12px 0 4px;}
-</style></head><body>${el.innerHTML}</body></html>`;
-    const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `HopDong_${contract?.contractId?.substring(0,8) || 'contract'}.html`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+
+    const contractName = `HopDong_${contract?.contractId?.substring(0,8) || 'contract'}`;
+    const opt = {
+      margin: [10, 10, 10, 10],
+      filename: `${contractName}.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: {
+        scale: 2,
+        useCORS: true,
+        letterRendering: true,
+        logging: false
+      },
+      jsPDF: {
+        unit: 'mm',
+        format: 'a4',
+        orientation: 'portrait'
+      }
+    };
+
+    try {
+      await html2pdf().set(opt).from(el).save();
+    } catch (err) {
+      console.error("Lỗi xuất PDF:", err);
+      alert("Không thể xuất PDF. Vui lòng thử lại.");
+    }
   };
 
   const handleReport = async () => {

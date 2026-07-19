@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Container, Row, Col, Button, Badge, Form, Modal, Spinner } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import { 
@@ -7,13 +7,18 @@ import {
   User, Eye, FolderOpen, GripVertical 
 } from 'lucide-react';
 import { portfolioService } from '../../services/portfolioservice';
-import { unwrapList } from '../../services/responseUtils';
+import PaginationBar from '../../components/PaginationBar';
 import '../../CSS/Portfolio.css';
 
 const MyPortfolio = () => {
   const [portfolios, setPortfolios] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+  const pageSize = 9;
 
   const [showModal, setShowModal] = useState(false);
   const [currentProject, setCurrentProject] = useState({
@@ -23,21 +28,29 @@ const MyPortfolio = () => {
     projectUrl: ''
   });
 
-  const fetchMyPortfolios = async () => {
+  const fetchMyPortfolios = useCallback(async (page = 1) => {
     setLoading(true);
     try {
-      const res = await portfolioService.getMyPortfolios();
-      if (res.success) {
-        setPortfolios(unwrapList(res));
+      const res = await portfolioService.getMyPortfolios({ page, pageSize });
+      if (res.success && res.data) {
+        const data = res.data;
+        setPortfolios(data.items || []);
+        setTotalPages(data.totalPages || 1);
+        setTotalItems(data.totalItems || 0);
+        setCurrentPage(data.page || 1);
       }
     } catch (err) {
       console.error("Lỗi tải danh sách dự án:", err);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  useEffect(() => { fetchMyPortfolios(); }, []);
+  useEffect(() => { fetchMyPortfolios(1); }, []);
+
+  const handlePageChange = (page) => {
+    fetchMyPortfolios(page);
+  };
 
   const handleOpenModal = (project = null) => {
     if (project) {
@@ -60,7 +73,7 @@ const MyPortfolio = () => {
         alert("Đã thêm dự án mới!");
       }
       setShowModal(false);
-      fetchMyPortfolios();
+      fetchMyPortfolios(currentPage);
     } catch (err) {
       alert("Lỗi khi lưu dự án: " + (err.response?.data?.message || "Vui lòng thử lại"));
     } finally {
@@ -108,7 +121,7 @@ const MyPortfolio = () => {
               
               <div className="d-flex gap-4">
                 <div className="hero-stat-box">
-                  <span className="hero-stat-number">{portfolios.length}</span>
+                  <span className="hero-stat-number">{totalItems}</span>
                   <span className="hero-stat-label">Dự án</span>
                 </div>
                 <div className="hero-stat-box">
@@ -132,52 +145,60 @@ const MyPortfolio = () => {
 
         {/* --- DANH SÁCH DỰ ÁN --- */}
         {portfolios.length > 0 ? (
-          <Row className="g-4">
-            {portfolios.map((item, index) => (
-              <Col md={6} lg={4} key={item.portfolioId}>
-                <div className="portfolio-manage-card glass-card h-100 border-0 overflow-hidden" style={{animationDelay: `${index * 0.05}s`}}>
-                  {/* Image Section */}
-                  <div className="portfolio-img-wrapper">
-                    <img 
-                      src={item.imageUrl || 'https://via.placeholder.com/600x340/0f172a/3b82f6?text=No+Image'} 
-                      alt={item.title} 
-                      className="portfolio-img"
-                    />
-                    <div className="portfolio-img-overlay">
-                      <button className="portfolio-action-btn edit" onClick={() => handleOpenModal(item)}>
-                        <Edit3 size={16} /> Sửa
-                      </button>
-                      <button className="portfolio-action-btn delete" onClick={() => handleDelete(item.portfolioId)}>
-                        <Trash2 size={16} /> Xóa
-                      </button>
+          <>
+            <Row className="g-4">
+              {portfolios.map((item, index) => (
+                <Col md={6} lg={4} key={item.portfolioId}>
+                  <div className="portfolio-manage-card glass-card h-100 border-0 overflow-hidden" style={{animationDelay: `${index * 0.05}s`}}>
+                    {/* Image Section */}
+                    <div className="portfolio-img-wrapper">
+                      <img 
+                        src={item.imageUrl || 'https://via.placeholder.com/600x340/0f172a/3b82f6?text=No+Image'} 
+                        alt={item.title} 
+                        className="portfolio-img"
+                      />
+                      <div className="portfolio-img-overlay">
+                        <button className="portfolio-action-btn edit" onClick={() => handleOpenModal(item)}>
+                          <Edit3 size={16} /> Sửa
+                        </button>
+                        <button className="portfolio-action-btn delete" onClick={() => handleDelete(item.portfolioId)}>
+                          <Trash2 size={16} /> Xóa
+                        </button>
+                      </div>
+                      <div className="portfolio-index-badge">
+                        <span>#{index + 1}</span>
+                      </div>
                     </div>
-                    <div className="portfolio-index-badge">
-                      <span>#{index + 1}</span>
-                    </div>
-                  </div>
-                  
-                  {/* Content Section */}
-                  <div className="p-4">
-                    <h5 className="fw-bold text-white mb-2 line-clamp-1">{item.title}</h5>
-                    <p className="text-white-50 small line-clamp-2 mb-3">
-                      {item.description || "Chưa có mô tả chi tiết cho dự án này."}
-                    </p>
                     
-                    <div className="d-flex justify-content-between align-items-center">
-                      {item.projectUrl ? (
-                        <a href={item.projectUrl} target="_blank" rel="noreferrer" className="text-primary-glow text-decoration-none small fw-bold d-flex align-items-center gap-1 hover-primary">
-                          <ExternalLink size={14} /> Xem demo
-                        </a>
-                      ) : (
-                        <span className="text-muted x-small fst-italic">Chưa có link demo</span>
-                      )}
-                      <Badge bg="dark" className="opacity-50 x-small">ID: {item.portfolioId?.substring(0, 6)}</Badge>
+                    {/* Content Section */}
+                    <div className="p-4">
+                      <h5 className="fw-bold text-white mb-2 line-clamp-1">{item.title}</h5>
+                      <p className="text-white-50 small line-clamp-2 mb-3">
+                        {item.description || "Chưa có mô tả chi tiết cho dự án này."}
+                      </p>
+                      
+                      <div className="d-flex justify-content-between align-items-center">
+                        {item.projectUrl ? (
+                          <a href={item.projectUrl} target="_blank" rel="noreferrer" className="text-primary-glow text-decoration-none small fw-bold d-flex align-items-center gap-1 hover-primary">
+                            <ExternalLink size={14} /> Xem demo
+                          </a>
+                        ) : (
+                          <span className="text-muted x-small fst-italic">Chưa có link demo</span>
+                        )}
+                        <Badge bg="dark" className="opacity-50 x-small">ID: {item.portfolioId?.substring(0, 6)}</Badge>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </Col>
-            ))}
-          </Row>
+                </Col>
+              ))}
+            </Row>
+
+            <PaginationBar
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={handlePageChange}
+            />
+          </>
         ) : (
           /* --- EMPTY STATE --- */
           <div className="empty-portfolio-card glass-card p-5 text-center">

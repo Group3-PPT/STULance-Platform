@@ -228,7 +228,7 @@ const Home = () => {
                           </div>
                           <div className="d-flex justify-content-between align-items-center mt-2 pt-2" style={{borderTop: '1px solid rgba(255,255,255,0.05)'}}>
                             <div className="job-price">
-                              {job.salary > 0 ? <><span>{formatMoney(job.salary)}</span><small>VND</small></> : <span className="text-info" style={{fontSize: '0.72rem'}}>Thỏa thuận</span>}
+                              {job.salary > 0 ? <><span>{formatMoney(job.salary)}</span><small>VND</small></> : <span className="text-info" style={{fontSize: '0.72rem'}}>Chưa có lương</span>}
                             </div>
                             <Button as={Link} to="/jobs" variant="primary" size="sm" className="job-apply-btn">
                               Ứng tuyển <ArrowRight size={10}/>

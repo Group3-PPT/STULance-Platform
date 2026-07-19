@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Table, Badge, Row, Col, Spinner, Button, Modal, Form } from 'react-bootstrap';
 import { Wallet, ShieldCheck, TrendingUp, Landmark, Loader2, RefreshCw, FileText, Banknote, CheckCircle2, XCircle, Clock, Eye } from 'lucide-react';
 import { adminService } from '../../services/adminservice';
 import { withdrawalService } from '../../services/withdrawalService';
 import { serviceOrderService } from '../../services/serviceorderservice';
-import { unwrapList } from '../../services/responseUtils';
+import PaginationBar from '../../components/PaginationBar';
 import '../../CSS/ManagePayments.css';
 
 const TABS = { TRANSACTIONS: 'transactions', WITHDRAWALS: 'withdrawals' };
@@ -27,38 +27,58 @@ const ManagePayments = () => {
   const [rejectReason, setRejectReason] = useState('');
   const [processing, setProcessing] = useState(false);
 
-  const fetchData = async () => {
+  const [txPage, setTxPage] = useState(1);
+  const [txTotalPages, setTxTotalPages] = useState(1);
+  const [txTotalItems, setTxTotalItems] = useState(0);
+  const [wdPage, setWdPage] = useState(1);
+  const [wdTotalPages, setWdTotalPages] = useState(1);
+  const [wdTotalItems, setWdTotalItems] = useState(0);
+  const pageSize = 15;
+
+  const fetchData = useCallback(async (page = 1) => {
     setLoading(true);
     try {
       const [contractsRes, ordersRes] = await Promise.all([
-        adminService.getAllContracts(),
-        serviceOrderService.adminGetAllOrders()
+        adminService.getAllContracts({ page, pageSize }),
+        serviceOrderService.adminGetAllOrders({ page, pageSize })
       ]);
-      if (contractsRes.success) setContracts(unwrapList(contractsRes));
-      if (ordersRes.success !== false) setOrders(unwrapList(ordersRes));
+      if (contractsRes.success && contractsRes.data) {
+        setContracts(contractsRes.data.items || []);
+        setTxTotalPages(contractsRes.data.totalPages || 1);
+        setTxTotalItems(contractsRes.data.totalItems || 0);
+        setTxPage(contractsRes.data.page || 1);
+      }
+      if (ordersRes.success && ordersRes.data) {
+        setOrders(ordersRes.data.items || []);
+      }
     } catch (err) {
       console.error('Lỗi tải dữ liệu:', err);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const fetchWithdrawals = async () => {
+  const fetchWithdrawals = useCallback(async (page = 1) => {
     setLoading(true);
     try {
-      const res = await withdrawalService.adminGetAllWithdrawals();
-      setWithdrawals(unwrapList(res));
+      const res = await withdrawalService.adminGetAllWithdrawals({ page, pageSize });
+      if (res.success && res.data) {
+        setWithdrawals(res.data.items || []);
+        setWdTotalPages(res.data.totalPages || 1);
+        setWdTotalItems(res.data.totalItems || 0);
+        setWdPage(res.data.page || 1);
+      }
     } catch (err) {
       console.error('Lỗi tải withdrawals:', err);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
-    if (activeTab === TABS.TRANSACTIONS) fetchData();
-    else fetchWithdrawals();
-  }, [activeTab]);
+    if (activeTab === TABS.TRANSACTIONS) fetchData(1);
+    else fetchWithdrawals(1);
+  }, [activeTab, fetchData, fetchWithdrawals]);
 
   const handleApprove = async (id) => {
     if (!window.confirm('Duyệt yêu cầu rút tiền này?')) return;
@@ -67,7 +87,7 @@ const ManagePayments = () => {
       await withdrawalService.adminApprove(id);
       alert('Đã duyệt!');
       setShowDetailModal(false);
-      fetchWithdrawals();
+      fetchWithdrawals(wdPage);
     } catch (err) {
       alert('Lỗi: ' + (err.response?.data?.message || err.message));
     } finally {
@@ -86,7 +106,7 @@ const ManagePayments = () => {
       alert('Đã từ chối!');
       setShowDetailModal(false);
       setRejectReason('');
-      fetchWithdrawals();
+      fetchWithdrawals(wdPage);
     } catch (err) {
       alert('Lỗi: ' + (err.response?.data?.message || err.message));
     } finally {
@@ -110,7 +130,7 @@ const ManagePayments = () => {
             Quản lý <span className="text-primary-glow">Thanh toán</span>
           </h2>
           <button className="btn-icon-table text-white-50" title="Làm mới"
-            onClick={() => activeTab === TABS.TRANSACTIONS ? fetchData() : fetchWithdrawals()}>
+            onClick={() => activeTab === TABS.TRANSACTIONS ? fetchData(txPage) : fetchWithdrawals(wdPage)}>
             <RefreshCw size={18} />
           </button>
         </div>
@@ -195,6 +215,7 @@ const ManagePayments = () => {
         {loading ? (
           <div className="text-center py-5"><Loader2 className="spinner text-primary" size={40} /></div>
         ) : activeTab === TABS.TRANSACTIONS ? (
+          <>
           <Table responsive variant="dark" className="mb-0 pay-custom-table align-middle">
             <thead>
               <tr>
@@ -238,7 +259,16 @@ const ManagePayments = () => {
               ))}
             </tbody>
           </Table>
+          <div className="p-3 border-top" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
+            <PaginationBar
+              currentPage={txPage}
+              totalPages={txTotalPages}
+              onPageChange={(p) => fetchData(p)}
+            />
+          </div>
+          </>
         ) : (
+          <>
           <Table responsive variant="dark" className="mb-0 pay-custom-table align-middle">
             <thead>
               <tr>
@@ -276,6 +306,14 @@ const ManagePayments = () => {
               )}
             </tbody>
           </Table>
+          <div className="p-3 border-top" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
+            <PaginationBar
+              currentPage={wdPage}
+              totalPages={wdTotalPages}
+              onPageChange={(p) => fetchWithdrawals(p)}
+            />
+          </div>
+          </>
         )}
       </div>
 

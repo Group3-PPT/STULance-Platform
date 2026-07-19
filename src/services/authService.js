@@ -1,8 +1,8 @@
 import api from './api';
 
 let refreshTimer = null;
-const REFRESH_INTERVAL = 14 * 60 * 1000;
-const SESSION_MAX_AGE = 7 * 24 * 60 * 60 * 1000;
+const REFRESH_INTERVAL = 14 * 60 * 1000; // 14 phút
+const SESSION_MAX_AGE = 7 * 24 * 60 * 60 * 1000; // 7 ngày
 
 const storage = {
     getAccess: () => localStorage.getItem('accessToken'),
@@ -15,6 +15,7 @@ const storage = {
     setUserId: (v) => localStorage.setItem('userId', v),
     getLastActivity: () => localStorage.getItem('lastActivity'),
     setLastActivity: (v) => localStorage.setItem('lastActivity', v),
+    getTokenRefreshedAt: () => localStorage.getItem('tokenRefreshedAt'),
     clear: () => {
         localStorage.removeItem('accessToken');
         sessionStorage.removeItem('refreshToken');
@@ -41,9 +42,7 @@ export const authService = {
 
     refreshAccessToken: async () => {
         const oldRefreshToken = storage.getRefresh();
-        if (!oldRefreshToken) {
-            return null;
-        }
+        if (!oldRefreshToken) return null;
 
         try {
             const res = await api.post('/v1/auth/refresh-token', { refreshToken: oldRefreshToken });
@@ -54,11 +53,12 @@ export const authService = {
                 localStorage.setItem('tokenRefreshedAt', Date.now().toString());
                 storage.setLastActivity(Date.now().toString());
                 window.dispatchEvent(new Event("token-refreshed"));
-                authService.scheduleRefresh();
+                console.log("Token refreshed thành công");
                 return data.accessToken;
             }
             return null;
         } catch (err) {
+            console.error("Refresh token thất bại:", err.response?.status);
             if (err.response?.status === 401 || err.response?.status === 400) {
                 authService.handleSessionExpired();
             }
@@ -107,23 +107,40 @@ export const authService = {
         localStorage.setItem('tokenRefreshedAt', Date.now().toString());
 
         window.dispatchEvent(new Event("local-storage-update"));
-        authService.scheduleRefresh();
+        authService.startAutoRefresh();
         await authService.fetchAndStoreUserId();
     },
 
-    scheduleRefresh: () => {
-        if (refreshTimer) {
-            clearTimeout(refreshTimer);
-            refreshTimer = null;
-        }
+    startAutoRefresh: () => {
+        authService.stopAutoRefresh();
 
         const token = storage.getAccess();
         const rfToken = storage.getRefresh();
         if (!token || !rfToken) return;
 
-        refreshTimer = setTimeout(async () => {
-            await authService.refreshAccessToken();
+        console.log("Bắt đầu auto-refresh token mỗi 14 phút");
+
+        refreshTimer = setInterval(async () => {
+            const currentRefreshToken = storage.getRefresh();
+            if (!currentRefreshToken) {
+                authService.stopAutoRefresh();
+                return;
+            }
+
+            console.log("Đang tự động refresh token...");
+            const newToken = await authService.refreshAccessToken();
+            if (!newToken) {
+                console.error("Auto-refresh thất bại, dừng timer");
+                authService.stopAutoRefresh();
+            }
         }, REFRESH_INTERVAL);
+    },
+
+    stopAutoRefresh: () => {
+        if (refreshTimer) {
+            clearInterval(refreshTimer);
+            refreshTimer = null;
+        }
     },
 
     ensureUserId: async () => {
@@ -144,7 +161,17 @@ export const authService = {
             return;
         }
 
-        authService.scheduleRefresh();
+        const refreshedAt = storage.getTokenRefreshedAt();
+        if (refreshedAt) {
+            const elapsed = Date.now() - Number(refreshedAt);
+            if (elapsed > REFRESH_INTERVAL) {
+                console.log("Token cũ hơn 14 phút, refresh ngay...");
+                const newToken = await authService.refreshAccessToken();
+                if (!newToken) return;
+            }
+        }
+
+        authService.startAutoRefresh();
 
         if (!storage.getUserId()) {
             await authService.fetchAndStoreUserId();
@@ -152,10 +179,7 @@ export const authService = {
     },
 
     handleSessionExpired: () => {
-        if (refreshTimer) {
-            clearTimeout(refreshTimer);
-            refreshTimer = null;
-        }
+        authService.stopAutoRefresh();
         storage.clear();
         window.dispatchEvent(new Event("local-storage-update"));
         if (window.location.pathname !== '/login') {
@@ -182,11 +206,28 @@ export const authService = {
 };
 
 window.addEventListener("token-refreshed", () => {
-    authService.scheduleRefresh();
+    // Token vừa được refresh, không cần làm gì thêm vì đã schedule ở trên
 });
 
 window.addEventListener("storage", (e) => {
     if (e.key === 'accessToken' && !e.newValue) {
         authService.handleSessionExpired();
+    }
+});
+
+window.addEventListener("visibilitychange", () => {
+    if (!document.hidden) {
+        const token = storage.getAccess();
+        const rfToken = storage.getRefresh();
+        if (!token || !rfToken) return;
+
+        const refreshedAt = storage.getTokenRefreshedAt();
+        if (refreshedAt) {
+            const elapsed = Date.now() - Number(refreshedAt);
+            if (elapsed > REFRESH_INTERVAL) {
+                console.log("Tab quay lại, token cũ → refresh ngay");
+                authService.refreshAccessToken();
+            }
+        }
     }
 });

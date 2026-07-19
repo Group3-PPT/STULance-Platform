@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { authService } from './services/authService';
-import { createBrowserRouter, RouterProvider, Outlet, useSearchParams, useLocation } from 'react-router-dom';
+import { createBrowserRouter, RouterProvider, Outlet, useSearchParams, useLocation, useNavigate } from 'react-router-dom';
 
 import NavbarComp from './components/NavbarComp';
 import FooterComp from './components/Footer';
@@ -111,7 +111,17 @@ const useSeo = () => {
 
 const MainLayout = () => {
   const [isLoading, setIsLoading] = useState(true);
+  const navigate = useNavigate();
   useSeo();
+
+  useEffect(() => {
+    const handleAuthLost = () => {
+      navigate('/login', { replace: true });
+    };
+    window.addEventListener('local-storage-update', handleAuthLost);
+    return () => window.removeEventListener('local-storage-update', handleAuthLost);
+  }, [navigate]);
+
   return (
     <div className="app-wrapper">
       {isLoading && <LoadingScreen onFinished={() => setIsLoading(false)} />}
