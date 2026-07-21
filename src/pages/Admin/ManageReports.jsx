@@ -78,8 +78,8 @@ const ManageReports = () => {
     ...contracts.filter(c => c.status === 'DISPUTED' || c.status === 'CANCELLED').map(c => ({
       id: c.contractId,
       shortId: c.contractId?.substring(0, 8),
-      reporter: c.studentName || 'N/A',
-      reported: c.enterpriseName || 'N/A',
+      reporter: c.providerName || c.studentName || 'N/A',
+      reported: c.clientName || c.enterpriseName || 'N/A',
       reason: c.status === 'DISPUTED' ? 'Tranh chấp hợp đồng' : 'Hủy hợp đồng',
       priority: c.status === 'DISPUTED' ? 'Cao' : 'Trung bình',
       status: c.status === 'DISPUTED' ? 'Mới' : 'Đang xử lý',

@@ -33,7 +33,9 @@ const ManageContracts = () => {
       });
       if (res.success && res.data) {
         const data = res.data;
-        setContracts(data.items || []);
+        const items = data.items || [];
+        if (items.length > 0) console.log("Contract item sample:", items[0]);
+        setContracts(items);
         setTotalPages(data.totalPages || 1);
         setTotalItems(data.totalItems || 0);
         setCurrentPage(data.page || 1);
@@ -146,7 +148,7 @@ const ManageContracts = () => {
                         <span className="mj-contract-id">#{c.contractId?.substring(0, 8)}</span>
                       </div>
                       <p className="mj-contract-student mb-0">
-                        <User size={12} className="me-1" /> {c.enterpriseName || 'N/A'} → {c.studentName || 'N/A'}
+                        <User size={12} className="me-1" /> {c.clientName || c.enterpriseName || 'N/A'} → {c.providerName || c.studentName || 'N/A'}
                       </p>
                     </div>
                   </div>
@@ -195,8 +197,8 @@ const ManageContracts = () => {
           <Modal.Body className="pt-3">
             <div className="mb-3 p-3 rounded" style={{ background: 'rgba(255,255,255,0.03)' }}>
               <p className="x-small text-white-50 mb-1">Hợp đồng: <strong className="text-white">{selectedContract?.contractName || selectedContract?.jobTitle}</strong></p>
-              <p className="x-small text-white-50 mb-1">Bên thuê: <strong className="text-white">{selectedContract?.enterpriseName}</strong></p>
-              <p className="x-small text-white-50 mb-1">Bên thực hiện: <strong className="text-white">{selectedContract?.studentName}</strong></p>
+              <p className="x-small text-white-50 mb-1">Bên thuê: <strong className="text-white">{selectedContract?.clientName || selectedContract?.enterpriseName || selectedContract?.clientInfo?.displayName || 'N/A'}</strong></p>
+              <p className="x-small text-white-50 mb-1">Bên thực hiện: <strong className="text-white">{selectedContract?.providerName || selectedContract?.studentName || selectedContract?.providerInfo?.displayName || 'N/A'}</strong></p>
               <p className="x-small text-white-50 mb-0">Giá trị: <strong className="text-warning">{formatMoney(selectedContract?.totalBudget || selectedContract?.totalAmount)}</strong></p>
             </div>
 

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Container, Row, Col, Button, Badge, Form, InputGroup, Modal } from 'react-bootstrap';
+import { Link } from 'react-router-dom';
 import {
   Search, Building2, ShieldCheck, Eye, Filter, Loader2, RefreshCw,
   MapPin, X, Mail, Globe, Hash, Users, User, Star
@@ -231,6 +232,9 @@ const FindEnterprises = () => {
                             )}
 
                             <div className="d-flex gap-2 justify-content-end">
+                                <Button as={Link} to={`/businesses/business-profile/${selectedEnterprise.enterpriseId}`} variant="outline-primary" className="fw-bold px-4">
+                                    <Eye size={16} className="me-1"/> Xem Profile
+                                </Button>
                                 {selectedEnterprise.website && (
                                     <Button variant="primary" className="fw-bold px-4" onClick={() => window.open(selectedEnterprise.website, '_blank')}>
                                         <Globe size={16} className="me-1"/> Website

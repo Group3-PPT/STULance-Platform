@@ -1,15 +1,21 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Table, Badge, Form, Spinner, Dropdown, Modal, Row, Col } from 'react-bootstrap';
-import { Search, MoreVertical, Eye, Calendar, Loader2, Building2, ShieldAlert, CheckCircle, XCircle, PauseCircle, Lock, Archive, RefreshCw, Clock, DollarSign, Users, MapPin } from 'lucide-react';
+import { Search, MoreVertical, Eye, Calendar, Loader2, Building2, ShieldAlert, CheckCircle, XCircle, PauseCircle, Lock, Archive, RefreshCw, Clock, DollarSign, Users, MapPin, Filter } from 'lucide-react';
 import { jobService } from "../../services/jobservice";
 import PaginationBar from '../../components/PaginationBar';
 import '../../CSS/ManagePosts.css';
+
+const JOB_TYPES = ['Tất cả', 'Part-time', 'Full-time', 'Freelance', 'Internship'];
+const STATUS_TABS = ["Tất cả", "Chờ duyệt", "Đang hiển thị", "Vi phạm/Khác"];
 
 const ManagePosts = () => {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("Tất cả");
   const [searchTerm, setSearchTerm] = useState("");
+  const [jobTypeFilter, setJobTypeFilter] = useState("Tất cả");
+  const [minSalary, setMinSalary] = useState('');
+  const [maxSalary, setMaxSalary] = useState('');
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [selectedPost, setSelectedPost] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -17,12 +23,22 @@ const ManagePosts = () => {
   const [totalItems, setTotalItems] = useState(0);
   const pageSize = 15;
 
-  const fetchPosts = useCallback(async (page = 1, keyword = '', status = '') => {
+  const statusMap = {
+    "Tất cả": '',
+    "Chờ duyệt": 'PENDING',
+    "Đang hiển thị": 'OPEN',
+    "Vi phạm/Khác": 'BLOCKED'
+  };
+
+  const fetchPosts = useCallback(async (page = 1, keyword = '', status = '', jobType = '', minSal = '', maxSal = '') => {
     setLoading(true);
     try {
       const params = { page, pageSize };
       if (keyword) params.keyword = keyword;
       if (status) params.status = status;
+      if (jobType && jobType !== 'Tất cả') params.jobType = jobType;
+      if (minSal) params.minSalary = minSal;
+      if (maxSal) params.maxSalary = maxSal;
       const res = await jobService.adminGetAllJobs(params);
       if (res.success && res.data) {
         const data = res.data;
@@ -79,35 +95,29 @@ const ManagePosts = () => {
   const handleFilterChange = (newFilter) => {
     setFilter(newFilter);
     setCurrentPage(1);
-    const statusMap = {
-      "Tất cả": '',
-      "Chờ duyệt": 'PENDING',
-      "Đang hiển thị": 'OPEN',
-      "Vi phạm/Khác": 'REJECTED'
-    };
-    fetchPosts(1, searchTerm, statusMap[newFilter] || '');
+    fetchPosts(1, searchTerm, statusMap[newFilter] || '', jobTypeFilter, minSalary, maxSalary);
   };
 
   const handleSearch = () => {
     setCurrentPage(1);
-    const statusMap = {
-      "Tất cả": '',
-      "Chờ duyệt": 'PENDING',
-      "Đang hiển thị": 'OPEN',
-      "Vi phạm/Khác": 'REJECTED'
-    };
-    fetchPosts(1, searchTerm, statusMap[filter] || '');
+    fetchPosts(1, searchTerm, statusMap[filter] || '', jobTypeFilter, minSalary, maxSalary);
   };
 
   const handlePageChange = (page) => {
-    const statusMap = {
-      "Tất cả": '',
-      "Chờ duyệt": 'PENDING',
-      "Đang hiển thị": 'OPEN',
-      "Vi phạm/Khác": 'REJECTED'
-    };
-    fetchPosts(page, searchTerm, statusMap[filter] || '');
+    fetchPosts(page, searchTerm, statusMap[filter] || '', jobTypeFilter, minSalary, maxSalary);
   };
+
+  const handleClearFilters = () => {
+    setSearchTerm('');
+    setFilter('Tất cả');
+    setJobTypeFilter('Tất cả');
+    setMinSalary('');
+    setMaxSalary('');
+    setCurrentPage(1);
+    fetchPosts(1, '', '', 'Tất cả', '', '');
+  };
+
+  const hasActiveFilters = searchTerm || filter !== 'Tất cả' || jobTypeFilter !== 'Tất cả' || minSalary || maxSalary;
 
   const pendingCount = posts.filter(p => p.status === "PENDING").length;
   const activeCount = posts.filter(p => p.status === "OPEN").length;
@@ -142,8 +152,47 @@ const ManagePosts = () => {
         </div>
       </div>
 
+      {/* ADVANCED FILTERS */}
+      <div className="glass-card p-3 mb-4 d-flex gap-2 align-items-center flex-wrap" style={{borderRadius: '12px'}}>
+        <div className="d-flex align-items-center gap-1 text-white-50 x-small fw-bold">
+          <Filter size={14}/> LỌC:
+        </div>
+        <Form.Select
+          className="bg-dark-input text-white border-0 rounded-3 py-1"
+          style={{fontSize: '13px', width: '140px'}}
+          value={jobTypeFilter}
+          onChange={(e) => { setJobTypeFilter(e.target.value); }}
+        >
+          {JOB_TYPES.map(t => <option key={t} value={t}>{t === 'Tất cả' ? 'Loại công việc' : t}</option>)}
+        </Form.Select>
+        <input
+          type="number"
+          placeholder="Lương tối thiểu"
+          className="bg-dark-input text-white border-0 rounded-3 py-1 px-2"
+          style={{fontSize: '13px', width: '130px'}}
+          value={minSalary}
+          onChange={(e) => setMinSalary(e.target.value)}
+        />
+        <input
+          type="number"
+          placeholder="Lương tối đa"
+          className="bg-dark-input text-white border-0 rounded-3 py-1 px-2"
+          style={{fontSize: '13px', width: '130px'}}
+          value={maxSalary}
+          onChange={(e) => setMaxSalary(e.target.value)}
+        />
+        <button className="btn btn-primary btn-sm rounded-3 fw-bold px-3" onClick={handleSearch} style={{fontSize: '13px'}}>
+          Áp dụng
+        </button>
+        {hasActiveFilters && (
+          <button className="btn btn-outline-light btn-sm rounded-3 px-2" onClick={handleClearFilters}>
+            <RefreshCw size={14}/>
+          </button>
+        )}
+      </div>
+
       <div className="post-filter-tabs glass-card p-2 mb-4 d-flex gap-2">
-        {["Tất cả", "Chờ duyệt", "Đang hiển thị", "Vi phạm/Khác"].map(t => (
+        {STATUS_TABS.map(t => (
           <button key={t} className={`post-tab-btn ${filter === t ? 'active' : ''}`} onClick={() => handleFilterChange(t)}>{t}</button>
         ))}
       </div>
@@ -174,7 +223,7 @@ const ManagePosts = () => {
                   </td>
                   <td>
                     <div className="small d-flex align-items-center gap-2 text-white-80">
-                      <Building2 size={14} className="text-info"/> {post.enterpriseName || 'N/A'}
+                      <Building2 size={14} className="text-info"/> {post.requesterName || post.companyName || 'N/A'}
                     </div>
                   </td>
                   <td>{renderStatusBadge(post.status)}</td>
@@ -246,7 +295,7 @@ const ManagePosts = () => {
                 <Col md={4}>
                   <div className="glass-card p-3">
                     <div className="x-small text-white-50 uppercase-tracking mb-1"><Building2 size={12} className="me-1"/> Doanh nghiệp</div>
-                    <div className="fw-bold text-white">{selectedPost.enterpriseName || 'N/A'}</div>
+                    <div className="fw-bold text-white">{selectedPost.requesterName || selectedPost.companyName || 'N/A'}</div>
                   </div>
                 </Col>
                 <Col md={4}>

@@ -159,14 +159,14 @@ const SignContract = () => {
                     <User size={14} />
                     <div>
                       <span className="sign-summary-label">Bên thuê</span>
-                      <span className="sign-summary-value">{contract?.clientName || contract?.enterpriseName || 'N/A'}</span>
+                      <span className="sign-summary-value">{contract?.clientInfo?.displayName || contract?.clientName || contract?.enterpriseName || 'N/A'}</span>
                     </div>
                   </div>
                   <div className="sign-summary-item">
                     <User size={14} />
                     <div>
                       <span className="sign-summary-label">Bên thực hiện</span>
-                      <span className="sign-summary-value">{contract?.providerName || contract?.studentName || 'N/A'}</span>
+                      <span className="sign-summary-value">{contract?.providerInfo?.displayName || contract?.providerName || contract?.studentName || 'N/A'}</span>
                     </div>
                   </div>
                   <div className="sign-summary-item">

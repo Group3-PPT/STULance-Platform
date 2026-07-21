@@ -1,16 +1,16 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Table, Badge, Form, InputGroup, Row, Col, Button, Dropdown } from 'react-bootstrap';
+import { Table, Badge, Form, InputGroup, Row, Col } from 'react-bootstrap';
 import { UserCheck, UserX, Mail, Calendar, Search, Loader2, RefreshCw, Building2, GraduationCap, CheckCircle, XCircle, Clock, HelpCircle } from 'lucide-react';
-import { studentService } from '../../services/studentservice';
-import { enterpriseService } from '../../services/enterprise.service';
-import { adminService } from '../../services/adminservice';
+import { userService } from '../../services/userservice';
 import PaginationBar from '../../components/PaginationBar';
 import '../../CSS/ManageAccounts.css';
 
 const STATUS_CONFIG = {
   UNVERIFIED: { color: 'secondary', icon: <HelpCircle size={12} />, label: 'Chưa xác minh' },
   PENDING: { color: 'warning', icon: <Clock size={12} />, label: 'Chờ duyệt' },
+  ACTIVE: { color: 'success', icon: <CheckCircle size={12} />, label: 'Đã xác minh' },
   VERIFIED: { color: 'success', icon: <CheckCircle size={12} />, label: 'Đã xác minh' },
+  INACTIVE: { color: 'danger', icon: <XCircle size={12} />, label: 'Bị khóa' },
   REJECTED: { color: 'danger', icon: <XCircle size={12} />, label: 'Bị từ chối' },
 };
 
@@ -32,76 +32,45 @@ const ManageAccounts = () => {
   const fetchUsers = useCallback(async (page = 1, keyword = '', status = '', type = '') => {
     setLoading(true);
     try {
-      const usersList = [];
-      let totalStudents = 0;
-      let totalEnterprises = 0;
+      const params = { page, pageSize };
+      if (keyword) params.keyword = keyword;
+      if (status) params.status = status;
 
-      const fetchStudentParams = { page, pageSize };
-      if (keyword) fetchStudentParams.keyword = keyword;
-      if (status) fetchStudentParams.status = status;
+      const res = await userService.adminGetAllUsers(params);
+      const data = res.data || res;
+      const items = data.items || [];
 
-      const fetchEntParams = { page, pageSize };
-      if (keyword) fetchEntParams.keyword = keyword;
-      if (status) fetchEntParams.status = status;
-
-      const shouldFetchStudents = type !== 'Doanh nghiệp';
-      const shouldFetchEnterprises = type !== 'Sinh viên';
-
-      const promises = [];
-      if (shouldFetchStudents) promises.push(studentService.getAllStudents(fetchStudentParams));
-      if (shouldFetchEnterprises) promises.push(enterpriseService.getAllEnterprises(fetchEntParams));
-
-      const results = await Promise.allSettled(promises);
-
-      let resultIdx = 0;
-      if (shouldFetchStudents) {
-        const studentsRes = results[resultIdx++];
-        if (studentsRes.status === 'fulfilled' && studentsRes.value?.data) {
-          const data = studentsRes.value.data;
-          const students = data.items || [];
-          totalStudents = data.totalItems || 0;
-          students.forEach(s => {
-            usersList.push({
-              id: s.studentId || s.id,
-              name: s.fullName || s.studentName || 'Sinh viên',
-              type: 'Sinh viên',
-              email: s.email || '',
-              status: s.verificationStatus || s.status || 'UNVERIFIED',
-              date: new Date(s.createdAt || Date.now()).toLocaleDateString('vi-VN'),
-              rawData: s
-            });
-          });
-        }
-      }
-
-      if (shouldFetchEnterprises) {
-        const enterprisesRes = results[resultIdx++];
-        if (enterprisesRes.status === 'fulfilled' && enterprisesRes.value?.data) {
-          const data = enterprisesRes.value.data;
-          const enterprises = data.items || [];
-          totalEnterprises = data.totalItems || 0;
-          enterprises.forEach(e => {
-            usersList.push({
-              id: e.enterpriseId || e.id,
-              name: e.companyName || e.enterpriseName || 'Doanh nghiệp',
-              type: 'Doanh nghiệp',
-              email: e.email || '',
-              status: e.verificationStatus || e.status || 'UNVERIFIED',
-              date: new Date(e.createdAt || Date.now()).toLocaleDateString('vi-VN'),
-              rawData: e
-            });
-          });
-        }
-      }
+      let studentCnt = 0;
+      let businessCnt = 0;
+      const usersList = items.map(u => {
+        const role = (u.roles && u.roles[0]) || '';
+        const isStudent = role === 'STUDENT';
+        const isEnterprise = role === 'ENTERPRISE' || role === 'BUSINESS';
+        if (isStudent) studentCnt++;
+        if (isEnterprise) businessCnt++;
+        return {
+          id: u.userId,
+          name: u.fullName || u.displayName || u.email?.split('@')[0] || 'N/A',
+          type: isEnterprise ? 'Doanh nghiệp' : 'Sinh viên',
+          email: u.email || '',
+          status: u.status || 'UNVERIFIED',
+          date: new Date(u.createdAt || Date.now()).toLocaleDateString('vi-VN'),
+          rawData: u
+        };
+      }).filter(u => {
+        if (type === 'Sinh viên' && u.type !== 'Sinh viên') return false;
+        if (type === 'Doanh nghiệp' && u.type !== 'Doanh nghiệp') return false;
+        return true;
+      });
 
       setUsers(usersList);
-      setStudentCount(totalStudents);
-      setBusinessCount(totalEnterprises);
-      setVerifiedCount(usersList.filter(u => u.status === 'VERIFIED').length);
+      setStudentCount(studentCnt);
+      setBusinessCount(businessCnt);
+      setVerifiedCount(usersList.filter(u => u.status === 'ACTIVE' || u.status === 'VERIFIED').length);
       setPendingCount(usersList.filter(u => u.status === 'PENDING').length);
-      setTotalItems(totalStudents + totalEnterprises);
-      setTotalPages(Math.max(totalStudents, totalEnterprises) > 0 ? Math.ceil((totalStudents + totalEnterprises) / pageSize) : 1);
-      setCurrentPage(page);
+      setTotalItems(data.totalItems || items.length);
+      setTotalPages(data.totalPages || 1);
+      setCurrentPage(data.page || page);
     } catch (err) {
       console.error("Lỗi tải danh sách:", err);
     } finally {
@@ -114,11 +83,7 @@ const ManageAccounts = () => {
   const handleVerify = async (user) => {
     if (!window.confirm(`Duyệt xác thực "${user.name}"?`)) return;
     try {
-      if (user.type === 'Sinh viên') {
-        await adminService.verifyStudent(user.id, 'VERIFIED');
-      } else {
-        await adminService.verifyEnterprise(user.id, 'VERIFIED');
-      }
+      await userService.adminUpdateUserStatus(user.id, 'ACTIVE', 'Approved by admin');
       alert("Duyệt thành công!");
       fetchUsers(currentPage, searchTerm, filterStatus === 'Tất cả' ? '' : filterStatus, filterType);
     } catch (err) {
@@ -129,11 +94,7 @@ const ManageAccounts = () => {
   const handleReject = async (user) => {
     if (!window.confirm(`Từ chối xác thực "${user.name}"?`)) return;
     try {
-      if (user.type === 'Sinh viên') {
-        await adminService.verifyStudent(user.id, 'REJECTED');
-      } else {
-        await adminService.verifyEnterprise(user.id, 'REJECTED');
-      }
+      await userService.adminUpdateUserStatus(user.id, 'REJECTED', 'Rejected by admin');
       alert("Đã từ chối!");
       fetchUsers(currentPage, searchTerm, filterStatus === 'Tất cả' ? '' : filterStatus, filterType);
     } catch (err) {
@@ -144,11 +105,7 @@ const ManageAccounts = () => {
   const handleResetStatus = async (user) => {
     if (!window.confirm(`Đặt lại trạng thái "${user.name}" về Chờ duyệt?`)) return;
     try {
-      if (user.type === 'Sinh viên') {
-        await adminService.verifyStudent(user.id, 'PENDING');
-      } else {
-        await adminService.verifyEnterprise(user.id, 'PENDING');
-      }
+      await userService.adminUpdateUserStatus(user.id, 'PENDING', 'Reset by admin');
       fetchUsers(currentPage, searchTerm, filterStatus === 'Tất cả' ? '' : filterStatus, filterType);
     } catch (err) {
       alert("Lỗi: " + (err.response?.data?.message || err.message));
@@ -198,7 +155,7 @@ const ManageAccounts = () => {
               ))}
             </div>
             <div className="d-flex gap-1 glass-card p-1">
-              {["Tất cả", "UNVERIFIED", "PENDING", "VERIFIED", "REJECTED"].map(s => (
+              {["Tất cả", "UNVERIFIED", "PENDING", "ACTIVE", "INACTIVE"].map(s => (
                 <button key={s} className={`post-tab-btn ${filterStatus === s ? 'active' : ''}`} style={{fontSize: '11px', padding: '5px 10px'}} onClick={() => handleFilterStatusChange(s)}>
                   {s === "Tất cả" ? s : STATUS_CONFIG[s]?.label || s}
                 </button>
@@ -266,17 +223,17 @@ const ManageAccounts = () => {
                       </td>
                       <td>
                         <div className="acc-actions justify-content-center gap-1">
-                          {u.status !== 'VERIFIED' && (
+                          {(u.status !== 'ACTIVE' && u.status !== 'VERIFIED') && (
                             <button className="acc-btn check" title="Duyệt xác thực" onClick={() => handleVerify(u)}>
                               <UserCheck size={14}/>
                             </button>
                           )}
-                          {u.status !== 'REJECTED' && (
+                          {u.status !== 'REJECTED' && u.status !== 'INACTIVE' && (
                             <button className="acc-btn block" title="Từ chối" onClick={() => handleReject(u)}>
                               <UserX size={14}/>
                             </button>
                           )}
-                          {u.status === 'REJECTED' && (
+                          {(u.status === 'REJECTED' || u.status === 'INACTIVE') && (
                             <button className="acc-btn" title="Đặt lại chờ duyệt" onClick={() => handleResetStatus(u)} style={{background: 'rgba(255,193,7,0.1)', color: '#ffc107'}}>
                               <RefreshCw size={14}/>
                             </button>

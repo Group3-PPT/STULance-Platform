@@ -38,13 +38,11 @@ const Portfolio = () => {
     setLoading(true);
     try {
       if (isPublicView) {
-        const [studentRes, portRes] = await Promise.all([
-          studentService.getPublicProfile(id),
-          portfolioService.getStudentPortfolios(id)
-        ]);
-        setCombinedData(studentRes?.data || {});
-        setProjects(unwrapList(portRes));
-        setSkills(studentRes?.data?.skills || []);
+        const res = await studentService.getPublicProfile(id);
+        const data = res?.data || {};
+        setCombinedData(data);
+        setSkills(data.skills || []);
+        setProjects(data.portfolios || []);
       } else {
         const results = await Promise.allSettled([
           profileService.getBasicProfile(),
@@ -142,9 +140,11 @@ const Portfolio = () => {
                   )}
                 </div>
 
-                <p className="text-white-50 mb-0" style={{lineHeight: '1.8'}}>
-                  {combinedData.bio || "Chưa có lời giới thiệu bản thân."}
-                </p>
+                {combinedData.bio && (
+                  <p className="text-white-50 mb-0" style={{lineHeight: '1.8'}}>
+                    {combinedData.bio}
+                  </p>
+                )}
               </Col>
             </Row>
           </div>
@@ -158,18 +158,30 @@ const Portfolio = () => {
               <h5 className="fw-bold mb-4 text-primary-glow d-flex align-items-center gap-2">
                 <GraduationCap size={20}/> HỌC VẤN
               </h5>
-              <div className="portfolio-info-item mb-3">
-                <span className="portfolio-info-label">Trường đại học</span>
-                <span className="portfolio-info-value">{combinedData.school || "Chưa cập nhật"}</span>
-              </div>
-              <div className="portfolio-info-item mb-3">
-                <span className="portfolio-info-label">Mã sinh viên</span>
-                <span className="portfolio-info-value">{combinedData.studentCode || "N/A"}</span>
-              </div>
-              <div className="portfolio-info-item mb-0">
-                <span className="portfolio-info-label">GPA tích lũy</span>
-                <span className="portfolio-info-value text-success fw-bold">{combinedData.gpa || 'N/A'} / 4.0</span>
-              </div>
+              {combinedData.school && (
+                <div className="portfolio-info-item mb-3">
+                  <span className="portfolio-info-label">Trường đại học</span>
+                  <span className="portfolio-info-value">{combinedData.school}</span>
+                </div>
+              )}
+              {combinedData.studentCode && (
+                <div className="portfolio-info-item mb-3">
+                  <span className="portfolio-info-label">Mã sinh viên</span>
+                  <span className="portfolio-info-value">{combinedData.studentCode}</span>
+                </div>
+              )}
+              {combinedData.gpa > 0 && (
+                <div className="portfolio-info-item mb-3">
+                  <span className="portfolio-info-label">GPA tích lũy</span>
+                  <span className="portfolio-info-value text-success fw-bold">{combinedData.gpa} / 4.0</span>
+                </div>
+              )}
+              {combinedData.graduationYear && (
+                <div className="portfolio-info-item mb-0">
+                  <span className="portfolio-info-label">Năm tốt nghiệp</span>
+                  <span className="portfolio-info-value">{combinedData.graduationYear}</span>
+                </div>
+              )}
             </div>
 
             {/* Contact Card */}
@@ -177,38 +189,47 @@ const Portfolio = () => {
               <h5 className="fw-bold mb-4 text-primary-glow d-flex align-items-center gap-2">
                 <Smartphone size={20}/> LIÊN HỆ
               </h5>
-              <div className="portfolio-info-item mb-3">
-                <span className="portfolio-info-label">Số điện thoại</span>
-                <span className="portfolio-info-value">{combinedData.phoneNumber || "Chưa cập nhật"}</span>
-              </div>
-              <div className="portfolio-info-item mb-3">
-                <span className="portfolio-info-label">Địa chỉ</span>
-                <span className="portfolio-info-value">{combinedData.location || "Chưa cập nhật"}</span>
-              </div>
-              {combinedData.dateOfBirth && (
+              {combinedData.email && (
+                <div className="portfolio-info-item mb-3">
+                  <span className="portfolio-info-label">Email</span>
+                  <span className="portfolio-info-value">{combinedData.email}</span>
+                </div>
+              )}
+              {combinedData.phoneNumber && (
+                <div className="portfolio-info-item mb-3">
+                  <span className="portfolio-info-label">Số điện thoại</span>
+                  <span className="portfolio-info-value">{combinedData.phoneNumber}</span>
+                </div>
+              )}
+              {combinedData.location && (
+                <div className="portfolio-info-item mb-3">
+                  <span className="portfolio-info-label">Địa chỉ</span>
+                  <span className="portfolio-info-value">{combinedData.location}</span>
+                </div>
+              )}
+              {combinedData.birthday && (
                 <div className="portfolio-info-item mb-0">
                   <span className="portfolio-info-label">Ngày sinh</span>
-                  <span className="portfolio-info-value">{new Date(combinedData.dateOfBirth).toLocaleDateString('vi-VN')}</span>
+                  <span className="portfolio-info-value">{new Date(combinedData.birthday).toLocaleDateString('vi-VN')}</span>
                 </div>
               )}
             </div>
 
             {/* Skills Card */}
-            <div className="portfolio-sidebar-card glass-card p-4">
-              <h5 className="fw-bold mb-4 text-primary-glow d-flex align-items-center gap-2">
-                <Code2 size={20}/> KỸ NĂNG
-              </h5>
-              <div className="d-flex flex-wrap gap-2">
-                {skills.map(skill => (
-                  <Badge key={skill.skillId} pill bg={skill.status === 'APPROVED' ? 'primary' : 'secondary'} className="portfolio-skill-badge">
-                    {skill.skillName}
-                  </Badge>
-                ))}
-                {skills.length === 0 && (
-                  <span className="text-muted small italic">Chưa có kỹ năng nào.</span>
-                )}
+            {skills.length > 0 && (
+              <div className="portfolio-sidebar-card glass-card p-4">
+                <h5 className="fw-bold mb-4 text-primary-glow d-flex align-items-center gap-2">
+                  <Code2 size={20}/> KỸ NĂNG
+                </h5>
+                <div className="d-flex flex-wrap gap-2">
+                  {skills.map(skill => (
+                    <Badge key={skill.skillId} pill bg={skill.status === 'APPROVED' ? 'primary' : 'secondary'} className="portfolio-skill-badge">
+                      {skill.skillName}
+                    </Badge>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
           </Col>
 
           {/* --- CỘT PHẢI: DỰ ÁN --- */}
@@ -245,7 +266,7 @@ const Portfolio = () => {
                         </div>
                       </div>
                       <div className="p-4">
-                        <h5 className="fw-bold text-white mb-2">{project.title}</h5>
+                        <h5 className="fw-bold text-white mb-2">{project.projectName || project.title}</h5>
                         <p className="text-white-50 small line-clamp-2 mb-3">{project.description}</p>
                         {project.projectUrl && (
                           <a href={project.projectUrl} target="_blank" rel="noreferrer" className="text-primary-glow text-decoration-none small fw-bold d-flex align-items-center gap-1">

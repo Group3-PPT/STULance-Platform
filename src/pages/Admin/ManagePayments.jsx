@@ -231,8 +231,8 @@ const ManagePayments = () => {
             <tbody>
               {[...contracts.map(c => ({
                 id: c.contractId?.substring(0, 8),
-                from: c.enterpriseName || 'N/A',
-                to: c.studentName || 'N/A',
+                from: c.clientName || c.enterpriseName || 'N/A',
+                to: c.providerName || c.studentName || 'N/A',
                 amount: c.totalAmount,
                 type: 'Hợp đồng',
                 status: c.status,

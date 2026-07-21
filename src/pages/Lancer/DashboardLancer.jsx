@@ -384,7 +384,7 @@ const DashboardLancer = () => {
                               <h6 className="fw-bold text-white mb-1">{item.jobTitle || item.contractName || "Dự án Freelance"}</h6>
                               <div className="d-flex gap-3 x-small text-white-50 mb-2">
                                 <span><Clock size={12} className="me-1" /> {new Date(item.updatedAt).toLocaleDateString()}</span>
-                                <span>Đối tác: {item.clientName || item.enterpriseName || 'Enterprise'}</span>
+                                <span>Đối tác: {item.clientInfo?.displayName || item.clientName || item.enterpriseName || 'Enterprise'}</span>
                               </div>
                               <div className="d-flex align-items-center gap-2">
                                 <ProgressBar now={item.status === 'COMPLETED' ? 100 : (item.progressPercent || 0)} className="custom-progress-sm flex-grow-1" style={{ width: '120px' }} />
