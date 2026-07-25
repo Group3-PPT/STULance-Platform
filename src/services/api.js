@@ -21,6 +21,15 @@ const rawApi = axios.create({
     timeout: 15000,
 });
 
+rawApi.interceptors.request.use(
+    (config) => {
+        const token = localStorage.getItem('accessToken');
+        if (token) config.headers.Authorization = `Bearer ${token}`;
+        return config;
+    },
+    (error) => Promise.reject(error)
+);
+
 let isRefreshing = false;
 let refreshAttempts = 0;
 const MAX_REFRESH_ATTEMPTS = 3;
@@ -140,4 +149,5 @@ api.interceptors.response.use(
     }
 );
 
+export { rawApi };
 export default api;

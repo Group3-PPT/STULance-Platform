@@ -5,7 +5,7 @@ import {
   MapPin, Mail, Phone, GraduationCap, Award, Code2, Briefcase,
   Printer, ChevronLeft, Globe, Layers, ExternalLink
 } from 'lucide-react';
-import { cvService } from '../services/cvservice';
+import { cvService as cvApi } from '../services/cvApiService';
 import '../CSS/CVPreview.css';
 
 const CVPreview = () => {
@@ -18,7 +18,7 @@ const CVPreview = () => {
     const fetchCv = async () => {
       setLoading(true);
       try {
-        const res = await cvService.getPublicCv(cvId);
+        const res = await cvApi.getPublicCv(cvId);
         if (res.success !== false) {
           setCv(res.data || res);
         } else {

@@ -4,7 +4,7 @@ import {
   FileText, Plus, Trash2, Eye, EyeOff, Star, StarOff,
   Loader2, ExternalLink, Edit3, Copy, Globe, Lock, Check
 } from 'lucide-react';
-import { cvService } from '../../services/cvservice';
+import { cvService as cvApi } from '../../services/cvApiService';
 import '../../CSS/ManageCVs.css';
 
 const TEMPLATES = [
@@ -36,7 +36,7 @@ const ManageCVs = () => {
   const fetchCvs = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await cvService.getMyCvs({ pageSize: 50 });
+      const res = await cvApi.getMyCvs({ pageSize: 50 });
       if (res.success && res.data) {
         setCvs(res.data.items || []);
       }
@@ -69,7 +69,7 @@ const ManageCVs = () => {
     }
     setSaving(true);
     try {
-      await cvService.createCv(formData);
+      await cvApi.create(formData);
       alert("Tạo CV thành công!");
       setShowCreateModal(false);
       resetForm();
@@ -85,7 +85,7 @@ const ManageCVs = () => {
     if (!formData.title.trim() || !selectedCv) return;
     setSaving(true);
     try {
-      await cvService.updateCv(selectedCv.cvId, formData);
+      await cvApi.updateCv(selectedCv.cvId, formData);
       alert("Cập nhật CV thành công!");
       setShowEditModal(false);
       setSelectedCv(null);
@@ -101,7 +101,7 @@ const ManageCVs = () => {
   const handleDelete = async (cvId) => {
     if (!window.confirm("Bạn có chắc muốn xóa CV này?")) return;
     try {
-      await cvService.deleteCv(cvId);
+      await cvApi.deleteCv(cvId);
       alert("Đã xóa CV!");
       fetchCvs();
     } catch (err) {
@@ -111,7 +111,7 @@ const ManageCVs = () => {
 
   const handleSetDefault = async (cvId) => {
     try {
-      await cvService.setDefaultCv(cvId);
+      await cvApi.setDefault(cvId);
       fetchCvs();
     } catch (err) {
       alert("Lỗi: " + (err.response?.data?.message || "Không thể đặt mặc định"));
@@ -120,7 +120,7 @@ const ManageCVs = () => {
 
   const handleToggleVisibility = async (cvId, currentPublic) => {
     try {
-      await cvService.updateVisibility(cvId, { isPublic: !currentPublic });
+      await cvApi.updateVisibility(cvId, { isPublic: !currentPublic });
       fetchCvs();
     } catch (err) {
       alert("Lỗi: " + (err.response?.data?.message || "Không thể thay đổi"));

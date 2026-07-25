@@ -6,7 +6,7 @@ import {
   Wand2, Calendar, CheckCircle, GraduationCap, Briefcase, Star, Save, Edit2, ChevronLeft,
   Brain, Sparkles, FileText, Target, Lightbulb, Loader2, Copy, Check, X, History, Award, Heart
 } from 'lucide-react';
-import { scoreMyCV, improveMyCV, suggestImprovements, generateObjective } from '../services/cvService';
+//import { scoreMyCV, improveMyCV, suggestImprovements, generateObjective } from '../services/cvService';
 import { cvService as cvApi } from '../services/cvApiService';
 import PaginationBar from '../components/PaginationBar';
 import '../CSS/CVMaker.css';

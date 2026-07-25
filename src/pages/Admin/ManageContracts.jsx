@@ -159,12 +159,9 @@ const ManageContracts = () => {
                   </div>
 
                   <div className="d-flex gap-2">
-                    <Button as={Link} to={`/contract/${c.contractId}`} variant="outline-light" size="sm" className="mj-btn-sm">
-                      <Eye size={13} /> Xem
-                    </Button>
                     {c.status === 'DISPUTED' && (
                       <Button variant="danger" size="sm" className="mj-btn-sm" onClick={() => { setSelectedContract(c); setShowDetailModal(true); }}>
-                        <AlertTriangle size={13} /> Xử lý
+                        <AlertTriangle size={13} /> Xử lý tranh chấp
                       </Button>
                     )}
                   </div>

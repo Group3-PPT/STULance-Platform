@@ -51,13 +51,16 @@ const Contract = () => {
     try {
       const userId = await authService.ensureUserId();
       if (userId) setCurrentUserId(userId);
+      const isAdmin = currentUserRole === 'ADMIN';
+      const detailFn = isAdmin ? contractService.adminGetContractDetail : contractService.getContractDetail;
+
       const [contRes, sigRes, progressRes, deliveryRes, evalRes, revisionRes] = await Promise.allSettled([
-        contractService.getContractDetail(id),
-        contractSignatureService.getContractSignatures(id),
-        contractService.getProgress(id),
-        contractService.getDeliveries(id),
-        contractService.getEvaluates(id),
-        contractService.getRevisionRequests(id)
+        detailFn(id),
+        isAdmin ? Promise.resolve({ success: false }) : contractSignatureService.getContractSignatures(id),
+        isAdmin ? Promise.resolve({ success: false }) : contractService.getProgress(id),
+        isAdmin ? Promise.resolve({ success: false }) : contractService.getDeliveries(id),
+        isAdmin ? Promise.resolve({ success: false }) : contractService.getEvaluates(id),
+        isAdmin ? Promise.resolve({ success: false }) : contractService.getRevisionRequests(id)
       ]);
 
       if (contRes.status === 'fulfilled') {
