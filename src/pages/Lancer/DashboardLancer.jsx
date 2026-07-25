@@ -393,9 +393,16 @@ const DashboardLancer = () => {
                             </Col>
                             <Col md={3} className="text-md-end mt-2 mt-md-0">
                               <div className="small fw-bold text-success mb-2">{formatMoney(item.totalBudget || item.totalAmount)}</div>
-                              <Button as={Link} to={cfg.link} variant={cfg.variant === 'warning' ? 'primary' : 'outline-light'} className="x-small fw-bold px-3 py-2 shadow-glow d-flex align-items-center gap-1 ms-auto">
-                                {cfg.btnIcon} {cfg.btnText}
-                              </Button>
+                              <div className="d-flex gap-2 justify-content-md-end flex-wrap">
+                                {item.status === 'SIGNING' && (
+                                  <Button as={Link} to={`/contract/${item.contractId}`} variant="outline-light" className="x-small fw-bold px-3 py-2 d-flex align-items-center gap-1">
+                                    <FileText size={14} /> XEM HỢP ĐỒNG
+                                  </Button>
+                                )}
+                                <Button as={Link} to={cfg.link} variant={cfg.variant === 'warning' ? 'primary' : 'outline-light'} className="x-small fw-bold px-3 py-2 shadow-glow d-flex align-items-center gap-1">
+                                  {cfg.btnIcon} {cfg.btnText}
+                                </Button>
+                              </div>
                             </Col>
                           </Row>
                         </div>

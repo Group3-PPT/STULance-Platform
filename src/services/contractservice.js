@@ -25,7 +25,8 @@ export const contractService = {
     cancelContract: (contractId) => api.patch(`/v1/contracts/${contractId}/cancel`).then(res => res.data),
     completeContract: (contractId) => api.patch(`/v1/contracts/${contractId}/complete`).then(res => res.data),
     disputeContract: (contractId, data) => api.patch(`/v1/contracts/${contractId}/dispute`, data).then(res => res.data),
-    requestRevision: (contractId, data) => api.post(`/v1/contracts/${contractId}/request-revision`, data).then(res => res.data),
+    requestRevision: (contractId, data) => api.post(`/v1/contracts/${contractId}/revision-requests`, data).then(res => res.data),
+    getRevisionRequests: (contractId) => api.get(`/v1/contracts/${contractId}/revision-requests`).then(res => res.data),
 
     // --- Cancellation Requests ---
     getCancellationRequests: (contractId) => api.get(`/v1/contracts/${contractId}/cancellation-requests`).then(res => res.data),

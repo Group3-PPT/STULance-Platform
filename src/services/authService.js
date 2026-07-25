@@ -1,6 +1,17 @@
 import api from './api';
+import axios from 'axios';
+
+const API_BASE_URL = "/api";
+const X_API_KEY = "STULANCE_SECRET_API_KEY_2026";
+
+const rawApi = axios.create({
+    baseURL: API_BASE_URL,
+    headers: { 'Content-Type': 'application/json', 'X-API-KEY': X_API_KEY },
+    timeout: 15000,
+});
 
 let refreshTimer = null;
+let isRefreshing = false;
 const REFRESH_INTERVAL = 14 * 60 * 1000; // 14 phút
 const SESSION_MAX_AGE = 7 * 24 * 60 * 60 * 1000; // 7 ngày
 
@@ -44,8 +55,11 @@ export const authService = {
         const oldRefreshToken = storage.getRefresh();
         if (!oldRefreshToken) return null;
 
+        if (isRefreshing) return null;
+        isRefreshing = true;
+
         try {
-            const res = await api.post('/v1/auth/refresh-token', { refreshToken: oldRefreshToken });
+            const res = await rawApi.post('/v1/auth/refresh-token', { refreshToken: oldRefreshToken });
             const data = res.data.data || res.data;
             if (data.accessToken) {
                 storage.setAccess(data.accessToken);
@@ -63,6 +77,8 @@ export const authService = {
                 authService.handleSessionExpired();
             }
             return null;
+        } finally {
+            isRefreshing = false;
         }
     },
 

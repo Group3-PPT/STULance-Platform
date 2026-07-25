@@ -37,6 +37,9 @@ const Contract = () => {
   const [evalComment, setEvalComment] = useState('');
   const [showDisputeModal, setShowDisputeModal] = useState(false);
   const [disputeReason, setDisputeReason] = useState('');
+  const [showRevisionModal, setShowRevisionModal] = useState(false);
+  const [revisionReason, setRevisionReason] = useState('');
+  const [revisionRequests, setRevisionRequests] = useState([]);
 
   const currentUserRole = localStorage.getItem('userRole');
   const [currentUserId, setCurrentUserId] = useState(() => localStorage.getItem('userId'));
@@ -46,12 +49,13 @@ const Contract = () => {
     try {
       const userId = await authService.ensureUserId();
       if (userId) setCurrentUserId(userId);
-      const [contRes, sigRes, progressRes, deliveryRes, evalRes] = await Promise.allSettled([
+      const [contRes, sigRes, progressRes, deliveryRes, evalRes, revisionRes] = await Promise.allSettled([
         contractService.getContractDetail(id),
         contractSignatureService.getContractSignatures(id),
         contractService.getProgress(id),
         contractService.getDeliveries(id),
-        contractService.getEvaluates(id)
+        contractService.getEvaluates(id),
+        contractService.getRevisionRequests(id)
       ]);
 
       if (contRes.status === 'fulfilled') {
@@ -76,6 +80,10 @@ const Contract = () => {
         const evalData = evalRes.value.data;
         setEvaluates(Array.isArray(evalData) ? evalData : (evalData?.items || []));
       }
+      if (revisionRes.status === 'fulfilled') {
+        const revData = revisionRes.value.data;
+        setRevisionRequests(Array.isArray(revData) ? revData : (revData?.items || []));
+      }
     } catch (err) {
       console.error("Lỗi tải hợp đồng:", err);
     } finally {
@@ -91,10 +99,12 @@ const Contract = () => {
   const sigList = Array.isArray(signatures) ? signatures : [];
   const isLocked = Boolean(contract?.isContentLocked || contract?.contentLockedAt);
 
-  const bothSigned = contract?.status !== 'SIGNING';
-  const hasEnterpriseSigned = bothSigned || isLocked;
-  const hasStudentSigned = bothSigned || isLocked;
-  const iamSigned = contract?.status !== 'SIGNING';
+  const hasEnterpriseSigned = sigList.some(s => s.signerRole === 'CLIENT' || s.signerRole === 'ENTERPRISE');
+  const hasStudentSigned = sigList.some(s => s.signerRole === 'PROVIDER' || s.signerRole === 'STUDENT');
+  const iamSigned = sigList.some(s => {
+    const uid = s.userId || s.signerUserId;
+    return uid && String(uid) === String(currentUserId);
+  }) || contract?.status !== 'SIGNING';
 
   const handlePayContract = async () => {
     try {
@@ -241,6 +251,22 @@ const Contract = () => {
       initData();
     } catch (err) {
       alert("Lỗi: " + (err.response?.data?.message || "Không thể gửi"));
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleSubmitRevision = async () => {
+    if (!revisionReason.trim()) { alert("Vui lòng nhập lý do chỉnh sửa"); return; }
+    setIsSaving(true);
+    try {
+      await contractService.requestRevision(id, { reason: revisionReason });
+      setRevisionReason('');
+      setShowRevisionModal(false);
+      alert("Yêu cầu chỉnh sửa đã được gửi!");
+      initData();
+    } catch (err) {
+      alert("Lỗi: " + (err.response?.data?.message || "Không thể gửi yêu cầu"));
     } finally {
       setIsSaving(false);
     }
@@ -412,7 +438,7 @@ const Contract = () => {
                     {hasEnterpriseSigned ? (
                       <div className="stamp-box signed">
                         {(() => {
-                          const entSig = sigList.find(s => s.signerRole === 'ENTERPRISE');
+                          const entSig = sigList.find(s => s.signerRole === 'CLIENT' || s.signerRole === 'ENTERPRISE');
                           const sigImg = entSig?.signatureImageUrl || entSig?.signatureData || entSig?.signatureImageFile;
                           return sigImg ? (
                             <img src={sigImg} alt="Chữ ký DN" style={{maxWidth: '180px', maxHeight: '80px', objectFit: 'contain'}} />
@@ -429,7 +455,7 @@ const Contract = () => {
                     {hasStudentSigned ? (
                       <div className="stamp-box signed-blue">
                         {(() => {
-                          const stuSig = sigList.find(s => s.signerRole === 'STUDENT');
+                          const stuSig = sigList.find(s => s.signerRole === 'PROVIDER' || s.signerRole === 'STUDENT');
                           const sigImg = stuSig?.signatureImageUrl || stuSig?.signatureData || stuSig?.signatureImageFile;
                           return sigImg ? (
                             <img src={sigImg} alt="Chữ ký SV" style={{maxWidth: '180px', maxHeight: '80px', objectFit: 'contain'}} />
@@ -494,6 +520,12 @@ const Contract = () => {
                   {contract.status === 'DELIVERED' && isClient && (
                     <Button onClick={() => handleAction('complete')} variant="success" className="py-3 fw-bold shadow-glow" disabled={isSaving}>
                       {isSaving ? <Loader2 className="spinner" /> : <CheckCircle size={18} className="me-2" />} NGHIỆM THU & GIẢI NGÂN
+                    </Button>
+                  )}
+
+                  {contract.status === 'DELIVERED' && isClient && (
+                    <Button onClick={() => setShowRevisionModal(true)} variant="outline-warning" className="py-2 x-small fw-bold">
+                      <MessageSquare size={14} className="me-2" /> YÊU CẦU CHỈNH SỬA
                     </Button>
                   )}
 
@@ -613,7 +645,23 @@ const Contract = () => {
                       ))}
                       {deliveries.length === 0 && <p className="x-small text-white-50 text-center py-3">Chưa có bản giao nào</p>}
 
-                      {contract.status === 'IN_PROGRESS' && isProvider && (
+                      {revisionRequests.length > 0 && (
+                        <div className="mt-3 mb-2">
+                          <p className="x-small fw-bold text-warning mb-2"><MessageSquare size={12} className="me-1" /> YÊU CẦU CHỈNH SỬA ({revisionRequests.length})</p>
+                          {revisionRequests.map((r, idx) => (
+                            <div key={r.revisionRequestId || idx} className="p-2 mb-2 rounded" style={{ background: 'rgba(245,158,11,0.06)', border: '1px solid rgba(245,158,11,0.15)' }}>
+                              <div className="d-flex align-items-center gap-2 mb-1">
+                                <MessageSquare size={11} className="text-warning" />
+                                <span className="x-small fw-bold text-warning">{r.createdBy || 'Doanh nghiệp'}</span>
+                                <span className="x-small text-white-50" style={{ fontSize: 10 }}>{r.createdAt ? new Date(r.createdAt).toLocaleString('vi-VN') : ''}</span>
+                              </div>
+                              <p className="x-small text-white mb-0">{r.reason || r.content || 'Không có lý do'}</p>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {['IN_PROGRESS', 'DELIVERED'].includes(contract.status) && isProvider && (
                         <div className="mt-3 p-3 rounded" style={{ background: 'rgba(255,255,255,0.03)' }}>
                           <Form.Label className="x-small fw-bold">Link bản giao (Google Drive, Figma, GitHub...)</Form.Label>
                           <Form.Control size="sm" className="bg-dark-input text-white border-0 mb-2"
@@ -672,6 +720,45 @@ const Contract = () => {
           </Col>
         </Row>
       </Container>
+
+      {/* REVISION REQUEST MODAL */}
+      <Modal show={showRevisionModal} onHide={() => { setShowRevisionModal(false); setRevisionReason(''); }} centered dialogClassName="modal-dark">
+        <Modal.Header closeButton className="border-0 pb-0">
+          <Modal.Title className="fw-bold d-flex align-items-center gap-2">
+            <div style={{background:'rgba(245,158,11,0.1)', color:'#f59e0b', width:40, height:40, borderRadius:12, display:'flex', alignItems:'center', justifyContent:'center'}}>
+              <MessageSquare size={18} />
+            </div>
+            <div>
+              <span className="text-white">Yêu cầu chỉnh sửa</span>
+              <p className="x-small text-white-50 mb-0">Gửi yêu cầu chỉnh sửa cho Sinh viên</p>
+            </div>
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body className="pt-3">
+          <div className="mb-3 p-3 rounded" style={{background:'rgba(245,158,11,0.06)', border:'1px solid rgba(245,158,11,0.15)'}}>
+            <p className="x-small text-white-50 mb-1">Hợp đồng: <strong className="text-white">{contract?.jobTitle || contract?.contractName}</strong></p>
+            <p className="x-small text-white-50 mb-0">Bản giao hiện tại: <strong className="text-warning">{deliveries.length} bản giao</strong></p>
+          </div>
+
+          <Form.Group className="mb-3">
+            <Form.Label className="x-small fw-bold text-white-50">LÝ DO CHỈNH SỬA *</Form.Label>
+            <Form.Control
+              as="textarea"
+              rows={4}
+              placeholder="Mô tả chi tiết những nội dung cần chỉnh sửa..."
+              className="bg-dark-input text-white border-0"
+              value={revisionReason}
+              onChange={(e) => setRevisionReason(e.target.value)}
+            />
+          </Form.Group>
+        </Modal.Body>
+        <Modal.Footer className="border-0 pt-0">
+          <Button variant="outline-light" onClick={() => { setShowRevisionModal(false); setRevisionReason(''); }}>Hủy</Button>
+          <Button variant="warning" className="text-dark fw-bold" onClick={handleSubmitRevision} disabled={!revisionReason.trim() || isSaving}>
+            {isSaving ? <><Loader2 className="spinner me-1" size={14} /> Đang gửi...</> : <><MessageSquare size={14} className="me-1" /> Gửi yêu cầu</>}
+          </Button>
+        </Modal.Footer>
+      </Modal>
 
       {/* DISPUTE MODAL */}
       <Modal show={showDisputeModal} onHide={() => setShowDisputeModal(false)} centered dialogClassName="modal-dark">

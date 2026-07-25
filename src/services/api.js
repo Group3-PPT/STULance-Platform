@@ -12,8 +12,16 @@ const api = axios.create({
     timeout: 30000,
 });
 
+const rawApi = axios.create({
+    baseURL: API_BASE_URL,
+    headers: {
+        'Content-Type': 'application/json',
+        'X-API-KEY': X_API_KEY
+    },
+    timeout: 15000,
+});
+
 let isRefreshing = false;
-let failedQueue = [];
 let refreshAttempts = 0;
 const MAX_REFRESH_ATTEMPTS = 3;
 
@@ -24,6 +32,8 @@ const processQueue = (error, token = null) => {
     });
     failedQueue = [];
 };
+
+let failedQueue = [];
 
 const clearAuth = () => {
     localStorage.removeItem('accessToken');
@@ -88,9 +98,8 @@ api.interceptors.response.use(
         }
 
         try {
-            const res = await axios.post(`${API_BASE_URL}/v1/auth/refresh-token`,
-                { refreshToken: oldRefreshToken },
-                { headers: { 'X-API-KEY': X_API_KEY, 'Content-Type': 'application/json' }, timeout: 15000 }
+            const res = await rawApi.post('/v1/auth/refresh-token',
+                { refreshToken: oldRefreshToken }
             );
 
             const data = res.data.data || res.data;
