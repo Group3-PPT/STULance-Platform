@@ -1,38 +1,61 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Button, Badge, Spinner } from 'react-bootstrap';
 import { useParams, Link } from 'react-router-dom';
-import { 
-  MapPin, Globe, Mail, Phone, Users, 
-  CheckCircle, ShieldCheck, Info, Heart, Loader2 
+import {
+  MapPin, Globe, Mail, Phone, Users,
+  CheckCircle, ShieldCheck, Info, Heart, Loader2,
+  Briefcase, Calendar, DollarSign, ExternalLink, Users as UsersIcon
 } from 'lucide-react';
 import { enterpriseService } from '../../services/enterprise.service';
+import { jobService } from '../../services/jobservice';
 import '../../CSS/BusinessProfile.css';
 
 const BusinessProfile = () => {
   const { id } = useParams();
   const [loading, setLoading] = useState(true);
   const [company, setCompany] = useState(null);
+  const [jobs, setJobs] = useState([]);
+  const [jobsLoading, setJobsLoading] = useState(false);
   const [isFollowing, setIsFollowing] = useState(false);
   const [followLoading, setFollowLoading] = useState(false);
+  const [isOwnProfile, setIsOwnProfile] = useState(false);
 
-  // 1. Tải dữ liệu từ Backend
   useEffect(() => {
     const fetchProfile = async () => {
+      setLoading(true);
       try {
         let res;
         if (id) {
-          // Nếu có ID trên URL -> Xem hồ sơ công khai
           res = await enterpriseService.getPublicProfile(id);
+          setIsOwnProfile(false);
         } else {
-          // Nếu không có ID -> Xem hồ sơ của chính mình
           res = await enterpriseService.getMe();
+          setIsOwnProfile(true);
         }
 
-        if (res.success) {
-          setCompany(res.data);
+        if (res.success !== false) {
+          const data = res.data || res;
+          setCompany(data);
+
+          setJobsLoading(true);
+          try {
+            if (id) {
+              const jobRes = await jobService.getAllPublicJobs({ enterpriseId: id, pageSize: 50 });
+              const jobData = jobRes.data || jobRes;
+              setJobs(jobData.items || []);
+            } else {
+              const jobRes = await jobService.getMyJobs({ pageSize: 50 });
+              const jobData = jobRes.data || jobRes;
+              setJobs(jobData.items || []);
+            }
+          } catch (e) {
+            console.error("Lỗi tải bài đăng:", e);
+          } finally {
+            setJobsLoading(false);
+          }
         }
-      } catch (err) {
-        console.error("Lỗi tải hồ sơ doanh nghiệp:", err);
+    } catch (err) {
+      console.error("Lỗi tải hồ sơ doanh nghiệp:", err);
       } finally {
         setLoading(false);
       }
@@ -52,6 +75,18 @@ const BusinessProfile = () => {
     }
   };
 
+  const formatMoney = (val) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val || 0);
+
+  const getStatusBadge = (status) => {
+    const map = {
+      'PENDING': { bg: 'warning', text: 'dark', label: 'Chờ duyệt' },
+      'APPROVED': { bg: 'success', text: 'white', label: 'Đang tuyển' },
+      'REJECTED': { bg: 'danger', text: 'white', label: 'Bị từ chối' },
+      'CLOSED': { bg: 'secondary', text: 'white', label: 'Đã đóng' },
+    };
+    return map[status] || { bg: 'secondary', text: 'white', label: status };
+  };
+
   if (loading) return (
     <div className="vh-100 d-flex justify-content-center align-items-center bg-dark">
       <Spinner animation="border" variant="primary" />
@@ -62,44 +97,48 @@ const BusinessProfile = () => {
 
   return (
     <div className="biz-profile-page animate-fade-in">
-      {/* HEADER: Banner & Logo */}
       <section className="biz-hero">
-        <div className="biz-banner-wrap">
-          {/* Banner hiện tại lấy tạm ảnh mẫu vì trong API chưa có trường Banner riêng */}
+          <div className="biz-banner-wrap">
           <img src="https://images.unsplash.com/photo-1497366216548-37526070297c" alt="Banner" className="biz-banner-img" />
         </div>
         <Container>
           <div className="biz-main-info-row">
             <div className="biz-logo-large glass-card p-2 bg-white">
-              <img 
-                src={company.logoUrl || 'https://via.placeholder.com/150?text=LOGO'} 
-                alt="Logo" 
+              <img
+                src={company.logoUrl || 'https://via.placeholder.com/150?text=LOGO'}
+                alt="Logo"
                 className="w-100 h-100 object-fit-contain"
               />
             </div>
             <div className="biz-title-area">
               <h1 className="fw-bold text-white d-flex align-items-center gap-2">
-                {company.companyName} 
+                {company.companyName}
                 {company.verificationStatus === 'VERIFIED' && <CheckCircle className="text-primary-glow" size={24} />}
               </h1>
               <p className="text-white-50 mb-2"><MapPin size={16} className="me-1" /> {company.address || 'Chưa cập nhật địa chỉ'}</p>
               <div className="d-flex gap-2">
                 <Badge bg="primary" className="px-3">Doanh nghiệp</Badge>
                 <Badge bg={company.verificationStatus === 'VERIFIED' ? "success" : "secondary"} className="px-3">
-                    {company.verificationStatus}
+                  {company.verificationStatus}
                 </Badge>
               </div>
             </div>
             <div className="biz-action-area">
-              <Button 
-                variant={isFollowing ? "outline-danger" : "primary"} 
-                className="fw-bold px-4 py-2 shadow-glow"
-                onClick={handleFollow}
-                disabled={followLoading}
-              >
-                {followLoading ? <Loader2 className="spinner me-2" size={16} /> : <Heart size={16} className="me-2" fill={isFollowing ? "currentColor" : "none"} />}
-                {isFollowing ? 'BỎ THEO DÕI' : 'THEO DÕI CÔNG TY'}
-              </Button>
+              {isOwnProfile ? (
+                <Button as={Link} to="/businesses/business-profile-settings" variant="outline-primary" className="fw-bold px-4 py-2">
+                  <Info size={16} className="me-2" /> CHỈNH SỬA HỒ SƠ
+                </Button>
+              ) : (
+                <Button
+                  variant={isFollowing ? "outline-danger" : "primary"}
+                  className="fw-bold px-4 py-2 shadow-glow"
+                  onClick={handleFollow}
+                  disabled={followLoading}
+                >
+                  {followLoading ? <Loader2 className="spinner me-2" size={16} /> : <Heart size={16} className="me-2" fill={isFollowing ? "currentColor" : "none"} />}
+                  {isFollowing ? 'BỎ THEO DÕI' : 'THEO DÕI CÔNG TY'}
+                </Button>
+              )}
             </div>
           </div>
         </Container>
@@ -107,7 +146,6 @@ const BusinessProfile = () => {
 
       <Container className="pb-5 mt-5">
         <Row className="g-4">
-          {/* CỘT TRÁI: GIỚI THIỆU */}
           <Col lg={8}>
             <div className="glass-card p-4 mb-4 shadow-sm">
               <h4 className="text-white fw-bold mb-3 border-start border-primary border-4 ps-3">Về chúng tôi</h4>
@@ -116,14 +154,52 @@ const BusinessProfile = () => {
               </p>
             </div>
 
-            {/* Phần việc làm (Cần API Job riêng để map vào đây) */}
             <div className="glass-card p-4 shadow-sm">
-               <h4 className="text-white fw-bold mb-4 border-start border-primary border-4 ps-3">Vị trí đang tuyển</h4>
-               <p className="text-muted italic small text-center py-4">Chưa có vị trí tuyển dụng nào được đăng.</p>
+              <h4 className="text-white fw-bold mb-4 border-start border-primary border-4 ps-3">
+                <Briefcase size={18} className="me-2" /> Vị trí đang tuyển ({jobs.length})
+              </h4>
+              {jobsLoading ? (
+                <div className="text-center py-4"><Loader2 className="spinner text-primary" size={24} /></div>
+              ) : jobs.length > 0 ? (
+                <div className="d-grid gap-3">
+                  {jobs.map(job => {
+                    const st = getStatusBadge(job.status);
+                    return (
+                      <div key={job.jobId} className="p-3 rounded-3" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                        <div className="d-flex justify-content-between align-items-start">
+                          <div className="flex-fill">
+                            <div className="d-flex align-items-center gap-2 mb-1">
+                              <Badge bg={st.bg} text={st.text} className="x-small fw-bold">{st.label}</Badge>
+                              {job.jobType && <Badge bg="info" className="x-small">{job.jobType}</Badge>}
+                            </div>
+                            <h6 className="fw-bold text-white mb-1">{job.title || job.jobTitle}</h6>
+                            <div className="d-flex flex-wrap gap-3 x-small text-white-50 mb-2">
+                              {job.salary && <span><DollarSign size={11} className="me-1" />{formatMoney(job.salary)}</span>}
+                              {job.location && <span><MapPin size={11} className="me-1" />{job.location}</span>}
+                              {job.createdAt && <span><Calendar size={11} className="me-1" />{new Date(job.createdAt).toLocaleDateString('vi-VN')}</span>}
+                            </div>
+                          </div>
+                          <div className="d-flex gap-2">
+                            {isOwnProfile && (
+                              <Button as={Link} to="/manage-jobs" variant="outline-primary" size="sm" className="x-small fw-bold px-3">
+                                Quản lý
+                              </Button>
+                            )}
+                            <Button as={Link} to={`/jobs/${job.jobId}`} variant="outline-light" size="sm" className="x-small fw-bold px-3">
+                              <ExternalLink size={12} className="me-1" /> Xem
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <p className="text-muted italic small text-center py-4">Chưa có vị trí tuyển dụng nào được đăng.</p>
+              )}
             </div>
           </Col>
 
-          {/* CỘT PHẢI: THÔNG TIN CHI TIẾT */}
           <Col lg={4}>
             <div className="glass-card p-4 mb-4 shadow-sm sticky-top" style={{ top: '100px' }}>
               <h5 className="text-white fw-bold mb-4 d-flex align-items-center gap-2">
@@ -135,7 +211,7 @@ const BusinessProfile = () => {
                   <div>
                     <strong className="d-block text-white">Website</strong>
                     <a href={company.website} target="_blank" rel="noreferrer" className="text-decoration-none text-primary">
-                        {company.website || 'N/A'}
+                      {company.website || 'N/A'}
                     </a>
                   </div>
                 </li>
@@ -154,10 +230,10 @@ const BusinessProfile = () => {
                   </div>
                 </li>
               </ul>
-              
+
               <div className="mt-4 pt-4 border-top border-secondary">
                 <div className={`d-flex align-items-center gap-2 small fw-bold ${company.verificationStatus === 'VERIFIED' ? 'text-primary' : 'text-muted'}`}>
-                  <ShieldCheck size={16} /> 
+                  <ShieldCheck size={16} />
                   {company.verificationStatus === 'VERIFIED' ? 'Doanh nghiệp đã được xác thực' : 'Đang chờ xác thực hồ sơ'}
                 </div>
               </div>

@@ -532,12 +532,6 @@ const Contract = () => {
                     </Button>
                   )}
 
-                  {contract.status === 'IN_PROGRESS' && isClient && (
-                    <Button onClick={() => handleAction('complete')} variant="success" className="py-3 fw-bold shadow-glow" disabled={isSaving}>
-                      {isSaving ? <Loader2 className="spinner" /> : <CheckCircle size={18} className="me-2" />} XÁC NHẬN NGHIỆM THU
-                    </Button>
-                  )}
-
                   {(contract.status === 'IN_PROGRESS' || contract.status === 'DELIVERED') && (
                     <Button onClick={() => handleAction('cancel')} variant="outline-warning" className="py-2 x-small fw-bold">
                       <AlertTriangle size={14} className="me-2" /> YÊU CẦU HỦY

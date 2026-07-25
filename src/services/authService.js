@@ -74,7 +74,7 @@ export const authService = {
         } catch (err) {
             console.error("Refresh token thất bại:", err.response?.status);
             if (err.response?.status === 401 || err.response?.status === 400) {
-                authService.handleSessionExpired();
+                console.warn("Refresh token hết hạn, sẽ logout khi access token hết hạn.");
             }
             return null;
         } finally {

@@ -114,13 +114,13 @@ const ManagePayments = () => {
     }
   };
 
-  const totalEscrow = contracts.reduce((sum, c) => sum + (c.totalAmount || 0), 0);
-  const completedRevenue = contracts.filter(c => c.status === 'COMPLETED').reduce((sum, c) => sum + (c.totalAmount || 0), 0);
-  const serviceOrderRevenue = orders.filter(o => o.status === 'COMPLETED').reduce((sum, o) => sum + (o.totalAmount || 0), 0);
+  const totalEscrow = contracts.reduce((sum, c) => sum + (c.totalBudget || c.totalAmount || 0), 0);
+  const completedRevenue = contracts.filter(c => c.status === 'COMPLETED').reduce((sum, c) => sum + (c.totalBudget || c.totalAmount || 0), 0);
+  const serviceOrderRevenue = orders.filter(o => o.status === 'COMPLETED').reduce((sum, o) => sum + (o.totalBudget || o.totalAmount || 0), 0);
   const totalRevenue = completedRevenue + serviceOrderRevenue;
   const pendingWithdrawals = withdrawals.filter(w => w.status === 'PENDING').length;
 
-  const formatMoney = (val) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val);
+  const formatMoney = (val) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val || 0);
 
   return (
     <div className="pay-manage-container animate-fade-in">
@@ -233,7 +233,7 @@ const ManagePayments = () => {
                 id: c.contractId?.substring(0, 8),
                 from: c.clientName || c.enterpriseName || 'N/A',
                 to: c.providerName || c.studentName || 'N/A',
-                amount: c.totalAmount,
+                amount: c.totalBudget || c.totalAmount || c.amount || 0,
                 type: 'Hợp đồng',
                 status: c.status,
                 date: new Date(c.createdAt).toLocaleDateString('vi-VN')
@@ -242,7 +242,7 @@ const ManagePayments = () => {
                 id: o.orderId?.substring(0, 8),
                 from: o.buyerName || 'N/A',
                 to: o.sellerName || 'N/A',
-                amount: o.totalAmount,
+                amount: o.totalBudget || o.totalAmount || o.amount || 0,
                 type: 'Đơn hàng DV',
                 status: o.status,
                 date: new Date(o.createdAt).toLocaleDateString('vi-VN')

@@ -22,6 +22,7 @@ const ManageJobs = () => {
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('jobs');
   const [searchTerm, setSearchTerm] = useState('');
+  const [filterStatus, setFilterStatus] = useState('');
 
   const [showBidsModal, setShowBidsModal] = useState(false);
   const [selectedJob, setSelectedJob] = useState(null);
@@ -48,14 +49,15 @@ const ManageJobs = () => {
   const [contractsPagination, setContractsPagination] = useState({ page: 1, totalPages: 1, totalItems: 0 });
   const pageSize = 12;
 
-  const fetchMyJobs = useCallback(async (page = 1, keyword = '') => {
+  const fetchMyJobs = useCallback(async (page = 1, keyword = '', status = '') => {
     setLoading(true);
     setError(null);
     try {
       const res = await jobService.getMyJobs({
         page,
         pageSize,
-        keyword: keyword || undefined
+        keyword: keyword || undefined,
+        status: status || undefined
       });
       if (res.success && res.data) {
         const data = res.data;
@@ -157,11 +159,11 @@ const ManageJobs = () => {
   }, []);
 
   useEffect(() => {
-    if (activeTab === 'jobs') fetchMyJobs(1);
+    if (activeTab === 'jobs') fetchMyJobs(1, '', filterStatus);
     else if (activeTab === 'contracts') fetchContracts(1);
     else if (activeTab === 'orders') fetchServiceOrders(1);
     setSearchTerm('');
-  }, [activeTab]);
+  }, [activeTab, filterStatus]);
 
   useEffect(() => {
     dashboardService.getEnterpriseDashboard()
@@ -170,13 +172,13 @@ const ManageJobs = () => {
   }, []);
 
   const handleTabSearch = () => {
-    if (activeTab === 'jobs') fetchMyJobs(1, searchTerm);
+    if (activeTab === 'jobs') fetchMyJobs(1, searchTerm, filterStatus);
     else if (activeTab === 'contracts') fetchContracts(1, searchTerm);
     else if (activeTab === 'orders') fetchServiceOrders(1, searchTerm);
   };
 
   const handleTabPageChange = (page) => {
-    if (activeTab === 'jobs') fetchMyJobs(page, searchTerm);
+    if (activeTab === 'jobs') fetchMyJobs(page, searchTerm, filterStatus);
     else if (activeTab === 'contracts') fetchContracts(page, searchTerm);
     else if (activeTab === 'orders') fetchServiceOrders(page, searchTerm);
   };
@@ -209,7 +211,7 @@ const ManageJobs = () => {
       }
       alert("Tạo hợp đồng thành công!");
       setShowCreateContractModal(false);
-      fetchMyJobs(jobsPagination.page);
+      fetchMyJobs(jobsPagination.page, '', filterStatus);
       fetchContracts(contractsPagination.page);
       fetchServiceOrders(ordersPagination.page);
     } catch (err) {
@@ -318,7 +320,7 @@ const ManageJobs = () => {
       });
       alert("Cập nhật thành công!");
       setShowEditModal(false);
-      fetchMyJobs(jobsPagination.page);
+      fetchMyJobs(jobsPagination.page, '', filterStatus);
     } catch (err) {
       alert("Lỗi: " + (err.response?.data?.message || "Không thể cập nhật"));
     }
@@ -462,6 +464,24 @@ const ManageJobs = () => {
           </div>
         </div>
 
+        {activeTab === 'jobs' && (
+          <div className="d-flex gap-2 mb-4 flex-wrap">
+            {[
+              { value: '', label: 'Tất cả' },
+              { value: 'OPEN', label: 'Đang hiển thị' },
+              { value: 'PENDING', label: 'Chờ duyệt' },
+              { value: 'REJECTED', label: 'Bị từ chối' },
+              { value: 'CLOSED', label: 'Đã đóng' },
+            ].map(f => (
+              <button key={f.value}
+                className={`post-tab-btn ${filterStatus === f.value ? 'active' : ''}`}
+                style={{ fontSize: '12px', padding: '6px 14px' }}
+                onClick={() => setFilterStatus(f.value)}
+              >{f.label}</button>
+            ))}
+          </div>
+        )}
+
         {/* CONTENT */}
         {loading ? (
           <div className="text-center py-5">
@@ -498,12 +518,8 @@ const ManageJobs = () => {
                         </div>
                         <h6 className="mj-job-title">{job.title}</h6>
                         <p className="mj-job-type">{job.jobType}</p>
-                        <div className="d-flex align-items-center gap-2 mb-3">
-                          <MapPin size={12} className="text-white-50" />
-                          <span className="mj-job-meta">{job.location || 'Remote'}</span>
-                        </div>
                         <div className="d-flex justify-content-between align-items-center mb-3">
-                          <span className="mj-job-price">{job.salary > 0 ? formatMoney(job.salary) : 'Chưa có lương'}</span>
+                          <span className="mj-job-price">{job.salary > 0 ? `Giá tiền: ${formatMoney(job.salary)}` : 'Thỏa thuận'}</span>
                           <span className="mj-job-meta">
                             <Users size={12} className="me-1" /> {job.bidCount || 0} ứng viên
                           </span>
@@ -515,6 +531,9 @@ const ManageJobs = () => {
                           <button className="mj-action-btn primary" onClick={() => handleEditJob(job)}>
                             <PenTool size={14} /> Chỉnh sửa
                           </button>
+                          <Button as={Link} to={`/jobs/${job.jobId}`} variant="outline-light" size="sm" className="mj-action-btn">
+                            <ExternalLink size={14} /> Xem
+                          </Button>
                           <button className="mj-action-btn danger" onClick={() => handleDelete(job.jobId)}>
                             <X size={14} />
                           </button>

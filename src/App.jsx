@@ -208,6 +208,7 @@ const router = createBrowserRouter([
           { path: 'manage-jobs', element: <ManageJobs /> },
           { path: 'saved-services', element: <SavedServices /> },
           { path: 'businesses/business-profile-settings', element: <BusinessProfileSettings /> },
+          { path: 'businesses/business-profile/me', element: <BusinessProfile /> },
         ]
       },
 
