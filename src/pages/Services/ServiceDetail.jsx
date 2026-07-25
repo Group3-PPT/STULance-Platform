@@ -14,6 +14,8 @@ const ServiceDetail = () => {
   const [loading, setLoading] = useState(true);
   const [similarServices, setSimilarServices] = useState([]);
   const [showReportModal, setShowReportModal] = useState(false);
+  const currentUserId = localStorage.getItem('userId');
+  const isOwnService = service && String(service.studentId) === String(currentUserId);
 
   useEffect(() => {
     const fetchDetail = async () => {
@@ -84,7 +86,9 @@ const ServiceDetail = () => {
                 </div>
                 <div className="d-flex gap-2">
                   <button className="btn btn-outline-light btn-sm rounded-pill px-3"><Share2 size={14}/> Chia sẻ</button>
-                  <button className="btn btn-outline-danger btn-sm rounded-pill px-3" onClick={() => setShowReportModal(true)}><ShieldAlert size={14}/> Tố cáo</button>
+                  {!isOwnService && (
+                    <button className="btn btn-outline-danger btn-sm rounded-pill px-3" onClick={() => setShowReportModal(true)}><ShieldAlert size={14}/> Tố cáo</button>
+                  )}
                 </div>
               </div>
 

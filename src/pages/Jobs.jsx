@@ -31,6 +31,8 @@ const Jobs = () => {
   const [actionLoading, setActionLoading] = useState(null);
   const [showReportModal, setShowReportModal] = useState(false);
   const [aiMatching, setAiMatching] = useState(false);
+  const currentUserId = localStorage.getItem('userId');
+  const isOwnJob = selectedJob && String(selectedJob.enterpriseId) === String(currentUserId);
 
   const [selectedJobType, setSelectedJobType] = useState('Tất cả');
   const [selectedSalaryRange, setSelectedSalaryRange] = useState(0);
@@ -355,7 +357,7 @@ const Jobs = () => {
                             </div>
                         </div>
                         <div className="d-flex gap-2">
-                            {token && (
+                            {token && !isOwnJob && (
                                 <Button
                                     variant="outline-danger"
                                     className="border-danger border-opacity-20 p-2 rounded-3"

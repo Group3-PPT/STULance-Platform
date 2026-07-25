@@ -102,6 +102,7 @@ const Contract = () => {
 
   const isClient = String(contract?.clientInfo?.userId || contract?.clientUserId) === String(currentUserId);
   const isProvider = String(contract?.providerInfo?.userId || contract?.providerUserId) === String(currentUserId);
+  const isOwnContract = isClient || isProvider;
 
   const sigList = Array.isArray(signatures) ? signatures : [];
   const isLocked = Boolean(contract?.isContentLocked || contract?.contentLockedAt);
@@ -555,9 +556,11 @@ const Contract = () => {
                     </Alert>
                   )}
 
-                  <Button variant="outline-danger" className="py-2 x-small fw-bold" onClick={() => setShowReportModal(true)}>
-                    <ShieldAlert size={14} className="me-2" /> TỐ CÁO HỢP ĐỒNG
-                  </Button>
+                  {!isOwnContract && (
+                    <Button variant="outline-danger" className="py-2 x-small fw-bold" onClick={() => setShowReportModal(true)}>
+                      <ShieldAlert size={14} className="me-2" /> TỐ CÁO HỢP ĐỒNG
+                    </Button>
+                  )}
 
                   {contract.status === 'CANCEL_REQUESTED' && (
                     <div className="d-grid gap-2">

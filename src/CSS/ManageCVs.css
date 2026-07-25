@@ -1,18 +1,286 @@
-/* --- MANAGE CVS PAGE --- */
+/* --- MANAGE CVS PAGE (MERGED LIST + PREVIEW) --- */
 .manage-cvs-page {
     padding: 10px;
 }
 
-.cv-card {
-    transition: transform 0.2s, border-color 0.2s;
-    border: 1px solid rgba(255, 255, 255, 0.06);
+/* LEFT PANEL: CV LIST */
+.cv-list-panel {
+    position: sticky;
+    top: 80px;
+    max-height: calc(100vh - 120px);
+    overflow: hidden;
 }
 
-.cv-card:hover {
-    transform: translateY(-3px);
-    border-color: rgba(59, 130, 246, 0.3);
+.cv-list-scroll {
+    max-height: calc(100vh - 180px);
+    overflow-y: auto;
+    padding-right: 4px;
+}
+
+.cv-list-scroll::-webkit-scrollbar {
+    width: 4px;
+}
+.cv-list-scroll::-webkit-scrollbar-thumb {
+    background: var(--primary-blue);
+    border-radius: 10px;
+}
+
+.cv-list-item {
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 12px;
+}
+
+.cv-list-item:hover {
+    border-color: rgba(59, 130, 246, 0.2);
+    background: rgba(255, 255, 255, 0.04) !important;
+}
+
+.cv-list-item-active {
+    border-color: rgba(59, 130, 246, 0.5) !important;
+    background: rgba(59, 130, 246, 0.08) !important;
+    box-shadow: 0 0 15px rgba(59, 130, 246, 0.1);
+}
+
+/* RIGHT PANEL: PREVIEW AREA */
+.cv-preview-area {
+    min-height: 600px;
+}
+
+/* A4 DOCUMENT - CVMaker style */
+.manage-cv-preview .a4-document {
+    width: 100%;
+    max-width: 794px;
+    min-height: 1123px;
+    background: white;
+    display: flex;
+    box-shadow: 0 0 40px rgba(0, 0, 0, 0.4);
+    overflow: hidden;
+    margin: 0 auto;
+    border-radius: 4px;
+}
+
+.manage-cv-preview .cv-sidebar-box {
+    width: 38%;
+    background-color: #2c3e50;
+    color: white;
+    padding: 40px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.manage-cv-preview .cv-avatar-circle {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    border: 4px solid rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+.manage-cv-preview .avatar-initials {
+    font-size: 42px;
+    font-weight: 300;
+    letter-spacing: 2px;
+    color: white;
+}
+
+.manage-cv-preview .cv-name-text {
+    font-size: 20px;
+    font-weight: 800;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+    line-height: 1.2;
+    color: white;
+    width: 100%;
+}
+
+.manage-cv-preview .cv-role-text {
+    font-size: 13px;
+    text-align: center;
+    opacity: 0.8;
+    margin-bottom: 30px;
+    color: white;
+}
+
+.manage-cv-preview .cv-contact-section {
+    width: 100%;
+    margin-bottom: 30px;
+}
+
+.manage-cv-preview .cv-contact-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 11px;
+    margin-bottom: 10px;
+    color: #e2e8f0;
+}
+
+.manage-cv-preview .cv-contact-item svg {
+    color: #fff;
+    opacity: 0.8;
+    flex-shrink: 0;
+}
+
+.manage-cv-preview .cv-sidebar-section {
+    width: 100%;
+    margin-bottom: 25px;
+}
+
+.manage-cv-preview .sidebar-pill {
+    background: rgba(255, 255, 255, 0.2);
+    padding: 5px 18px;
+    border-radius: 50px;
+    font-size: 11px;
+    font-weight: 800;
+    display: inline-block;
+    margin-bottom: 15px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: white;
+}
+
+.manage-cv-preview .sidebar-list {
+    list-style: none;
+    padding-left: 0;
+    font-size: 11px;
+    color: white;
+}
+
+.manage-cv-preview .sidebar-list li {
+    margin-bottom: 8px;
+    display: flex;
+    align-items: flex-start;
+    line-height: 1.5;
+}
+
+.manage-cv-preview .sidebar-list li::before {
+    content: "•";
+    color: white;
+    font-weight: bold;
+    margin-right: 10px;
+}
+
+/* MAIN BOX */
+.manage-cv-preview .cv-main-box {
+    width: 62%;
+    padding: 35px 28px;
+    color: #333;
+    background: white;
+}
+
+.manage-cv-preview .cv-main-section {
+    margin-bottom: 30px;
+}
+
+.manage-cv-preview .main-pill-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.manage-cv-preview .main-pill-header span {
+    background: #446872;
+    color: white;
+    padding: 4px 20px;
+    border-radius: 50px;
+    font-weight: bold;
+    font-size: 12px;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.manage-cv-preview .pill-line {
+    flex: 1;
+    height: 1.5px;
+    background: #446872;
+    opacity: 0.3;
+}
+
+.manage-cv-preview .main-text-content {
+    font-size: 11px;
+    line-height: 1.8;
+    text-align: justify;
+    color: #444;
+}
+
+.manage-cv-preview .exp-item-box {
+    margin-bottom: 18px;
+}
+
+.manage-cv-preview .exp-item-box strong {
+    font-size: 12px;
+    color: #222;
+}
+
+.manage-cv-preview .cv-accent-text {
+    color: #446872;
+    font-weight: 700;
+    font-size: 10px;
+    margin-bottom: 3px;
+}
+
+/* TEMPLATE VARIANTS */
+.manage-cv-preview.template-classic .sidebar-pill { background: rgba(139, 92, 246, 0.3); }
+.manage-cv-preview.template-classic .cv-sidebar-box { background-color: #4a1d6b; }
+.manage-cv-preview.template-classic .main-pill-header span { background: #6b21a8; }
+.manage-cv-preview.template-classic .pill-line { background: #6b21a8; }
+
+.manage-cv-preview.template-minimal .sidebar-pill { background: rgba(16, 185, 129, 0.3); }
+.manage-cv-preview.template-minimal .cv-sidebar-box { background-color: #1a3a2a; }
+.manage-cv-preview.template-minimal .main-pill-header span { background: #059669; }
+.manage-cv-preview.template-minimal .pill-line { background: #059669; }
+
+.manage-cv-preview.template-creative .sidebar-pill { background: rgba(245, 158, 11, 0.3); }
+.manage-cv-preview.template-creative .cv-sidebar-box { background-color: #3d2e0f; }
+.manage-cv-preview.template-creative .main-pill-header span { background: #d97706; }
+.manage-cv-preview.template-creative .pill-line { background: #d97706; }
+
+/* Print styles */
+@media print {
+    .no-print { display: none !important; }
+    .cv-list-panel { display: none !important; }
+    .manage-cv-preview .a4-document {
+        box-shadow: none;
+        max-width: 100%;
+        border-radius: 0;
+    }
+    .manage-cv-preview .cv-sidebar-box {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+    body { background: white !important; }
+}
+
+@media (max-width: 991px) {
+    .cv-list-panel {
+        position: static;
+        max-height: 300px;
+        margin-bottom: 20px;
+    }
+    .cv-list-scroll {
+        max-height: 250px;
+    }
 }
 
 @media (max-width: 768px) {
     .manage-cvs-page h2 { font-size: 1.3rem !important; }
+    .manage-cv-preview .a4-document {
+        flex-direction: column;
+        min-height: auto;
+    }
+    .manage-cv-preview .cv-sidebar-box,
+    .manage-cv-preview .cv-main-box {
+        width: 100% !important;
+        padding: 20px 16px !important;
+    }
 }

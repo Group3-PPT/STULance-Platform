@@ -18,6 +18,8 @@ const Portfolio = () => {
   const isPublicView = Boolean(id);
   const [loading, setLoading] = useState(true);
   const [showReportModal, setShowReportModal] = useState(false);
+  const currentUserId = localStorage.getItem('userId');
+  const isOwnPortfolio = isPublicView ? String(id) === String(currentUserId) : false;
 
   const [combinedData, setCombinedData] = useState({
     fullName: 'Đang tải...',
@@ -121,7 +123,7 @@ const Portfolio = () => {
                   <Badge bg={isVerified ? 'success' : 'secondary'} className="px-3 py-2 d-flex align-items-center gap-1">
                     <Award size={14} /> {isVerified ? 'ĐÃ XÁC MINH' : 'CHƯA XÁC MINH'}
                   </Badge>
-                  {isPublicView && localStorage.getItem('accessToken') && (
+                  {isPublicView && !isOwnPortfolio && localStorage.getItem('accessToken') && (
                     <Button variant="outline-danger" size="sm" className="px-3 py-1 fw-bold" onClick={() => setShowReportModal(true)}>
                       <ShieldAlert size={14} className="me-1" /> Tố cáo
                     </Button>
