@@ -1,94 +1,116 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Table, Badge, Form, Spinner } from 'react-bootstrap';
+import { Row, Col, Table, Badge } from 'react-bootstrap';
 import {
-  LineChart, Line, BarChart, Bar, XAxis, YAxis,
-  Tooltip, ResponsiveContainer, AreaChart, Area
+  AreaChart, Area, BarChart, Bar, XAxis, YAxis,
+  Tooltip, ResponsiveContainer, PieChart, Pie, Cell
 } from 'recharts';
 import {
-  ShoppingCart, DollarSign, CreditCard, Users,
-  ArrowUpRight, ArrowDownRight,
+  DollarSign, CreditCard, Users, Briefcase,
   ChevronLeft, ChevronRight,
-  TrendingUp, Loader2, RefreshCw, Briefcase, FileText
+  Loader2, RefreshCw, AlertTriangle, TrendingUp, ShieldCheck
 } from 'lucide-react';
 import { dashboardService } from '../../services/dashboardService';
+import { adminService } from '../../services/adminservice';
+import { contractService } from '../../services/contractservice';
 import '../../CSS/AdminDashboard.css';
 
-const StatCard = ({ title, value, icon, color, trend, isUp }) => (
+const COLORS = ['#3b82f6', '#a855f7', '#f59e0b', '#10b981', '#ef4444', '#ec4899'];
+
+const StatCard = ({ title, value, icon, color, sub }) => (
   <Col xl={3} md={6}>
     <div className="glass-card p-4 d-flex align-items-center gap-3 h-100">
       <div className="adm-icon-box" style={{ backgroundColor: `${color}20`, color: color }}>
         {icon}
       </div>
-      <div>
+      <div className="flex-fill">
         <p className="text-white-50 x-small mb-1 fw-bold uppercase-tracking">{title}</p>
         <h4 className="text-white fw-bold mb-1">{value}</h4>
-        <div className={`x-small fw-bold ${isUp ? 'text-success' : 'text-danger'}`}>
-          {isUp ? <ArrowUpRight size={12} /> : <ArrowDownRight size={12} />} {trend}
-          <span className="text-white-50 fw-normal ms-1">(30 days)</span>
-        </div>
+        {sub && <div className="x-small text-white-50">{sub}</div>}
       </div>
     </div>
   </Col>
 );
 
 const AdminDashboard = () => {
-  const [dashboard, setDashboard] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState(null);
+  const [recentContracts, setRecentContracts] = useState([]);
+  const [recentOrders, setRecentOrders] = useState([]);
+  const [chartData, setChartData] = useState([]);
 
-  const fetchData = async () => {
+  const fetchAll = async () => {
     setLoading(true);
     try {
-      const res = await dashboardService.getAdminDashboard();
-      console.log("Admin dashboard response:", res);
-      // Handle different API response structures
-      setDashboard(res?.data || res || null);
+      const [dashRes, contractsRes, ordersRes] = await Promise.allSettled([
+        dashboardService.getAdminDashboard(),
+        contractService.adminGetAllContracts({ pageSize: 100 }),
+        adminService.getAllServiceOrders({ pageSize: 100 }),
+      ]);
+
+      if (dashRes.status === 'fulfilled') {
+        const d = dashRes.value?.data || dashRes.value;
+        setStats(d);
+      }
+
+      if (contractsRes.status === 'fulfilled') {
+        const items = contractsRes.value?.data?.items || [];
+        setRecentContracts(items);
+
+        const now = new Date();
+        const monthlyMap = {};
+        for (let i = 5; i >= 0; i--) {
+          const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+          const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+          const label = d.toLocaleDateString('vi-VN', { month: 'short' });
+          monthlyMap[key] = { name: label, contracts: 0, revenue: 0, completed: 0 };
+        }
+        items.forEach(item => {
+          const date = item.createdAt;
+          if (!date) return;
+          const d = new Date(date);
+          const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+          if (monthlyMap[key]) {
+            monthlyMap[key].contracts++;
+            if (item.status === 'COMPLETED') {
+              monthlyMap[key].revenue += (item.totalBudget || item.totalAmount || 0);
+              monthlyMap[key].completed++;
+            }
+          }
+        });
+        setChartData(Object.values(monthlyMap));
+      }
+
+      if (ordersRes.status === 'fulfilled') {
+        const d = ordersRes.value?.data || ordersRes.value;
+        setRecentOrders(d?.items || []);
+      }
     } catch (err) {
-      console.error("Lỗi tải admin dashboard:", err);
+      console.error("Lỗi tải dashboard admin:", err);
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => { fetchData(); }, []);
+  useEffect(() => { fetchAll(); }, []);
 
-  const stats = dashboard?.overview || {};
-  const recentActivity = dashboard?.recentActivity || [];
-  const monthlyData = dashboard?.monthlyData || [];
-
-  const forecastData = monthlyData.length > 0 ? monthlyData.map(m => ({
-    name: m.month || m.name,
-    revenue: m.revenue || 0,
-    profit: m.profit || 0,
-    order: m.orders || 0
-  })) : [
-    { name: 'Jan', revenue: 100, profit: 120, order: 180 },
-    { name: 'Feb', revenue: 150, profit: 130, order: 130 },
-    { name: 'Mar', revenue: 120, profit: 160, order: 140 },
-    { name: 'Apr', revenue: 170, profit: 150, order: 100 },
-    { name: 'May', revenue: 140, profit: 210, order: 110 },
-    { name: 'Jun', revenue: 150, profit: 160, order: 130 },
-  ];
-
-  const trafficData = dashboard?.traffic || [
-    { name: 'Jan', visits: 600, visitors: 700 },
-    { name: 'Feb', visits: 700, visitors: 750 },
-    { name: 'Mar', visits: 1000, visitors: 720 },
-    { name: 'Apr', visits: 700, visitors: 500 },
-    { name: 'May', visits: 650, visitors: 850 },
-    { name: 'Jun', visits: 800, visitors: 900 },
-  ];
-
-  const formatMoney = (val) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val);
+  const formatMoney = (val) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val || 0);
 
   const renderStatusBadge = (status) => {
-    switch (status) {
-      case 'OPEN': return <Badge bg="success" className="status-badge-sm">Active</Badge>;
-      case 'ACTIVE': return <Badge bg="success" className="status-badge-sm">Active</Badge>;
-      case 'PENDING': return <Badge bg="warning" className="status-badge-sm text-dark">Pending</Badge>;
-      case 'BLOCKED': return <Badge bg="danger" className="status-badge-sm">Blocked</Badge>;
-      case 'COMPLETED': return <Badge bg="info" className="status-badge-sm">Completed</Badge>;
-      default: return <Badge bg="secondary" className="status-badge-sm">{status}</Badge>;
-    }
+    const map = {
+      'IN_PROGRESS': { bg: 'primary', text: 'Đang thực hiện' },
+      'SIGNING': { bg: 'info', text: 'Ký kết' },
+      'DELIVERED': { bg: 'info', text: 'Đã giao' },
+      'COMPLETED': { bg: 'success', text: 'Hoàn thành' },
+      'CANCELLED': { bg: 'danger', text: 'Đã hủy' },
+      'DISPUTED': { bg: 'danger', text: 'Tranh chấp' },
+      'PENDING': { bg: 'warning', text: 'Chờ duyệt' },
+      'ACCEPTED': { bg: 'primary', text: 'Đã chấp nhận' },
+      'REJECTED': { bg: 'danger', text: 'Bị từ chối' },
+      'OPEN': { bg: 'success', text: 'Đang mở' },
+      'BLOCKED': { bg: 'danger', text: 'Bị khóa' },
+    };
+    const s = map[status] || { bg: 'secondary', text: status };
+    return <Badge bg={s.bg} className="status-badge-sm">{s.text}</Badge>;
   };
 
   if (loading) {
@@ -99,41 +121,122 @@ const AdminDashboard = () => {
     );
   }
 
+  const s = stats || {};
+
+  const recentActivity = [
+    ...recentContracts.map(c => ({
+      type: 'Hợp đồng',
+      detail: `${c.clientName || c.enterpriseName || 'N/A'} → ${c.providerName || c.studentName || 'N/A'}`,
+      amount: c.totalBudget || c.totalAmount || 0,
+      status: c.status,
+      date: c.createdAt ? new Date(c.createdAt).toLocaleDateString('vi-VN') : 'N/A',
+      sortDate: new Date(c.createdAt || 0),
+    })),
+    ...recentOrders.map(o => ({
+      type: 'Đơn hàng DV',
+      detail: `${o.buyerName || 'N/A'} → ${o.sellerName || 'N/A'}`,
+      amount: o.totalBudget || o.totalAmount || 0,
+      status: o.status,
+      date: o.createdAt ? new Date(o.createdAt).toLocaleDateString('vi-VN') : 'N/A',
+      sortDate: new Date(o.createdAt || 0),
+    })),
+  ].sort((a, b) => b.sortDate - a.sortDate).slice(0, 10);
+
+  const pieData = [
+    { name: 'Đang thực hiện', value: s.activeContracts || 0 },
+    { name: 'Đã phát hành', value: s.openJobs || 0 },
+    { name: 'Chờ duyệt', value: s.pendingJobs || 0 },
+    { name: 'Tranh chấp', value: s.disputedContracts || 0 },
+  ].filter(d => d.value > 0);
+
+  const rolePieData = [
+    { name: 'Sinh viên', value: s.totalStudents || 0 },
+    { name: 'Doanh nghiệp', value: s.totalEnterprises || 0 },
+  ].filter(d => d.value > 0);
+
   return (
     <div className="adm-dashboard-content animate-fade-in">
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h2 className="text-white fw-bold">STULance <span className="text-primary-glow">Analytics</span></h2>
-        <button className="btn-icon-table text-white-50" title="Làm mới" onClick={fetchData}><RefreshCw size={18} /></button>
+        <button className="btn-icon-table text-white-50" title="Làm mới" onClick={fetchAll}><RefreshCw size={18} /></button>
       </div>
 
       <Row className="g-3 mb-4">
-        <StatCard title="Bài đăng việc làm" value={stats.totalJobs || 0} icon={<Briefcase />} color="#8b5cf6" trend="+12%" isUp={true} />
-        <StatCard title="Dịch vụ sinh viên" value={stats.totalServices || 0} icon={<FileText />} color="#10b981" trend="+8%" isUp={true} />
-        <StatCard title="Hợp đồng" value={stats.totalContracts || 0} icon={<CreditCard />} color="#3b82f6" trend="+5%" isUp={true} />
-        <StatCard title="Người dùng" value={stats.totalUsers || 0} icon={<Users />} color="#f59e0b" trend="+15%" isUp={true} />
+        <StatCard title="Người dùng" value={s.totalUsers || 0} icon={<Users />} color="#f59e0b"
+          sub={`${s.totalStudents || 0} SV · ${s.totalEnterprises || 0} DN`} />
+        <StatCard title="Bài đăng việc làm" value={s.openJobs || 0} icon={<Briefcase />} color="#8b5cf6"
+          sub={s.pendingJobs > 0 ? `${s.pendingJobs} chờ duyệt` : 'Đã xử lý hết'} />
+        <StatCard title="Hợp đồng hoạt động" value={s.activeContracts || 0} icon={<CreditCard />} color="#3b82f6"
+          sub={s.disputedContracts > 0 ? `${s.disputedContracts} tranh chấp` : 'Không có tranh chấp'} />
+        <StatCard title="Báo cáo chờ xử lý" value={s.pendingReports || 0} icon={<AlertTriangle />} color="#ef4444"
+          sub={s.pendingWithdrawals > 0 ? `${s.pendingWithdrawals} chờ rút tiền` : 'Không chờ rút tiền'} />
+      </Row>
+
+      <Row className="g-3 mb-4">
+        <Col xl={3} md={6}>
+          <div className="glass-card p-4">
+            <div className="d-flex align-items-center gap-2 mb-1">
+              <DollarSign size={14} className="text-primary" />
+              <p className="text-white-50 x-small mb-0 fw-bold uppercase-tracking">TỔNG GIAO DỊCH</p>
+            </div>
+            <h4 className="text-primary-glow fw-bold mb-0">{formatMoney(s.totalContractPaymentVolume)}</h4>
+          </div>
+        </Col>
+        <Col xl={3} md={6}>
+          <div className="glass-card p-4">
+            <div className="d-flex align-items-center gap-2 mb-1">
+              <TrendingUp size={14} className="text-success" />
+              <p className="text-white-50 x-small mb-0 fw-bold uppercase-tracking">PHÍ HỆ THỐNG</p>
+            </div>
+            <h4 className="text-success fw-bold mb-0">{formatMoney(s.totalSystemFees)}</h4>
+          </div>
+        </Col>
+        <Col xl={3} md={6}>
+          <div className="glass-card p-4">
+            <div className="d-flex align-items-center gap-2 mb-1">
+              <ShieldCheck size={14} className="text-info" />
+              <p className="text-white-50 x-small mb-0 fw-bold uppercase-tracking">ĐÃ GIẢI PHÓNG</p>
+            </div>
+            <h4 className="text-info fw-bold mb-0">{formatMoney(s.totalReleasedAmount)}</h4>
+          </div>
+        </Col>
+        <Col xl={3} md={6}>
+          <div className="glass-card p-4">
+            <div className="d-flex align-items-center gap-2 mb-1">
+              <CreditCard size={14} className="text-warning" />
+              <p className="text-white-50 x-small mb-0 fw-bold uppercase-tracking">ĐÃ RÚT</p>
+            </div>
+            <h4 className="text-warning fw-bold mb-0">{formatMoney(s.totalWithdrawnAmount)}</h4>
+          </div>
+        </Col>
       </Row>
 
       <Row className="g-3 mb-4">
         <Col lg={7}>
           <div className="glass-card p-4 h-100">
-            <div className="d-flex justify-content-between mb-4">
-              <h5 className="text-white fw-bold">Dự báo doanh thu</h5>
-              <Form.Select size="sm" className="adm-select-sm"><option>Last Month</option></Form.Select>
-            </div>
+            <h5 className="text-white fw-bold mb-4">Giao dịch 6 tháng gần đây</h5>
             <div style={{ width: '100%', height: 300 }}>
               <ResponsiveContainer>
-                <AreaChart data={forecastData}>
+                <AreaChart data={chartData.length > 0 ? chartData : [
+                  { name: 'T1', contracts: 0, revenue: 0 },
+                  { name: 'T2', contracts: 0, revenue: 0 },
+                  { name: 'T3', contracts: 0, revenue: 0 },
+                  { name: 'T4', contracts: 0, revenue: 0 },
+                  { name: 'T5', contracts: 0, revenue: 0 },
+                  { name: 'T6', contracts: 0, revenue: 0 },
+                ]}>
                   <defs>
-                    <linearGradient id="colorBlue" x1="0" y1="0" x2="0" y2="1">
+                    <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
                       <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
                     </linearGradient>
                   </defs>
                   <XAxis dataKey="name" axisLine={false} tickLine={false} stroke="#64748b" fontSize={12} />
-                  <Tooltip contentStyle={{ backgroundColor: '#0f172a', border: 'none', borderRadius: '10px' }} />
-                  <Area type="monotone" dataKey="profit" stroke="#a855f7" strokeWidth={3} fill="transparent" />
-                  <Area type="monotone" dataKey="revenue" stroke="#3b82f6" strokeWidth={3} fill="url(#colorBlue)" />
-                  <Area type="monotone" dataKey="order" stroke="#f59e0b" strokeWidth={3} fill="transparent" />
+                  <YAxis axisLine={false} tickLine={false} stroke="#64748b" fontSize={12} />
+                  <Tooltip contentStyle={{ backgroundColor: '#0f172a', border: 'none', borderRadius: '10px', color: '#fff' }} />
+                  <Area type="monotone" dataKey="contracts" stroke="#a855f7" strokeWidth={2} fill="transparent" name="Hợp đồng" />
+                  <Area type="monotone" dataKey="revenue" stroke="#3b82f6" strokeWidth={3} fill="url(#colorRevenue)" name="Doanh thu" />
+                  <Area type="monotone" dataKey="completed" stroke="#10b981" strokeWidth={2} fill="transparent" name="Hoàn thành" />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
@@ -141,17 +244,69 @@ const AdminDashboard = () => {
         </Col>
         <Col lg={5}>
           <div className="glass-card p-4 h-100">
-            <div className="d-flex justify-content-between mb-4">
-              <h5 className="text-white fw-bold">Lưu lượng truy cập</h5>
-              <Form.Select size="sm" className="adm-select-sm"><option>Last 6 Months</option></Form.Select>
-            </div>
-            <div style={{ width: '100%', height: 300 }}>
+            <h5 className="text-white fw-bold mb-4">Phân bổ hệ thống</h5>
+            {pieData.length > 0 ? (
+              <div className="d-flex align-items-center justify-content-center" style={{ height: 300 }}>
+                <ResponsiveContainer>
+                  <PieChart>
+                    <Pie data={pieData} cx="50%" cy="50%" innerRadius={55} outerRadius={95}
+                      paddingAngle={4} dataKey="value"
+                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                      labelLine={false} fontSize={11} fill="rgba(255,255,255,0.7)">
+                      {pieData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+                    </Pie>
+                    <Tooltip contentStyle={{ backgroundColor: '#0f172a', border: 'none', borderRadius: '10px', color: '#fff' }} />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            ) : (
+              <div className="text-center py-5 text-white-50 small">Chưa có dữ liệu</div>
+            )}
+          </div>
+        </Col>
+      </Row>
+
+      <Row className="g-3 mb-4">
+        <Col lg={5}>
+          <div className="glass-card p-4 h-100">
+            <h5 className="text-white fw-bold mb-4">Người dùng theo vai trò</h5>
+            {rolePieData.length > 0 ? (
+              <div className="d-flex align-items-center justify-content-center" style={{ height: 260 }}>
+                <ResponsiveContainer>
+                  <PieChart>
+                    <Pie data={rolePieData} cx="50%" cy="50%" innerRadius={55} outerRadius={90}
+                      paddingAngle={4} dataKey="value"
+                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                      labelLine={false} fontSize={11} fill="rgba(255,255,255,0.7)">
+                      {rolePieData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+                    </Pie>
+                    <Tooltip contentStyle={{ backgroundColor: '#0f172a', border: 'none', borderRadius: '10px', color: '#fff' }} />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            ) : (
+              <div className="text-center py-5 text-white-50 small">Chưa có dữ liệu</div>
+            )}
+          </div>
+        </Col>
+        <Col lg={7}>
+          <div className="glass-card p-4 h-100">
+            <h5 className="text-white fw-bold mb-4">Hợp đồng theo tháng</h5>
+            <div style={{ width: '100%', height: 260 }}>
               <ResponsiveContainer>
-                <BarChart data={trafficData}>
+                <BarChart data={chartData.length > 0 ? chartData : [
+                  { name: 'T1', contracts: 0, completed: 0 },
+                  { name: 'T2', contracts: 0, completed: 0 },
+                  { name: 'T3', contracts: 0, completed: 0 },
+                  { name: 'T4', contracts: 0, completed: 0 },
+                  { name: 'T5', contracts: 0, completed: 0 },
+                  { name: 'T6', contracts: 0, completed: 0 },
+                ]}>
                   <XAxis dataKey="name" axisLine={false} tickLine={false} stroke="#64748b" fontSize={12} />
-                  <Tooltip cursor={{ fill: 'transparent' }} contentStyle={{ backgroundColor: '#0f172a', border: 'none', borderRadius: '10px' }} />
-                  <Bar dataKey="visits" fill="#3b82f6" radius={[5, 5, 0, 0]} barSize={8} />
-                  <Bar dataKey="visitors" fill="#ef4444" radius={[5, 5, 0, 0]} barSize={8} />
+                  <YAxis axisLine={false} tickLine={false} stroke="#64748b" fontSize={12} />
+                  <Tooltip contentStyle={{ backgroundColor: '#0f172a', border: 'none', borderRadius: '10px', color: '#fff' }} cursor={{ fill: 'transparent' }} />
+                  <Bar dataKey="contracts" fill="#3b82f6" radius={[5, 5, 0, 0]} barSize={12} name="Tổng hợp đồng" />
+                  <Bar dataKey="completed" fill="#10b981" radius={[5, 5, 0, 0]} barSize={12} name="Hoàn thành" />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -170,7 +325,7 @@ const AdminDashboard = () => {
               </div>
             </div>
             <div className="calendar-grid">
-              {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map(d => <div key={d} className="cal-day-head">{d}</div>)}
+              {['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'].map(d => <div key={d} className="cal-day-head">{d}</div>)}
               {Array.from({ length: 30 }, (_, i) => (
                 <div key={i} className={`cal-date ${i + 1 === new Date().getDate() ? 'active' : ''}`}>{i + 1}</div>
               ))}
@@ -180,14 +335,13 @@ const AdminDashboard = () => {
 
         <Col lg={8}>
           <div className="glass-card p-4 h-100">
-            <div className="d-flex justify-content-between mb-4">
-              <h5 className="text-white fw-bold">Hoạt động gần đây</h5>
-            </div>
+            <h5 className="text-white fw-bold mb-4">Hoạt động gần đây</h5>
             <Table responsive variant="dark" className="admin-table-clean align-middle">
               <thead>
                 <tr>
                   <th>Loại</th>
                   <th>Chi tiết</th>
+                  <th>Giá trị</th>
                   <th>Trạng thái</th>
                   <th>Thời gian</th>
                 </tr>
@@ -195,14 +349,15 @@ const AdminDashboard = () => {
               <tbody>
                 {recentActivity.map((item, i) => (
                   <tr key={i}>
-                    <td><span className="small fw-bold">{item.type || 'N/A'}</span></td>
-                    <td className="text-white-50 small">{item.detail || item.name || 'N/A'}</td>
+                    <td><span className="small fw-bold">{item.type}</span></td>
+                    <td className="text-white-50 small" style={{ maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.detail}</td>
+                    <td className="small fw-bold text-primary-glow">{formatMoney(item.amount)}</td>
                     <td>{renderStatusBadge(item.status)}</td>
-                    <td className="text-white-50 small">{item.date || 'N/A'}</td>
+                    <td className="text-white-50 small">{item.date}</td>
                   </tr>
                 ))}
                 {recentActivity.length === 0 && (
-                  <tr><td colSpan="4" className="text-center py-4 text-white-50">Chưa có hoạt động nào.</td></tr>
+                  <tr><td colSpan="5" className="text-center py-4 text-white-50">Chưa có hoạt động nào.</td></tr>
                 )}
               </tbody>
             </Table>
