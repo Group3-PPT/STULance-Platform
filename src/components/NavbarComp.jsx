@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import StudentNavbar from './StudentNavbar';
 import BusinessNavbar from './BusinessNavbar';
+import AdminNavbar from './AdminNavbar';
 import AuthNavbar from './AuthNavbar';
 
 const NavbarComp = () => {
@@ -53,6 +54,9 @@ const NavbarComp = () => {
     case ROLE_ENTERPRISE:
     case 'ENTERPRISE':
       return <BusinessNavbar />;
+
+    case 'ADMIN':
+      return <AdminNavbar />;
 
     default:
       // Nếu có token nhưng role không khớp, quay về Navbar khách

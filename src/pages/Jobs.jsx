@@ -70,9 +70,16 @@ const Jobs = () => {
         setTotalPages(data.totalPages || 1);
         setTotalItems(jobList.length);
         setCurrentPage(data.page || 1);
-        if (jobList.length > 0 && !selectedJobRef.current) {
-          setSelectedJob(jobList[0]);
-          selectedJobRef.current = jobList[0];
+
+        if (jobList.length > 0) {
+          const currentStillExists = selectedJobRef.current && jobList.some(j => j.jobId === selectedJobRef.current.jobId);
+          if (!currentStillExists) {
+            setSelectedJob(jobList[0]);
+            selectedJobRef.current = jobList[0];
+          }
+        } else {
+          setSelectedJob(null);
+          selectedJobRef.current = null;
         }
       }
 
