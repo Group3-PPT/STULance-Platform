@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Navbar, Nav, Container, Button, NavDropdown, Image, Badge } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
-import { Bell, User, LogOut, LayoutDashboard, Layers, History, Check, CheckCheck, Wallet } from 'lucide-react';
+import { Bell, User, LogOut, LayoutDashboard, Layers, History, Check, CheckCheck, Wallet, FileText } from 'lucide-react';
 import { authService } from '../services/authService';
 import { profileService } from '../services/profileservice';
 import { studentService } from '../services/studentservice';
@@ -211,6 +211,9 @@ const StudentNavbar = () => {
               </NavDropdown.Item>
               <NavDropdown.Item as={Link} to="/profile-settings">
                 <User size={18} className="me-3 text-primary" /> Hồ sơ cá nhân
+              </NavDropdown.Item>
+              <NavDropdown.Item as={Link} to="/manage-cvs">
+                <FileText size={18} className="me-3 text-primary" /> Quản lý CV
               </NavDropdown.Item>
               <NavDropdown.Item as={Link} to="/payment">
                 <History size={18} className="me-3 text-primary" /> Ví & Rút tiền

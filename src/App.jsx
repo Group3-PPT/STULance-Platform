@@ -52,6 +52,8 @@ import ManageStudentServices from './pages/Admin/ManageStudentServices';
 import ManageContracts from './pages/Admin/ManageContracts';
 import ApplyJob from './pages/Lancer/ApplyJob';
 import SignContract from './pages/SignContract';
+import ManageCVs from './pages/Lancer/ManageCVs';
+import CVPreview from './pages/CVPreview';
 import ContractTerms from './pages/ContractTerms';
 import Policy from './pages/Policy';
 import NotFound from './pages/NotFound';
@@ -72,6 +74,7 @@ const PAGE_META = {
   '/policy': { title: 'Điều khoản sử dụng', desc: 'Điều khoản và điều kiện sử dụng nền tảng STULance.' },
   '/universities': { title: 'Trường đại học', desc: 'Danh sách trường đại học đối tác của STULance.' },
   '/dashboardlancer': { title: 'Bảng điều khiển', desc: 'Quản lý công việc, hợp đồng và thu nhập freelancer.' },
+  '/manage-cvs': { title: 'Quản lý CV', desc: 'Tạo và quản lý CV xin việc chuyên nghiệp trên STULance.' },
   '/cv-maker': { title: 'Tạo CV', desc: 'Tạo CV chuyên nghiệp miễn phí với công cụ AI của STULance.' },
   '/profile-settings': { title: 'Cài đặt hồ sơ', desc: 'Cập nhật thông tin hồ sơ cá nhân trên STULance.' },
   '/portfolio-manager': { title: 'Quản lý Portfolio', desc: 'Quản lý và cập nhật portfolio hiển thị với nhà tuyển dụng.' },
@@ -181,6 +184,7 @@ const router = createBrowserRouter([
       { path: 'service-detail/:id', element: <ServiceDetail /> },
       { path: 'portfolio', element: <Portfolio /> },
       { path: 'portfolio/:id', element: <Portfolio /> },
+      { path: 'cv/:cvId', element: <CVPreview /> },
       { path: 'handbook', element: <Handbook /> },
       { path: 'privacy', element: <Privacy /> },
       { path: 'policy', element: <Policy /> },
@@ -192,6 +196,7 @@ const router = createBrowserRouter([
         element: <RequireStudent />,
         children: [
           { path: 'dashboardlancer', element: <DashboardLancer /> },
+          { path: 'manage-cvs', element: <ManageCVs /> },
           { path: 'cv-maker', element: <CVMaker /> },
           { path: 'profile-settings', element: <ProfileSettings /> },
           { path: 'portfolio-manager', element: <MyPortfolio /> },
