@@ -71,7 +71,6 @@ const AdminLayout = () => {
     { path: '/admin/contracts', icon: <Handshake size={20}/>, label: 'Hợp đồng' },
     { path: '/admin/manage-reports', icon: <BarChart3 size={20}/>, label: 'Tố cáo' },
     { path: '/admin/skills', icon: <ShieldCheck size={20}/>, label: 'Kỹ năng' },
-    { path: '/admin/reports', icon: <BarChart3 size={20}/>, label: 'Báo cáo' },
   ];
 
   const isActive = (path) => {

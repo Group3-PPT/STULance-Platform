@@ -1,12 +1,13 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Container, Row, Col, Form, Button, Badge, Spinner } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
-import { Search, Globe, MapPin, Bookmark, Send, Laptop, ShieldCheck, Zap, Loader2, Sparkles, Building2, Filter, X } from 'lucide-react';
+import { Search, Globe, MapPin, Bookmark, Send, Laptop, ShieldCheck, Zap, Loader2, Sparkles, Building2, Filter, X, ShieldAlert } from 'lucide-react';
 import { jobService } from '../services/jobservice';
 import { savedItemsService } from '../services/saveditemsservice';
 import { recommendationService } from '../services/recommendationservice';
 import { enterpriseService } from '../services/enterprise.service';
 import PaginationBar from '../components/PaginationBar';
+import ReportModal from '../components/ReportModal';
 import '../CSS/Jobs.css';
 
 const JOB_TYPES = ['Tất cả', 'Part-time', 'Full-time', 'Freelance', 'Thực tập'];
@@ -28,6 +29,7 @@ const Jobs = () => {
   const [error, setError] = useState(null);
   const [savedJobIds, setSavedJobIds] = useState(new Set());
   const [actionLoading, setActionLoading] = useState(null);
+  const [showReportModal, setShowReportModal] = useState(false);
   const [aiMatching, setAiMatching] = useState(false);
 
   const [selectedJobType, setSelectedJobType] = useState('Tất cả');
@@ -346,6 +348,16 @@ const Jobs = () => {
                             </div>
                         </div>
                         <div className="d-flex gap-2">
+                            {token && (
+                                <Button
+                                    variant="outline-danger"
+                                    className="border-danger border-opacity-20 p-2 rounded-3"
+                                    title="Tố cáo bài đăng"
+                                    onClick={() => setShowReportModal(true)}
+                                >
+                                    <ShieldAlert size={20} />
+                                </Button>
+                            )}
                             {isStudent && (
                                 <Button
                                   variant="outline-light"
@@ -451,6 +463,16 @@ const Jobs = () => {
 
         </div>
       </Container>
+
+      {selectedJob && (
+        <ReportModal
+          show={showReportModal}
+          onHide={() => setShowReportModal(false)}
+          targetType="JOB"
+          targetId={selectedJob.jobId}
+          targetName={selectedJob.title}
+        />
+      )}
     </div>
   );
 };

@@ -5,13 +5,14 @@ import {
   ShieldCheck, Printer, Eye, EyeOff, ChevronLeft, Download,
   FileCheck, Lock, Loader2, AlertTriangle, CheckCircle,
   PenTool, XCircle, DollarSign, Upload, MessageSquare,
-  Clock, Star, Send, File
+  Clock, Star, Send, File, ShieldAlert
 } from 'lucide-react';
 import { contractService } from '../services/contractservice';
 import { contractSignatureService } from '../services/contractsignatureservice';
 import { paymentService } from '../services/paymentservice';
 import { reportService } from '../services/reportService';
 import { authService } from '../services/authService';
+import ReportModal from '../components/ReportModal';
 import html2pdf from 'html2pdf.js';
 import '../CSS/Contract.css';
 
@@ -39,6 +40,7 @@ const Contract = () => {
   const [disputeReason, setDisputeReason] = useState('');
   const [showRevisionModal, setShowRevisionModal] = useState(false);
   const [revisionReason, setRevisionReason] = useState('');
+  const [showReportModal, setShowReportModal] = useState(false);
   const [revisionRequests, setRevisionRequests] = useState([]);
 
   const currentUserRole = localStorage.getItem('userRole');
@@ -550,6 +552,10 @@ const Contract = () => {
                     </Alert>
                   )}
 
+                  <Button variant="outline-danger" className="py-2 x-small fw-bold" onClick={() => setShowReportModal(true)}>
+                    <ShieldAlert size={14} className="me-2" /> TỐ CÁO HỢP ĐỒNG
+                  </Button>
+
                   {contract.status === 'CANCEL_REQUESTED' && (
                     <div className="d-grid gap-2">
                       <Button onClick={() => handleAction('approveCancel')} variant="danger" className="py-2 fw-bold" disabled={isSaving}>
@@ -797,6 +803,14 @@ const Contract = () => {
           </Button>
         </Modal.Footer>
       </Modal>
+
+      <ReportModal
+        show={showReportModal}
+        onHide={() => setShowReportModal(false)}
+        targetType="CONTRACT"
+        targetId={id}
+        targetName={`Hợp đồng #${id?.substring(0, 8)}`}
+      />
     </div>
   );
 };

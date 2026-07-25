@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Button, Badge, Spinner } from 'react-bootstrap';
 import { Link, useParams } from 'react-router-dom';
-import { Star, Clock, RefreshCcw, Check, ChevronLeft, ShieldCheck, MessageCircle, Share2, MapPin, Eye, Heart, Bookmark, Sparkles } from 'lucide-react';
+import { Star, Clock, RefreshCcw, Check, ChevronLeft, ShieldCheck, MessageCircle, Share2, MapPin, Eye, Heart, Bookmark, Sparkles, ShieldAlert } from 'lucide-react';
 import { studentServiceService } from '../../services/studentserviceservice';
 import { recommendationService } from '../../services/recommendationservice';
 import { unwrapList } from '../../services/responseUtils';
+import ReportModal from '../../components/ReportModal';
 import '../../CSS/ServiceDetail.css';
 
 const ServiceDetail = () => {
@@ -12,6 +13,7 @@ const ServiceDetail = () => {
   const [service, setService] = useState(null);
   const [loading, setLoading] = useState(true);
   const [similarServices, setSimilarServices] = useState([]);
+  const [showReportModal, setShowReportModal] = useState(false);
 
   useEffect(() => {
     const fetchDetail = async () => {
@@ -82,6 +84,7 @@ const ServiceDetail = () => {
                 </div>
                 <div className="d-flex gap-2">
                   <button className="btn btn-outline-light btn-sm rounded-pill px-3"><Share2 size={14}/> Chia sẻ</button>
+                  <button className="btn btn-outline-danger btn-sm rounded-pill px-3" onClick={() => setShowReportModal(true)}><ShieldAlert size={14}/> Tố cáo</button>
                 </div>
               </div>
 
@@ -233,6 +236,14 @@ const ServiceDetail = () => {
           </Col>
         </Row>
       </Container>
+
+      <ReportModal
+        show={showReportModal}
+        onHide={() => setShowReportModal(false)}
+        targetType="STUDENT_SERVICE"
+        targetId={id}
+        targetName={service?.title}
+      />
     </div>
   );
 };

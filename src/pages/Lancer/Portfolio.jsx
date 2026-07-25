@@ -4,18 +4,20 @@ import { useParams, Link } from 'react-router-dom';
 import { 
   Edit3, GraduationCap, BookOpen, ExternalLink, MapPin, 
   Smartphone, Star, Eye, Layers, Award, Code2, Briefcase,
-  ChevronLeft, Loader2
+  ChevronLeft, Loader2, ShieldAlert
 } from 'lucide-react';
 import { profileService } from '../../services/profileservice';
 import { studentService } from '../../services/studentservice';
 import { portfolioService } from '../../services/portfolioservice';
 import { unwrapList } from '../../services/responseUtils';
+import ReportModal from '../../components/ReportModal';
 import '../../CSS/Portfolio.css';
 
 const Portfolio = () => {
   const { id } = useParams();
   const isPublicView = Boolean(id);
   const [loading, setLoading] = useState(true);
+  const [showReportModal, setShowReportModal] = useState(false);
 
   const [combinedData, setCombinedData] = useState({
     fullName: 'Đang tải...',
@@ -119,6 +121,11 @@ const Portfolio = () => {
                   <Badge bg={isVerified ? 'success' : 'secondary'} className="px-3 py-2 d-flex align-items-center gap-1">
                     <Award size={14} /> {isVerified ? 'ĐÃ XÁC MINH' : 'CHƯA XÁC MINH'}
                   </Badge>
+                  {isPublicView && localStorage.getItem('accessToken') && (
+                    <Button variant="outline-danger" size="sm" className="px-3 py-1 fw-bold" onClick={() => setShowReportModal(true)}>
+                      <ShieldAlert size={14} className="me-1" /> Tố cáo
+                    </Button>
+                  )}
                 </div>
                 <p className="h4 text-primary-glow mb-3">{combinedData.major || "Freelancer"}</p>
                 
@@ -287,6 +294,16 @@ const Portfolio = () => {
           </Col>
         </Row>
       </Container>
+
+      {isPublicView && (
+        <ReportModal
+          show={showReportModal}
+          onHide={() => setShowReportModal(false)}
+          targetType="STUDENT"
+          targetId={id}
+          targetName={combinedData.fullName}
+        />
+      )}
     </div>
   );
 };

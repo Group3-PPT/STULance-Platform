@@ -200,17 +200,6 @@ const Login = () => {
               </div>
             )}
           </Form>
-
-          <div className="social-divider my-4">
-            <span>Hoặc tiếp tục với</span>
-          </div>
-
-          <div className="social-login-area text-center">
-            <Button className="btn-google-login w-100 py-2 fw-bold" onClick={() => alert("Đăng nhập Google đang được phát triển. Vui lòng sử dụng email/mật khẩu.")}>
-              <i className="fab fa-google me-2"></i> Google
-            </Button>
-          </div>
-
           <div className="text-center mt-4 pt-3 border-top border-white-10">
             <span className="text-white-50 small">Chưa có tài khoản? </span>
             <Link to="/register" className="text-primary small fw-bold text-decoration-none">Đăng ký ngay</Link>

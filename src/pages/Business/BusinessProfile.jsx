@@ -4,10 +4,11 @@ import { useParams, Link } from 'react-router-dom';
 import {
   MapPin, Globe, Mail, Phone, Users,
   CheckCircle, ShieldCheck, Info, Heart, Loader2,
-  Briefcase, Calendar, DollarSign, ExternalLink, Users as UsersIcon
+  Briefcase, Calendar, DollarSign, ExternalLink, Users as UsersIcon, ShieldAlert
 } from 'lucide-react';
 import { enterpriseService } from '../../services/enterprise.service';
 import { jobService } from '../../services/jobservice';
+import ReportModal from '../../components/ReportModal';
 import '../../CSS/BusinessProfile.css';
 
 const BusinessProfile = () => {
@@ -19,6 +20,7 @@ const BusinessProfile = () => {
   const [isFollowing, setIsFollowing] = useState(false);
   const [followLoading, setFollowLoading] = useState(false);
   const [isOwnProfile, setIsOwnProfile] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -129,15 +131,22 @@ const BusinessProfile = () => {
                   <Info size={16} className="me-2" /> CHỈNH SỬA HỒ SƠ
                 </Button>
               ) : (
-                <Button
-                  variant={isFollowing ? "outline-danger" : "primary"}
-                  className="fw-bold px-4 py-2 shadow-glow"
-                  onClick={handleFollow}
-                  disabled={followLoading}
-                >
-                  {followLoading ? <Loader2 className="spinner me-2" size={16} /> : <Heart size={16} className="me-2" fill={isFollowing ? "currentColor" : "none"} />}
-                  {isFollowing ? 'BỎ THEO DÕI' : 'THEO DÕI CÔNG TY'}
-                </Button>
+                <div className="d-flex gap-2">
+                  <Button
+                    variant={isFollowing ? "outline-danger" : "primary"}
+                    className="fw-bold px-4 py-2 shadow-glow"
+                    onClick={handleFollow}
+                    disabled={followLoading}
+                  >
+                    {followLoading ? <Loader2 className="spinner me-2" size={16} /> : <Heart size={16} className="me-2" fill={isFollowing ? "currentColor" : "none"} />}
+                    {isFollowing ? 'BỎ THEO DÕI' : 'THEO DÕI CÔNG TY'}
+                  </Button>
+                  {localStorage.getItem('accessToken') && (
+                    <Button variant="outline-danger" className="fw-bold px-3 py-2" onClick={() => setShowReportModal(true)}>
+                      <ShieldAlert size={16} />
+                    </Button>
+                  )}
+                </div>
               )}
             </div>
           </div>
@@ -241,6 +250,16 @@ const BusinessProfile = () => {
           </Col>
         </Row>
       </Container>
+
+      {!isOwnProfile && company && (
+        <ReportModal
+          show={showReportModal}
+          onHide={() => setShowReportModal(false)}
+          targetType="ENTERPRISE"
+          targetId={id || company.enterpriseId}
+          targetName={company.companyName}
+        />
+      )}
     </div>
   );
 };
