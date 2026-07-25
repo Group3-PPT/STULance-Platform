@@ -37,6 +37,9 @@ const AdminDashboard = () => {
   const [recentContracts, setRecentContracts] = useState([]);
   const [recentOrders, setRecentOrders] = useState([]);
   const [chartData, setChartData] = useState([]);
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [calendarMonth, setCalendarMonth] = useState(new Date().getMonth());
+  const [calendarYear, setCalendarYear] = useState(new Date().getFullYear());
 
   const fetchAll = async () => {
     setLoading(true);
@@ -123,7 +126,24 @@ const AdminDashboard = () => {
 
   const s = stats || {};
 
-  const recentActivity = [
+  const daysInMonth = new Date(calendarYear, calendarMonth + 1, 0).getDate();
+  const firstDayOfWeek = new Date(calendarYear, calendarMonth, 1).getDay();
+  const monthNames = ['Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5', 'Tháng 6', 'Tháng 7', 'Tháng 8', 'Tháng 9', 'Tháng 10', 'Tháng 11', 'Tháng 12'];
+
+  const prevMonth = () => {
+    if (calendarMonth === 0) { setCalendarMonth(11); setCalendarYear(y => y - 1); }
+    else setCalendarMonth(m => m - 1);
+  };
+  const nextMonth = () => {
+    if (calendarMonth === 11) { setCalendarMonth(0); setCalendarYear(y => y + 1); }
+    else setCalendarMonth(m => m + 1);
+  };
+  const selectDate = (day) => {
+    setSelectedDate(new Date(calendarYear, calendarMonth, day));
+  };
+  const isSameDay = (d1, d2) => d1.getFullYear() === d2.getFullYear() && d1.getMonth() === d2.getMonth() && d1.getDate() === d2.getDate();
+
+  const allActivity = [
     ...recentContracts.map(c => ({
       type: 'Hợp đồng',
       detail: `${c.clientName || c.enterpriseName || 'N/A'} → ${c.providerName || c.studentName || 'N/A'}`,
@@ -140,7 +160,16 @@ const AdminDashboard = () => {
       date: o.createdAt ? new Date(o.createdAt).toLocaleDateString('vi-VN') : 'N/A',
       sortDate: new Date(o.createdAt || 0),
     })),
-  ].sort((a, b) => b.sortDate - a.sortDate).slice(0, 10);
+  ].sort((a, b) => b.sortDate - a.sortDate);
+
+  const recentActivity = selectedDate
+    ? allActivity.filter(item => isSameDay(item.sortDate, selectedDate))
+    : allActivity.slice(0, 10);
+
+  const dayActivityCount = (day) => {
+    const d = new Date(calendarYear, calendarMonth, day);
+    return allActivity.filter(item => isSameDay(item.sortDate, d)).length;
+  };
 
   const pieData = [
     { name: 'Đang thực hiện', value: s.activeContracts || 0 },
@@ -318,24 +347,55 @@ const AdminDashboard = () => {
         <Col lg={4}>
           <div className="glass-card p-4 h-100">
             <div className="d-flex justify-content-between align-items-center mb-4">
-              <h6 className="text-white fw-bold mb-0">Tháng {new Date().getMonth() + 1}, {new Date().getFullYear()}</h6>
+              <h6 className="text-white fw-bold mb-0">{monthNames[calendarMonth]}, {calendarYear}</h6>
               <div className="d-flex gap-2">
-                <ChevronLeft size={16} className="text-white-50 pointer" />
-                <ChevronRight size={16} className="text-white-50 pointer" />
+                <ChevronLeft size={16} className="text-white-50 pointer" onClick={prevMonth} style={{ cursor: 'pointer' }} />
+                <ChevronRight size={16} className="text-white-50 pointer" onClick={nextMonth} style={{ cursor: 'pointer' }} />
               </div>
             </div>
             <div className="calendar-grid">
               {['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'].map(d => <div key={d} className="cal-day-head">{d}</div>)}
-              {Array.from({ length: 30 }, (_, i) => (
-                <div key={i} className={`cal-date ${i + 1 === new Date().getDate() ? 'active' : ''}`}>{i + 1}</div>
-              ))}
+              {Array.from({ length: firstDayOfWeek }, (_, i) => <div key={`empty-${i}`} />)}
+              {Array.from({ length: daysInMonth }, (_, i) => {
+                const day = i + 1;
+                const isSelected = selectedDate && isSameDay(selectedDate, new Date(calendarYear, calendarMonth, day));
+                const isToday = isSameDay(new Date(), new Date(calendarYear, calendarMonth, day));
+                const count = dayActivityCount(day);
+                return (
+                  <div key={day}
+                    className={`cal-date ${isSelected ? 'active' : ''} ${isToday && !isSelected ? 'today' : ''}`}
+                    onClick={() => selectDate(day)}
+                    style={{ cursor: 'pointer', position: 'relative' }}
+                  >
+                    {day}
+                    {count > 0 && <span className="cal-dot" />}
+                  </div>
+                );
+              })}
             </div>
+            {selectedDate && (
+              <div className="mt-3 pt-3 border-top border-secondary text-center">
+                <button className="btn btn-sm btn-outline-primary fw-bold"
+                  onClick={() => setSelectedDate(null)}>
+                  Hiển thị tất cả
+                </button>
+              </div>
+            )}
           </div>
         </Col>
 
         <Col lg={8}>
           <div className="glass-card p-4 h-100">
-            <h5 className="text-white fw-bold mb-4">Hoạt động gần đây</h5>
+            <div className="d-flex justify-content-between align-items-center mb-4">
+              <h5 className="text-white fw-bold mb-0">
+                {selectedDate
+                  ? `Hoạt động ngày ${selectedDate.getDate()}/${selectedDate.getMonth() + 1}/${selectedDate.getFullYear()}`
+                  : 'Hoạt động gần đây'}
+              </h5>
+              {selectedDate && recentActivity.length > 0 && (
+                <Badge bg="primary" className="px-3 py-2">{recentActivity.length} hoạt động</Badge>
+              )}
+            </div>
             <Table responsive variant="dark" className="admin-table-clean align-middle">
               <thead>
                 <tr>
@@ -357,7 +417,9 @@ const AdminDashboard = () => {
                   </tr>
                 ))}
                 {recentActivity.length === 0 && (
-                  <tr><td colSpan="5" className="text-center py-4 text-white-50">Chưa có hoạt động nào.</td></tr>
+                  <tr><td colSpan="5" className="text-center py-4 text-white-50">
+                    {selectedDate ? 'Không có hoạt động nào trong ngày này.' : 'Chưa có hoạt động nào.'}
+                  </td></tr>
                 )}
               </tbody>
             </Table>
