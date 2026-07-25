@@ -63,7 +63,9 @@ const Contract = () => {
       }
       if (sigRes.status === 'fulfilled') {
         const sigData = sigRes.value.data;
-        setSignatures(Array.isArray(sigData) ? sigData : (sigData?.items || sigData?.signatures || []));
+        const sigs = Array.isArray(sigData) ? sigData : (sigData?.items || sigData?.signatures || []);
+        console.log("Signatures raw:", sigData, "Parsed:", sigs);
+        setSignatures(sigs);
       }
       if (progressRes.status === 'fulfilled') {
         const pData = progressRes.value.data;
@@ -98,9 +100,10 @@ const Contract = () => {
 
   const sigList = Array.isArray(signatures) ? signatures : [];
   const isLocked = Boolean(contract?.isContentLocked || contract?.contentLockedAt);
+  const pastSigning = contract?.status !== 'SIGNING' && contract?.status !== 'CANCELLED' && contract?.status !== 'EXPIRED';
 
-  const hasEnterpriseSigned = sigList.some(s => s.signerRole === 'CLIENT' || s.signerRole === 'ENTERPRISE');
-  const hasStudentSigned = sigList.some(s => s.signerRole === 'PROVIDER' || s.signerRole === 'STUDENT');
+  const hasEnterpriseSigned = sigList.some(s => s.signerRole === 'CLIENT' || s.signerRole === 'ENTERPRISE') || (pastSigning && isLocked);
+  const hasStudentSigned = sigList.some(s => s.signerRole === 'PROVIDER' || s.signerRole === 'STUDENT') || (pastSigning && isLocked);
   const iamSigned = sigList.some(s => {
     const uid = s.userId || s.signerUserId;
     return uid && String(uid) === String(currentUserId);
