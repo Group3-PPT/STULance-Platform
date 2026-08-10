@@ -15,125 +15,218 @@ const STATUS_CONFIG = {
 };
 
 const ManageAccounts = () => {
+  // ============================================================
+  // STATE
+  // ============================================================
+
+  // Danh sách người dùng
   const [users, setUsers] = useState([]);
+
+  // Loading trang
   const [loading, setLoading] = useState(true);
+
+  // Từ khóa tìm kiếm
   const [searchTerm, setSearchTerm] = useState("");
+
+  // Bộ lọc loại tài khoản
   const [filterType, setFilterType] = useState("Tất cả");
+
+  // bộ lọc tên tài khoản
+ const  [filterName, setFilterName] = useState("Tất cả");
+  // Bộ lọc trạng thái
   const [filterStatus, setFilterStatus] = useState("Tất cả");
+
+  // ============================================================
+  // PHÂN TRANG
+  // ============================================================
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
+
+  // ============================================================
+  // THỐNG KÊ
+  // ============================================================
   const [studentCount, setStudentCount] = useState(0);
   const [businessCount, setBusinessCount] = useState(0);
   const [verifiedCount, setVerifiedCount] = useState(0);
   const [pendingCount, setPendingCount] = useState(0);
+
   const pageSize = 20;
 
-  const fetchUsers = useCallback(async (page = 1, keyword = '', status = '', type = '') => {
+  // ============================================================
+  // HÀM TẢI DỮ LIỆU
+  // ============================================================
+  const fetchUsers = useCallback(async function (page, keyword, status, type) {
+    if (!page) page = 1;
+    if (!keyword) keyword = '';
+    if (!status) status = '';
+    if (!type) type = '';
+
     setLoading(true);
+
     try {
-      const params = { page, pageSize };
+      var params = { page: page, pageSize: pageSize };
       if (keyword) params.keyword = keyword;
       if (status) params.status = status;
 
-      const res = await userService.adminGetAllUsers(params);
-      const data = res.data || res;
-      const items = data.items || [];
+      var res = await userService.adminGetAllUsers(params);
+      var data = res.data || res;
+      var items = data.items || [];
 
-      let studentCnt = 0;
-      let businessCnt = 0;
-      const usersList = items.map(u => {
-        const role = (u.roles && u.roles[0]) || '';
-        const isStudent = role === 'STUDENT';
-        const isEnterprise = role === 'ENTERPRISE' || role === 'BUSINESS';
+      // Đếm số lượng sinh viên và doanh nghiệp
+      var studentCnt = 0;
+      var businessCnt = 0;
+
+      // Chuyển đổi dữ liệu
+      var usersList = [];
+      for (var i = 0; i < items.length; i++) {
+        var u = items[i];
+        var role = (u.roles && u.roles.length > 0) ? u.roles[0] : '';
+        var isStudent = role === 'STUDENT';
+        var isEnterprise = role === 'ENTERPRISE' || role === 'BUSINESS';
+
         if (isStudent) studentCnt++;
         if (isEnterprise) businessCnt++;
-        return {
+
+        var name = 'N/A';
+        if (u.fullName) name = u.fullName;
+        else if (u.displayName) name = u.displayName;
+        else if (u.email) name = u.email.split('@')[0];
+
+        usersList.push({
           id: u.userId,
-          name: u.fullName || u.displayName || u.email?.split('@')[0] || 'N/A',
+          name: name,
           type: isEnterprise ? 'Doanh nghiệp' : 'Sinh viên',
           email: u.email || '',
           status: u.status || 'UNVERIFIED',
           date: new Date(u.createdAt || Date.now()).toLocaleDateString('vi-VN'),
           rawData: u
-        };
-      }).filter(u => {
-        if (type === 'Sinh viên' && u.type !== 'Sinh viên') return false;
-        if (type === 'Doanh nghiệp' && u.type !== 'Doanh nghiệp') return false;
-        return true;
-      });
+        });
+      }
 
-      setUsers(usersList);
+      // Lọc theo loại (client-side)
+      var filteredList = usersList;
+      if (type === 'Sinh viên') {
+        filteredList = usersList.filter(function (u) { return u.type === 'Sinh viên'; });
+      } else if (type === 'Doanh nghiệp') {
+        filteredList = usersList.filter(function (u) { return u.type === 'Doanh nghiệp'; });
+      }
+
+      setUsers(filteredList);
       setStudentCount(studentCnt);
       setBusinessCount(businessCnt);
-      setVerifiedCount(usersList.filter(u => u.status === 'ACTIVE' || u.status === 'VERIFIED').length);
-      setPendingCount(usersList.filter(u => u.status === 'PENDING').length);
+      setVerifiedCount(filteredList.filter(function (u) { return u.status === 'ACTIVE' || u.status === 'VERIFIED'; }).length);
+      setPendingCount(filteredList.filter(function (u) { return u.status === 'PENDING'; }).length);
       setTotalItems(data.totalItems || items.length);
       setTotalPages(data.totalPages || 1);
       setCurrentPage(data.page || page);
+
     } catch (err) {
       console.error("Lỗi tải danh sách:", err);
+
     } finally {
       setLoading(false);
     }
   }, []);
 
-  useEffect(() => { fetchUsers(1); }, [fetchUsers]);
+  // ============================================================
+  // EFFECT: Tải dữ liệu khi mount
+  // ============================================================
+  useEffect(function () {
+    fetchUsers(1);
+  }, [fetchUsers]);
 
-  const handleVerify = async (user) => {
-    if (!window.confirm(`Duyệt xác thực "${user.name}"?`)) return;
+  // ============================================================
+  // HÀM DUYỆT XÁC THỰC
+  // ============================================================
+  const handleVerify = async function (user) {
+    var confirmed = window.confirm('Duyệt xác thực "' + user.name + '"?');
+    if (!confirmed) return;
+
     try {
-      await userService.adminUpdateUserStatus(user.id, 'ACTIVE', 'Approved by admin');
+      await userService.getUserByUsername(user.id, 'ACTIVE', 'Approved by admin');
       alert("Duyệt thành công!");
       fetchUsers(currentPage, searchTerm, filterStatus === 'Tất cả' ? '' : filterStatus, filterType);
     } catch (err) {
-      alert("Lỗi: " + (err.response?.data?.message || err.message));
+      var msg = err.message;
+      if (err.response && err.response.data && err.response.data.message) {
+        msg = err.response.data.message;
+      }
+      alert("Lỗi: " + msg);
     }
   };
 
-  const handleReject = async (user) => {
-    if (!window.confirm(`Từ chối xác thực "${user.name}"?`)) return;
+  // ============================================================
+  // HÀM TỪ CHỐI XÁC THỰC
+  // ============================================================
+  const handleReject = async function (user) {
+    var confirmed = window.confirm('Từ chối xác thực "' + user.name + '"?');
+    if (!confirmed) return;
+
     try {
       await userService.adminUpdateUserStatus(user.id, 'REJECTED', 'Rejected by admin');
       alert("Đã từ chối!");
       fetchUsers(currentPage, searchTerm, filterStatus === 'Tất cả' ? '' : filterStatus, filterType);
     } catch (err) {
-      alert("Lỗi: " + (err.response?.data?.message || err.message));
+      var msg = err.message;
+      if (err.response && err.response.data && err.response.data.message) {
+        msg = err.response.data.message;
+      }
+      alert("Lỗi: " + msg);
     }
   };
+  
+  
+  // ============================================================
+  // HÀM ĐẶT LẠI TRẠNG THÁI
+  // ============================================================
+  const handleResetStatus = async function (user) {
+    var confirmed = window.confirm('Đặt lại trạng thái "' + user.name + '" về Chờ duyệt?');
+    if (!confirmed) return;
 
-  const handleResetStatus = async (user) => {
-    if (!window.confirm(`Đặt lại trạng thái "${user.name}" về Chờ duyệt?`)) return;
     try {
       await userService.adminUpdateUserStatus(user.id, 'PENDING', 'Reset by admin');
       fetchUsers(currentPage, searchTerm, filterStatus === 'Tất cả' ? '' : filterStatus, filterType);
     } catch (err) {
-      alert("Lỗi: " + (err.response?.data?.message || err.message));
+      var msg = err.message;
+      if (err.response && err.response.data && err.response.data.message) {
+        msg = err.response.data.message;
+      }
+      alert("Lỗi: " + msg);
     }
   };
 
-  const handleFilterTypeChange = (type) => {
+  // ============================================================
+  // HÀM XỬ LÝ BỘ LỌC
+  // ============================================================
+  const handleFilterTypeChange = function (type) {
     setFilterType(type);
     setCurrentPage(1);
     fetchUsers(1, searchTerm, filterStatus === 'Tất cả' ? '' : filterStatus, type);
   };
 
-  const handleFilterStatusChange = (status) => {
+  const handleFilterStatusChange = function (status) {
     setFilterStatus(status);
     setCurrentPage(1);
     fetchUsers(1, searchTerm, status === 'Tất cả' ? '' : status, filterType);
   };
 
-  const handleSearch = () => {
+  // ============================================================
+  // HÀM TÌM KIẾM
+  // ============================================================
+  const handleSearch = function () {
     setCurrentPage(1);
     fetchUsers(1, searchTerm, filterStatus === 'Tất cả' ? '' : filterStatus, filterType);
   };
 
-  const handlePageChange = (page) => {
+  // ============================================================
+  // HÀM CHUYỂN TRANG
+  // ============================================================
+  const handlePageChange = function (page) {
     fetchUsers(page, searchTerm, filterStatus === 'Tất cả' ? '' : filterStatus, filterType);
   };
 
-  const filteredUsers = users;
+  var filteredUsers = users;
 
   return (
     <div className="acc-manage-container animate-fade-in">

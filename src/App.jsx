@@ -185,6 +185,7 @@ const router = createBrowserRouter([
       { path: 'portfolio', element: <Portfolio /> },
       { path: 'portfolio/:id', element: <Portfolio /> },
       { path: 'cv/:cvId', element: <CVPreview /> },
+      { path: 'cv/student/:studentId', element: <CVPreview /> },
       { path: 'handbook', element: <Handbook /> },
       { path: 'privacy', element: <Privacy /> },
       { path: 'policy', element: <Policy /> },

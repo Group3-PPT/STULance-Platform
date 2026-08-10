@@ -17,7 +17,6 @@ const ManageContracts = () => {
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [resolving, setResolving] = useState(false);
   const [resolveAction, setResolveAction] = useState('');
-  const [resolveNote, setResolveNote] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
@@ -80,13 +79,11 @@ const ManageContracts = () => {
     setResolving(true);
     try {
       await contractService.adminResolveDispute(selectedContract.contractId, {
-        action: resolveAction,
-        note: resolveNote
+        resolution: resolveAction
       });
       alert("Xử lý tranh chấp thành công!");
       setShowDetailModal(false);
       setResolveAction('');
-      setResolveNote('');
       fetchContracts();
     } catch (err) {
       alert("Lỗi: " + (err.response?.data?.message || "Không thể xử lý"));
@@ -228,18 +225,6 @@ const ManageContracts = () => {
                   <XCircle size={14} className="me-2" /> Hủy & Hoàn tiền (CANCELLED) — Hợp đồng bị hủy, tiền hoàn trả cho Bên A
                 </Button>
               </div>
-            </Form.Group>
-
-            <Form.Group className="mb-3">
-              <Form.Label className="x-small fw-bold text-white-50">GHI CHÚ XỬ LÝ *</Form.Label>
-              <Form.Control
-                as="textarea"
-                rows={2}
-                placeholder="Nhập lý do xử lý tranh chấp..."
-                className="bg-dark-input text-white border-0"
-                value={resolveNote}
-                onChange={(e) => setResolveNote(e.target.value)}
-              />
             </Form.Group>
           </Modal.Body>
           <Modal.Footer className="border-0 pt-0">

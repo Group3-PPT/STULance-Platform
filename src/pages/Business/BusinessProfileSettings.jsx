@@ -9,10 +9,22 @@ import { authService } from '../../services/authService';
 import '../../CSS/BusinessProfileSettings.css';
 
 const BusinessProfileSettings = () => {
+  // ============================================================
+  // STATE
+  // ============================================================
+
+  // Loading trang
   const [loading, setLoading] = useState(true);
+
+  // Đang lưu
   const [isSaving, setIsSaving] = useState(false);
+
+  // Tab đang xem
   const [activeTab, setActiveTab] = useState('profile');
 
+  // ============================================================
+  // STATE DỮ LIỆU DOANH NGHIỆP
+  // ============================================================
   const [bizData, setBizData] = useState({
     companyName: '',
     companyTaxCode: '',
@@ -22,18 +34,28 @@ const BusinessProfileSettings = () => {
     description: ''
   });
 
+  // File logo
   const [logoFile, setLogoFile] = useState(null);
+
+  // Preview logo
   const [logoPreview, setLogoPreview] = useState('');
 
+  // ============================================================
+  // STATE MẬT KHẨU
+  // ============================================================
   const [passwordData, setPasswordData] = useState({
     currentPassword: '',
     newPassword: '',
     confirmNewPassword: ''
   });
 
-  const fetchBiz = async () => {
+  // ============================================================
+  // HÀM TẢI DỮ LIỆU
+  // ============================================================
+  const fetchBiz = async function () {
     try {
-      const res = await enterpriseService.getMe();
+      var res = await enterpriseService.getMe();
+
       if (res.success && res.data) {
         setBizData({
           companyName: res.data.companyName || '',
@@ -43,80 +65,131 @@ const BusinessProfileSettings = () => {
           website: res.data.website || '',
           description: res.data.description || ''
         });
+
         setLogoPreview(res.data.logoUrl);
       }
+
     } catch (err) {
       console.error("Lỗi tải thông tin doanh nghiệp");
+
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => { fetchBiz(); }, []);
+  // ============================================================
+  // EFFECT: Tải dữ liệu khi mount
+  // ============================================================
+  useEffect(function () {
+    fetchBiz();
+  }, []);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
+  // ============================================================
+  // HÀM XỬ LÝ THAY ĐỔI FORM
+  // ============================================================
+  const handleChange = function (e) {
+    var name = e.target.name;
+    var value = e.target.value;
     setBizData({ ...bizData, [name]: value });
   };
 
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
+  // ============================================================
+  // HÀM CHỌN FILE LOGO
+  // ============================================================
+  const handleFileChange = function (e) {
+    var file = e.target.files[0];
     if (file) {
       setLogoFile(file);
       setLogoPreview(URL.createObjectURL(file));
     }
   };
 
-  const handleCancel = () => {
-    if (window.confirm('Bạn có chắc muốn hủy? Các thay đổi chưa lưu sẽ bị mất.')) {
+  // ============================================================
+  // HÀM HỦY
+  // ============================================================
+  const handleCancel = function () {
+    var confirmed = window.confirm('Bạn có chắc muốn hủy? Các thay đổi chưa lưu sẽ bị mất.');
+    if (confirmed) {
       fetchBiz();
     }
   };
 
-  const handleSave = async (e) => {
+  // ============================================================
+  // HÀM LƯU HỒ SƠ
+  // ============================================================
+  const handleSave = async function (e) {
     e.preventDefault();
     setIsSaving(true);
 
-    const formData = new FormData();
-    formData.append('CompanyName', bizData.companyName);
-    formData.append('CompanyTaxCode', bizData.companyTaxCode);
-    formData.append('RepresentName', bizData.representName);
-    formData.append('Address', bizData.address);
-    formData.append('Website', bizData.website);
-    formData.append('Description', bizData.description);
-    if (logoFile) formData.append('LogoFile', logoFile);
-
     try {
+      // Tạo FormData để upload file
+      var formData = new FormData();
+      formData.append('CompanyName', bizData.companyName);
+      formData.append('CompanyTaxCode', bizData.companyTaxCode);
+      formData.append('RepresentName', bizData.representName);
+      formData.append('Address', bizData.address);
+      formData.append('Website', bizData.website);
+      formData.append('Description', bizData.description);
+
+      if (logoFile) {
+        formData.append('LogoFile', logoFile);
+      }
+
       await enterpriseService.updateMe(formData);
       alert("Cập nhật hồ sơ doanh nghiệp thành công!");
+
     } catch (err) {
-      alert("Lỗi: " + (err.response?.data?.message || "Không thể lưu dữ liệu"));
+      var msg = "Không thể lưu dữ liệu";
+      if (err.response && err.response.data && err.response.data.message) {
+        msg = err.response.data.message;
+      }
+      alert("Lỗi: " + msg);
+
     } finally {
       setIsSaving(false);
     }
   };
 
-  const handleChangePassword = async (e) => {
+  // ============================================================
+  // HÀM ĐỔI MẬT KHẨU
+  // ============================================================
+  const handleChangePassword = async function (e) {
     e.preventDefault();
+
+    // Validate
     if (!passwordData.currentPassword || !passwordData.newPassword) {
-      return alert("Vui lòng nhập đầy đủ thông tin!");
+      alert("Vui lòng nhập đầy đủ thông tin!");
+      return;
     }
+
     if (passwordData.newPassword !== passwordData.confirmNewPassword) {
-      return alert("Mật khẩu mới không khớp!");
+      alert("Mật khẩu mới không khớp!");
+      return;
     }
+
     if (passwordData.newPassword.length < 6) {
-      return alert("Mật khẩu mới phải có ít nhất 6 ký tự!");
+      alert("Mật khẩu mới phải có ít nhất 6 ký tự!");
+      return;
     }
+
     setIsSaving(true);
+
     try {
       await authService.changePassword({
         currentPassword: passwordData.currentPassword,
         newPassword: passwordData.newPassword
       });
+
       alert("Đổi mật khẩu thành công!");
       setPasswordData({ currentPassword: '', newPassword: '', confirmNewPassword: '' });
+
     } catch (err) {
-      alert("Lỗi: " + (err.response?.data?.message || "Không thể đổi mật khẩu"));
+      var msg = "Không thể đổi mật khẩu";
+      if (err.response && err.response.data && err.response.data.message) {
+        msg = err.response.data.message;
+      }
+      alert("Lỗi: " + msg);
+
     } finally {
       setIsSaving(false);
     }
@@ -153,7 +226,7 @@ const BusinessProfileSettings = () => {
                     <div className="text-center mb-5">
                       <div className="avatar-wrapper mx-auto mb-3" style={{ width: '120px', height: '120px', position: 'relative' }}>
                         <img 
-                           src={logoPreview || 'https://via.placeholder.com/120?text=LOGO'} 
+                           src={logoPreview || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' fill='%23e2e8f0'%3E%3Crect width='120' height='120' rx='12'/%3E%3Ctext x='50%25' y='55%25' dominant-baseline='middle' text-anchor='middle' fill='%2364748b' font-size='14'%3ELOGO%3C/text%3E%3C/svg%3E"} 
                            alt="Logo" 
                            className="w-100 h-100 object-fit-contain bg-white rounded-3 p-2" 
                         />

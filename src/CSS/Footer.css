@@ -87,4 +87,11 @@
     .social-links {
         justify-content: center;
     }
+
+    /* Footer: reduce padding, better spacing */
+    .footer-glass { padding: 30px 0 20px !important; }
+    .footer-links li { margin-bottom: 8px; }
+    .footer-links li a { font-size: 13px; padding: 4px 0; display: block; }
+    .social-icon-btn { width: 42px; height: 42px; border-radius: 12px; }
+    .contact-circle { width: 36px; height: 36px; }
 }

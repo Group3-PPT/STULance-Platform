@@ -12,52 +12,91 @@ import ReportModal from '../../components/ReportModal';
 import '../../CSS/BusinessProfile.css';
 
 const BusinessProfile = () => {
-  const { id } = useParams();
+  // ============================================================
+  // ROUTING
+  // ============================================================
+  var params = useParams();
+  var id = params.id;
+
+  // ============================================================
+  // STATE
+  // ============================================================
+
+  // Loading trang
   const [loading, setLoading] = useState(true);
+
+  // Thông tin doanh nghiệp
   const [company, setCompany] = useState(null);
+
+  // Danh sách job đang tuyển
   const [jobs, setJobs] = useState([]);
+
+  // Loading danh sách job
   const [jobsLoading, setJobsLoading] = useState(false);
+
+  // Đang theo dõi
   const [isFollowing, setIsFollowing] = useState(false);
+
+  // Loading theo dõi
   const [followLoading, setFollowLoading] = useState(false);
+
+  // Có phải hồ sơ của mình không
   const [isOwnProfile, setIsOwnProfile] = useState(false);
+
+  // Hiện modal tố cáo
   const [showReportModal, setShowReportModal] = useState(false);
 
-  useEffect(() => {
-    const fetchProfile = async () => {
+  // ============================================================
+  // EFFECT: TẢI DỮ LIỆU
+  // ============================================================
+  useEffect(function () {
+    var fetchProfile = async function () {
       setLoading(true);
+
       try {
-        let res;
+        var res;
+
         if (id) {
+          // Xem hồ sơ công khai
           res = await enterpriseService.getPublicProfile(id);
           setIsOwnProfile(false);
         } else {
+          // Xem hồ sơ của mình
           res = await enterpriseService.getMe();
           setIsOwnProfile(true);
         }
 
+        // Xử lý dữ liệu doanh nghiệp
         if (res.success !== false) {
-          const data = res.data || res;
+          var data = res.data || res;
           setCompany(data);
 
+          // Tải danh sách job
           setJobsLoading(true);
+
           try {
+            var jobRes;
+
             if (id) {
-              const jobRes = await jobService.getAllPublicJobs({ enterpriseId: id, pageSize: 50 });
-              const jobData = jobRes.data || jobRes;
-              setJobs(jobData.items || []);
+              jobRes = await jobService.getAllPublicJobs({ enterpriseId: id, pageSize: 50 });
             } else {
-              const jobRes = await jobService.getMyJobs({ pageSize: 50 });
-              const jobData = jobRes.data || jobRes;
-              setJobs(jobData.items || []);
+              jobRes = await jobService.getMyJobs({ pageSize: 50 });
             }
+
+            var jobData = jobRes.data || jobRes;
+            setJobs(jobData.items || []);
+
           } catch (e) {
             console.error("Lỗi tải bài đăng:", e);
+
           } finally {
             setJobsLoading(false);
           }
         }
-    } catch (err) {
-      console.error("Lỗi tải hồ sơ doanh nghiệp:", err);
+
+      } catch (err) {
+        console.error("Lỗi tải hồ sơ doanh nghiệp:", err);
+
       } finally {
         setLoading(false);
       }
@@ -66,27 +105,54 @@ const BusinessProfile = () => {
     fetchProfile();
   }, [id]);
 
-  const handleFollow = async () => {
+  // ============================================================
+  // HÀM THEO DÕI
+  // ============================================================
+  const handleFollow = async function () {
     setFollowLoading(true);
+
     try {
+      // Toggle theo dõi
       setIsFollowing(!isFollowing);
+
     } catch (err) {
-      alert("Lỗi: " + (err.response?.data?.message || "Không thể thực hiện"));
+      var msg = "Không thể thực hiện";
+      if (err.response && err.response.data && err.response.data.message) {
+        msg = err.response.data.message;
+      }
+      alert("Lỗi: " + msg);
+
     } finally {
       setFollowLoading(false);
     }
   };
 
-  const formatMoney = (val) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val || 0);
+  // ============================================================
+  // HÀM FORMAT TIỀN TỆ
+  // ============================================================
+  const formatMoney = function (val) {
+    if (!val) val = 0;
+    return new Intl.NumberFormat('vi-VN', {
+      style: 'currency',
+      currency: 'VND'
+    }).format(val);
+  };
 
-  const getStatusBadge = (status) => {
-    const map = {
+  // ============================================================
+  // HÀM LẤY BADGE TRẠNG THÁI JOB
+  // ============================================================
+  const getStatusBadge = function (status) {
+    var map = {
       'PENDING': { bg: 'warning', text: 'dark', label: 'Chờ duyệt' },
       'APPROVED': { bg: 'success', text: 'white', label: 'Đang tuyển' },
       'REJECTED': { bg: 'danger', text: 'white', label: 'Bị từ chối' },
-      'CLOSED': { bg: 'secondary', text: 'white', label: 'Đã đóng' },
+      'CLOSED': { bg: 'secondary', text: 'white', label: 'Đã đóng' }
     };
-    return map[status] || { bg: 'secondary', text: 'white', label: status };
+
+    if (map[status]) {
+      return map[status];
+    }
+    return { bg: 'secondary', text: 'white', label: status };
   };
 
   if (loading) return (
@@ -107,7 +173,7 @@ const BusinessProfile = () => {
           <div className="biz-main-info-row">
             <div className="biz-logo-large glass-card p-2 bg-white">
               <img
-                src={company.logoUrl || 'https://via.placeholder.com/150?text=LOGO'}
+                src={company.logoUrl || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150' fill='%23e2e8f0'%3E%3Crect width='150' height='150' rx='12'/%3E%3Ctext x='50%25' y='55%25' dominant-baseline='middle' text-anchor='middle' fill='%2364748b' font-size='14'%3ELOGO%3C/text%3E%3C/svg%3E"}
                 alt="Logo"
                 className="w-100 h-100 object-fit-contain"
               />

@@ -30,52 +30,118 @@ const EMPTY_CV = {
 };
 
 const CVMaker = () => {
+  // ============================================================
+  // NAVIGATION
+  // ============================================================
   const navigate = useNavigate();
 
-  const [cv, setCv] = useState(() => {
-    const saved = localStorage.getItem('stulance_cv_current');
-    return saved ? JSON.parse(saved) : EMPTY_CV;
+  // ============================================================
+  // STATE - DỮ LIỆU CV
+  // ============================================================
+
+  // Dữ liệu CV hiện tại (từ localStorage hoặc mặc định)
+  const [cv, setCv] = useState(function () {
+    var saved = localStorage.getItem('stulance_cv_current');
+    if (saved) {
+      return JSON.parse(saved);
+    }
+    return EMPTY_CV;
   });
 
-  const [aiModal, setAiModal] = useState({ show: false, title: '', content: '', loading: false, type: '' });
+  // ============================================================
+  // STATE - MODAL AI
+  // ============================================================
+
+  // Modal AI: hiển thị kết quả phân tích/tối ưu CV
+  const [aiModal, setAiModal] = useState({
+    show: false,
+    title: '',
+    content: '',
+    loading: false,
+    type: ''
+  });
+
+  // ============================================================
+  // STATE - LỊCH SỬ CV
+  // ============================================================
+
+  // Hiện modal lịch sử
   const [showHistory, setShowHistory] = useState(false);
+
+  // Danh sách CV đã lưu
   const [history, setHistory] = useState([]);
+
+  // Đã copy nội dung AI chưa
   const [copied, setCopied] = useState(false);
+
+  // Đang lưu CV
   const [saving, setSaving] = useState(false);
+
+  // Đang tải lịch sử
   const [loadingHistory, setLoadingHistory] = useState(false);
+
+  // ID CV đang xóa
   const [deletingId, setDeletingId] = useState(null);
+
+  // ID CV đang đặt mặc định
   const [defaultId, setDefaultId] = useState(null);
 
+  // ============================================================
+  // STATE - PHÂN TRANG LỊCH SỬ
+  // ============================================================
   const [cvPage, setCvPage] = useState(1);
   const [cvTotalPages, setCvTotalPages] = useState(1);
   const [cvTotalItems, setCvTotalItems] = useState(0);
   const cvPageSize = 10;
 
-  useEffect(() => {
+  // ============================================================
+  // EFFECT: TỰ ĐỘNG LƯU CV VÀO LOCALSTORAGE
+  // ============================================================
+  useEffect(function () {
     localStorage.setItem('stulance_cv_current', JSON.stringify(cv));
   }, [cv]);
 
-  useEffect(() => {
-    const fetchCvs = async () => {
+  // ============================================================
+  // EFFECT: TẢI DANH SÁCH CV TỪ SERVER
+  // ============================================================
+  useEffect(function () {
+    var fetchCvs = async function () {
       try {
-        const data = await cvApi.getMyCvs();
+        var res = await cvApi.getMyCvs();
+        var data = (res && res.data && res.data.items) || (Array.isArray(res) ? res : []);
+
+        // Kiểm tra dữ liệu hợp lệ
         if (data && Array.isArray(data) && data.length > 0) {
           setHistory(data);
-          const defaultCv = data.find(item => item.isDefault) || data[0];
+
+          // Tìm CV mặc định (hoặc CV đầu tiên)
+          var defaultCv = null;
+          for (var i = 0; i < data.length; i++) {
+            if (data[i].isDefault) {
+              defaultCv = data[i];
+              break;
+            }
+          }
+          if (!defaultCv) {
+            defaultCv = data[0];
+          }
+
+          // Nếu chưa có CV nào đang mở → load CV mặc định
           if (defaultCv && !cv.id) {
+            var ownerData = defaultCv.owner || {};
             setCv({
-              id: defaultCv.id,
-              cvTitle: defaultCv.cvTitle || '',
-              name: defaultCv.name || '',
-              title: defaultCv.title || '',
-              phone: defaultCv.phone || '',
+              id: defaultCv.cvId || defaultCv.id,
+              cvTitle: defaultCv.title || defaultCv.cvTitle || '',
+              name: ownerData.fullName || defaultCv.name || '',
+              title: defaultCv.desiredPosition || defaultCv.title || '',
+              phone: ownerData.phoneNumber || defaultCv.phone || '',
               birthday: defaultCv.birthday || '',
-              email: defaultCv.email || '',
-              address: defaultCv.address || '',
-              objective: defaultCv.objective || '',
+              email: ownerData.email || defaultCv.email || '',
+              address: ownerData.location || defaultCv.address || '',
+              objective: defaultCv.professionalSummary || defaultCv.objective || '',
               skills: defaultCv.skills || '',
               hobbies: defaultCv.hobbies || '',
-              education: defaultCv.education || { school: '', time: '', major: '', detail: '' },
+              education: defaultCv.education || { school: ownerData.school || '', time: '', major: ownerData.major || '', detail: '' },
               experience: defaultCv.experience || [],
               certificates: defaultCv.certificates || [],
               projects: defaultCv.projects || []
@@ -86,50 +152,80 @@ const CVMaker = () => {
         console.error('Failed to fetch CVs from backend:', err);
       }
     };
+
     fetchCvs();
   }, []);
 
-  const handleSaveCV = async () => {
+  // ============================================================
+  // HÀM LƯU CV
+  // ============================================================
+  const handleSaveCV = async function () {
+    // Validate: phải có họ tên
     if (!cv.name.trim()) {
       alert("Vui lòng nhập họ tên!");
       return;
     }
-    setSaving(true);
-    try {
-      const payload = { ...cv };
-      delete payload.id;
-      delete payload.savedAt;
 
-      let result;
+    setSaving(true);
+
+    try {
+      // Tạo payload (bỏ id và savedAt)
+      var payload = {};
+      for (var key in cv) {
+        if (key !== 'id' && key !== 'savedAt') {
+          payload[key] = cv[key];
+        }
+      }
+
+      var result;
+
+      // Cập nhật hoặc tạo mới
       if (cv.id) {
         result = await cvApi.updateCv(cv.id, payload);
       } else {
         result = await cvApi.create(payload);
       }
 
+      // Nếu server trả về id mới → cập nhật state
       if (result && result.id) {
-        setCv(prev => ({ ...prev, id: result.id }));
+        setCv(function (prev) {
+          return { ...prev, id: result.id };
+        });
       }
 
-      const data = await cvApi.getMyCvs();
+      // Tải lại danh sách CV
+      var data = await cvApi.getMyCvs();
       if (data && Array.isArray(data)) {
         setHistory(data);
       }
 
-      alert(`Đã lưu CV: "${cv.cvTitle || cv.name}"`);
+      alert('Đã lưu CV: "' + (cv.cvTitle || cv.name) + '"');
+
     } catch (err) {
       console.error('Save CV error:', err);
-      const toSave = { ...cv, id: cv.id || Date.now(), savedAt: new Date().toISOString() };
+
+      // Lưu offline khi server lỗi
+      var toSave = {
+        ...cv,
+        id: cv.id || Date.now(),
+        savedAt: new Date().toISOString()
+      };
       localStorage.setItem('stulance_cv_backup_' + toSave.id, JSON.stringify(toSave));
+
       alert('Lỗi khi lưu lên server. CV đã được lưu tạm offline.');
+
     } finally {
       setSaving(false);
     }
   };
 
-  const handleLoadFromHistory = async (item) => {
+  // ============================================================
+  // HÀM TẢI CV TỪ LỊCH SỬ
+  // ============================================================
+  const handleLoadFromHistory = async function (item) {
     try {
-      const detail = await cvApi.getCvDetail(item.id);
+      var detail = await cvApi.getCvDetail(item.id);
+
       if (detail) {
         setCv({
           id: detail.id,
@@ -155,153 +251,284 @@ const CVMaker = () => {
       console.error('Load CV detail error:', err);
       setCv(item);
     }
+
     setShowHistory(false);
   };
 
-  const handleNewCV = () => {
-    if (window.confirm('Tạo CV mới? CV hiện tại sẽ được lưu vào lịch sử.')) {
-      if (cv.name && cv.id) handleSaveCV();
-      setCv(EMPTY_CV);
+  // ============================================================
+  // HÀM TẠO CV MỚI
+  // ============================================================
+  const handleNewCV = function () {
+    var confirmed = window.confirm('Tạo CV mới? CV hiện tại sẽ được lưu vào lịch sử.');
+    if (!confirmed) return;
+
+    // Lưu CV hiện tại trước khi tạo mới
+    if (cv.name && cv.id) {
+      handleSaveCV();
     }
+
+    setCv(EMPTY_CV);
   };
 
-  const handleDeleteCv = async (cvId, e) => {
+  // ============================================================
+  // HÀM XÓA CV
+  // ============================================================
+  const handleDeleteCv = async function (cvId, e) {
     e.stopPropagation();
-    if (!window.confirm('Bạn có chắc muốn xóa CV này?')) return;
+
+    var confirmed = window.confirm('Bạn có chắc muốn xóa CV này?');
+    if (!confirmed) return;
+
     setDeletingId(cvId);
+
     try {
       await cvApi.deleteCv(cvId);
-      setHistory(prev => prev.filter(item => item.id !== cvId));
+
+      // Xóa khỏi danh sách lịch sử
+      setHistory(function (prev) {
+        return prev.filter(function (item) {
+          return item.id !== cvId;
+        });
+      });
+
+      // Nếu xóa CV đang mở → reset
       if (cv.id === cvId) {
         setCv(EMPTY_CV);
       }
+
     } catch (err) {
       console.error('Delete CV error:', err);
       alert('Xóa CV thất bại. Vui lòng thử lại.');
+
     } finally {
       setDeletingId(null);
     }
   };
 
-  const handleSetDefault = async (cvId, e) => {
+  // ============================================================
+  // HÀM ĐẶT CV MẶC ĐỊNH
+  // ============================================================
+  const handleSetDefault = async function (cvId, e) {
     e.stopPropagation();
     setDefaultId(cvId);
+
     try {
       await cvApi.setDefault(cvId);
-      setHistory(prev => prev.map(item => ({
-        ...item,
-        isDefault: item.id === cvId
-      })));
+
+      // Cập nhật danh sách lịch sử
+      setHistory(function (prev) {
+        return prev.map(function (item) {
+          if (item.id === cvId) {
+            return { ...item, isDefault: true };
+          }
+          return { ...item, isDefault: false };
+        });
+      });
+
     } catch (err) {
       console.error('Set default CV error:', err);
       alert('Đặt làm CV mặc định thất bại.');
+
     } finally {
       setDefaultId(null);
     }
   };
 
-  const openHistoryModal = async (page = 1) => {
+  // ============================================================
+  // HÀM MỞ MODAL LỊCH SỬ (PHÂN TRANG)
+  // ============================================================
+  const openHistoryModal = async function (page) {
+    if (!page) page = 1;
+
     setShowHistory(true);
     setLoadingHistory(true);
+
     try {
-      const res = await cvApi.getMyCvs({ page, pageSize: cvPageSize });
+      var res = await cvApi.getMyCvs({ page: page, pageSize: cvPageSize });
+
       if (res && res.data) {
-        const data = res.data;
+        // Response dạng PagedResponse
+        var data = res.data;
         setHistory(data.items || []);
         setCvTotalPages(data.totalPages || 1);
         setCvTotalItems(data.totalItems || 0);
         setCvPage(data.page || 1);
+
       } else if (Array.isArray(res)) {
+        // Response dạng mảng
         setHistory(res);
         setCvTotalPages(1);
         setCvTotalItems(res.length);
       }
+
     } catch (err) {
       console.error('Fetch history error:', err);
+
     } finally {
       setLoadingHistory(false);
     }
   };
 
-  const handleCvPageChange = (page) => {
+  // ============================================================
+  // HÀM CHUYỂN TRANG LỊCH SỬ
+  // ============================================================
+  const handleCvPageChange = function (page) {
     openHistoryModal(page);
   };
 
-  const openAiModal = async (type) => {
-    const loadingTitles = {
+  // ============================================================
+  // HÀM MỞ MODAL AI
+  // ============================================================
+  const openAiModal = async function (type) {
+    // Tiêu đề loading theo từng loại
+    var loadingTitles = {
       score: '🔍 Đang phân tích CV...',
       improve: '✨ Đang tối ưu CV...',
       suggest: '💡 Đang tạo gợi ý...',
       objective: '🎯 Đang viết mục tiêu...'
     };
 
-    setAiModal({ show: true, title: loadingTitles[type], content: '', loading: true, type });
+    // Mở modal với trạng thái loading
+    setAiModal({
+      show: true,
+      title: loadingTitles[type],
+      content: '',
+      loading: true,
+      type: type
+    });
 
     try {
-      let result;
+      var result;
+
       switch (type) {
         case 'score':
           result = await scoreMyCV(cv);
           break;
+
         case 'improve':
           result = await improveMyCV(cv);
+          // Nếu thành công → hiển thị kết quả để người dùng chọn áp dụng
           if (result.success && result.data) {
-            setAiModal(prev => ({ ...prev, content: result.raw, loading: false, title: '✨ CV đã tối ưu - Áp dụng?', type: 'improve-result', improveData: result.data }));
+            setAiModal(function (prev) {
+              return {
+                ...prev,
+                content: result.raw,
+                loading: false,
+                title: '✨ CV đã tối ưu - Áp dụng?',
+                type: 'improve-result',
+                improveData: result.data
+              };
+            });
             return;
           }
           break;
+
         case 'suggest':
           result = await suggestImprovements(cv);
           break;
+
         case 'objective':
           result = await generateObjective(cv);
+          // Nếu thành công → hiển thị các lựa chọn mục tiêu
           if (result.success && result.data) {
-            setAiModal(prev => ({ ...prev, content: result.raw, loading: false, title: '🎯 Chọn mục tiêu', type: 'objective-result', objectiveData: result.data }));
+            setAiModal(function (prev) {
+              return {
+                ...prev,
+                content: result.raw,
+                loading: false,
+                title: '🎯 Chọn mục tiêu',
+                type: 'objective-result',
+                objectiveData: result.data
+              };
+            });
             return;
           }
           break;
-        default: return;
+
+        default:
+          return;
       }
-      setAiModal(prev => ({ ...prev, content: result.raw || result, loading: false }));
+
+      // Hiển thị kết quả (score / suggest)
+      setAiModal(function (prev) {
+        return {
+          ...prev,
+          content: result.raw || result,
+          loading: false
+        };
+      });
+
     } catch (err) {
-      setAiModal(prev => ({ ...prev, content: `❌ Lỗi: ${err.message}\n\nVui lòng thử lại.`, loading: false }));
+      setAiModal(function (prev) {
+        return {
+          ...prev,
+          content: '❌ Lỗi: ' + err.message + '\n\nVui lòng thử lại.',
+          loading: false
+        };
+      });
     }
   };
 
-  const applyImprovements = (data) => {
-    setCv(prev => ({
-      ...prev,
-      objective: data.objective || prev.objective,
-      skills: Array.isArray(data.skills) ? data.skills.join('\n') : (data.skills || prev.skills),
-      experience: data.experience || prev.experience,
-      projects: data.projects || prev.projects
-    }));
+  // ============================================================
+  // HÀM ÁP DỤNG TỐI ƯU CV
+  // ============================================================
+  const applyImprovements = function (data) {
+    setCv(function (prev) {
+      return {
+        ...prev,
+        objective: data.objective || prev.objective,
+        // Skills có thể là mảng hoặc chuỗi
+        skills: Array.isArray(data.skills) ? data.skills.join('\n') : (data.skills || prev.skills),
+        experience: data.experience || prev.experience,
+        projects: data.projects || prev.projects
+      };
+    });
+
     setAiModal({ show: false, title: '', content: '', loading: false, type: '' });
   };
 
-  const applyObjective = (text) => {
-    setCv(prev => ({ ...prev, objective: text }));
+  // ============================================================
+  // HÀM ÁP DỤNG MỤC TIÊU
+  // ============================================================
+  const applyObjective = function (text) {
+    setCv(function (prev) {
+      return { ...prev, objective: text };
+    });
     setAiModal({ show: false, title: '', content: '', loading: false, type: '' });
   };
 
-  const handleCopy = () => {
+  // ============================================================
+  // HÀM COPY NỘI DUNG AI
+  // ============================================================
+  const handleCopy = function () {
     navigator.clipboard.writeText(aiModal.content);
     setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    setTimeout(function () { setCopied(false); }, 2000);
   };
 
-  const updateList = (key, index, field, value) => {
-    let newArr = [...cv[key]];
-    newArr[index][field] = value;
+  // ============================================================
+  // CÁC HÀM QUẢN LÝ MẢNG (EXPERIENCE, PROJECTS, CERTIFICATES)
+  // ============================================================
+
+  // Cập nhật 1 trường trong mảng
+  const updateList = function (key, index, field, value) {
+    var newArr = [...cv[key]];
+    newArr[index] = { ...newArr[index], [field]: value };
     setCv({ ...cv, [key]: newArr });
   };
 
-  const addListItem = (key, defaultObj) => {
-    setCv({ ...cv, [key]: [...cv[key], { ...defaultObj, id: Date.now() }] });
+  // Thêm phần tử mới vào mảng
+  const addListItem = function (key, defaultObj) {
+    var newItem = { ...defaultObj, id: Date.now() };
+    setCv({ ...cv, [key]: [...cv[key], newItem] });
   };
 
-  const removeListItem = (key, id) => {
-    setCv({ ...cv, [key]: cv[key].filter(item => item.id !== id) });
+  // Xóa phần tử khỏi mảng
+  const removeListItem = function (key, id) {
+    var newArr = cv[key].filter(function (item) {
+      return item.id !== id;
+    });
+    setCv({ ...cv, [key]: newArr });
   };
 
   return (

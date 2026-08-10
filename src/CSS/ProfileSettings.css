@@ -108,12 +108,21 @@
         overflow-x: auto;
         gap: 10px;
         white-space: nowrap;
+        scrollbar-width: none;
+        padding-bottom: 4px;
     }
+    .settings-sidebar::-webkit-scrollbar { display: none; }
     
     .settings-nav-item {
         margin-bottom: 0;
         padding: 10px 20px;
+        flex-shrink: 0;
+        font-size: 13px;
+        min-height: 44px;
     }
+
+    .avatar-wrapper { width: 120px; height: 120px; }
+    .settings-input { font-size: 16px !important; padding: 14px 16px !important; }
 }
 
 .suggestion-dropdown {

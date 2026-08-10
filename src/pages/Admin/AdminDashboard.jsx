@@ -244,8 +244,8 @@ const AdminDashboard = () => {
         <Col lg={7}>
           <div className="glass-card p-4 h-100">
             <h5 className="text-white fw-bold mb-4">Giao dịch 6 tháng gần đây</h5>
-            <div style={{ width: '100%', height: 300 }}>
-              <ResponsiveContainer>
+            <div style={{ width: '100%', height: 300, minWidth: 0 }}>
+              <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={chartData.length > 0 ? chartData : [
                   { name: 'T1', contracts: 0, revenue: 0 },
                   { name: 'T2', contracts: 0, revenue: 0 },
@@ -275,8 +275,8 @@ const AdminDashboard = () => {
           <div className="glass-card p-4 h-100">
             <h5 className="text-white fw-bold mb-4">Phân bổ hệ thống</h5>
             {pieData.length > 0 ? (
-              <div className="d-flex align-items-center justify-content-center" style={{ height: 300 }}>
-                <ResponsiveContainer>
+              <div className="d-flex align-items-center justify-content-center" style={{ height: 300, minWidth: 0 }}>
+                <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie data={pieData} cx="50%" cy="50%" innerRadius={55} outerRadius={95}
                       paddingAngle={4} dataKey="value"
@@ -300,8 +300,8 @@ const AdminDashboard = () => {
           <div className="glass-card p-4 h-100">
             <h5 className="text-white fw-bold mb-4">Người dùng theo vai trò</h5>
             {rolePieData.length > 0 ? (
-              <div className="d-flex align-items-center justify-content-center" style={{ height: 260 }}>
-                <ResponsiveContainer>
+              <div className="d-flex align-items-center justify-content-center" style={{ height: 260, minWidth: 0 }}>
+                <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie data={rolePieData} cx="50%" cy="50%" innerRadius={55} outerRadius={90}
                       paddingAngle={4} dataKey="value"
@@ -321,8 +321,8 @@ const AdminDashboard = () => {
         <Col lg={7}>
           <div className="glass-card p-4 h-100">
             <h5 className="text-white fw-bold mb-4">Hợp đồng theo tháng</h5>
-            <div style={{ width: '100%', height: 260 }}>
-              <ResponsiveContainer>
+            <div style={{ width: '100%', height: 260, minWidth: 0 }}>
+              <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={chartData.length > 0 ? chartData : [
                   { name: 'T1', contracts: 0, completed: 0 },
                   { name: 'T2', contracts: 0, completed: 0 },

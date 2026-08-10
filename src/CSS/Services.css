@@ -265,4 +265,11 @@
 @media (max-width: 768px) {
     .svc-card-v-img { height: 180px; }
     .svc-card-v-body { padding: 12px 14px 14px; }
+    .svc-card-v-title { font-size: 0.88rem; }
+    .svc-card-v-price-tag { font-size: 0.8rem; padding: 5px 12px; }
+    .svc-card-v-heart { width: 34px; height: 34px; }
+    .svc-card-v-stats { gap: 12px; }
+    .svc-card-v-stat { font-size: 0.65rem; }
+    /* Disable hover on mobile */
+    .svc-card-v:hover { transform: none !important; }
 }

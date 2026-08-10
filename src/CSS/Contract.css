@@ -404,6 +404,22 @@
     .sigCanvas {
         height: 150px !important;
     }
+
+    /* Contract paper: reduce padding on mobile */
+    .contract-paper { padding: 24px 18px !important; font-size: 12px; }
+    .signature-row { grid-template-columns: 1fr; gap: 20px; }
+    .stamp-box { min-width: 90px; min-height: 50px; font-size: 14px; }
+    .empty-sig { width: 100px; height: 50px; font-size: 10px; }
+
+    /* Sign page */
+    .sign-main-card { padding: 24px 16px !important; border-radius: 16px !important; }
+    .sign-summary-row { grid-template-columns: 1fr 1fr !important; gap: 12px !important; }
+    .sign-summary-item { gap: 6px; }
+    .sign-summary-value { font-size: 12px; }
+    .sign-summary-value.price { font-size: 14px; }
+    .sign-submit-btn { padding: 14px 20px; font-size: 13px; min-height: 48px; }
+    .sign-legal-notice { padding: 12px; gap: 10px; }
+    .sign-legal-notice p { font-size: 11px; }
 }
 
 /* Contract Detail - Signature Area */

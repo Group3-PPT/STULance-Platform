@@ -675,9 +675,55 @@
 
 /* --- RESPONSIVE --- */
 @media (max-width: 768px) {
-    .hero-search-section { padding: 50px 0 35px; }
-    .main-title { font-size: 2rem !important; }
-    .hero-quick-stats { gap: 12px; }
-    .quick-stat-item { font-size: 0.8rem; }
+    .hero-search-section { padding: 40px 0 28px; }
+    .main-title { font-size: 1.6rem !important; letter-spacing: -0.5px; }
+    .hero-slogan { font-size: 0.65rem !important; letter-spacing: 1px; }
+    .hero-quick-stats { gap: 8px; }
+    .quick-stat-item { font-size: 0.7rem; gap: 4px; }
+    .quick-stat-divider { display: none; }
     .service-card-img-wrapper { height: 150px; }
+    .search-container { border-radius: 12px !important; }
+    .search-header { padding: 8px 12px; font-size: 10px; }
+    .section-badge { font-size: 0.55rem; padding: 4px 10px; }
+
+    /* Job cards: stack on mobile */
+    .job-card-h { border-radius: 12px; }
+    .job-card-h-header { padding: 12px; }
+    .job-card-h-footer { padding: 10px 12px; }
+
+    /* Service cards: full-width image on mobile */
+    .svc-card-h { border-radius: 12px; height: auto; }
+    .svc-card-h-img { width: 100%; min-width: 0; height: 160px; }
+    .svc-card-h-body { padding: 12px; }
+
+    /* Category cards: 2 columns on mobile */
+    .cat-card { padding: 16px 10px; }
+    .cat-icon-wrapper { width: 40px; height: 40px; }
+
+    /* Guide cards: stack */
+    .guide-step-card { padding: 18px 14px !important; }
+
+    /* CTA section */
+    .cta-card { padding: 24px 16px !important; border-radius: 14px !important; }
+
+    /* Partner cards */
+    .home-partner-card { padding: 14px 12px !important; border-radius: 12px !important; }
+    .partner-logo-wrap { width: 42px; height: 42px; }
+
+    /* Reduce hover effects on mobile */
+    .job-card-h:hover, .svc-card-h:hover, .cat-card:hover,
+    .guide-step-card:hover, .home-partner-card:hover {
+        transform: none !important;
+    }
+}
+
+/* Phone-specific */
+@media (max-width: 480px) {
+    .main-title { font-size: 1.4rem !important; }
+    .hero-badge-inline { font-size: 0.5rem; padding: 4px 10px; }
+    .hero-search-btn { padding: 10px 12px !important; font-size: 0.8rem !important; }
+    .job-card-h-title { font-size: 0.82rem; }
+    .job-price { font-size: 0.85rem; }
+    .svc-card-h-title { font-size: 0.82rem; }
+    .svc-card-h-price { font-size: 0.85rem; }
 }

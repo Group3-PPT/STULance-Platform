@@ -35,39 +35,87 @@ const PAYMENT_TYPE = {
 };
 
 const Payment = () => {
+  // ============================================================
+  // STATE
+  // ============================================================
+
+  // Loading trang
   const [loading, setLoading] = useState(true);
+
+  // Số dư ví
   const [balance, setBalance] = useState(0);
+
+  // Danh sách giao dịch (payments)
   const [payments, setPayments] = useState([]);
+
+  // Danh sách yêu cầu rút tiền
   const [withdrawals, setWithdrawals] = useState([]);
+
+  // Thông tin người dùng (tên, vai trò)
   const [userData, setUserData] = useState({ fullName: '', roleName: '' });
+
+  // Đang xử lý giao dịch (disable nút)
   const [isProcessing, setIsProcessing] = useState(false);
+
+  // Hiện modal rút tiền
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
+
+  // ============================================================
+  // STATE FORM RÚT TIỀN
+  // ============================================================
   const [withdrawAmount, setWithdrawAmount] = useState('');
   const [withdrawBank, setWithdrawBank] = useState('');
   const [withdrawAccount, setWithdrawAccount] = useState('');
   const [withdrawAccountName, setWithdrawAccountName] = useState('');
   const [withdrawNote, setWithdrawNote] = useState('');
+
+  // ============================================================
+  // STATE CHI TIẾT RÚT TIỀN
+  // ============================================================
   const [selectedWithdrawal, setSelectedWithdrawal] = useState(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
+
+  // Tab đang xem (history / withdrawals)
   const [activeTab, setActiveTab] = useState('history');
+
+  // Thông báo lỗi
   const [error, setError] = useState(null);
 
+  // ============================================================
+  // PHÂN TRANG - GIAO DỊCH
+  // ============================================================
   const [paymentsPage, setPaymentsPage] = useState(1);
   const [paymentsTotalPages, setPaymentsTotalPages] = useState(1);
   const [paymentsTotalItems, setPaymentsTotalItems] = useState(0);
 
+  // ============================================================
+  // PHÂN TRANG - RÚT TIỀN
+  // ============================================================
   const [withdrawalsPage, setWithdrawalsPage] = useState(1);
   const [withdrawalsTotalPages, setWithdrawalsTotalPages] = useState(1);
   const [withdrawalsTotalItems, setWithdrawalsTotalItems] = useState(0);
+
   const pageSize = 10;
 
-  useEffect(() => { initData(); }, []);
+  // ============================================================
+  // EFFECT: Tải dữ liệu khi trang loads
+  // ============================================================
+  useEffect(function () {
+    initData();
+  }, []);
 
-  const fetchPayments = useCallback(async (page = 1) => {
+  // ============================================================
+  // HÀM TẢI GIAO DỊCH (payments) - PHÂN TRANG
+  // ============================================================
+  const fetchPayments = useCallback(async function (page) {
+    if (!page) page = 1;
+
     try {
-      const res = await paymentService.getMyPayments({ page, pageSize });
+      var res = await paymentService.getMyPayments({ page: page, pageSize: pageSize });
+
       if (res.success && res.data) {
-        const data = res.data;
+        var data = res.data;
+
         setPayments(data.items || []);
         setPaymentsTotalPages(data.totalPages || 1);
         setPaymentsTotalItems(data.totalItems || 0);
@@ -78,11 +126,18 @@ const Payment = () => {
     }
   }, []);
 
-  const fetchWithdrawals = useCallback(async (page = 1) => {
+  // ============================================================
+  // HÀM TẢI YÊU CẦU RÚT TIỀN - PHÂN TRANG
+  // ============================================================
+  const fetchWithdrawals = useCallback(async function (page) {
+    if (!page) page = 1;
+
     try {
-      const res = await withdrawalService.getMyWithdrawals({ page, pageSize });
+      var res = await withdrawalService.getMyWithdrawals({ page: page, pageSize: pageSize });
+
       if (res.success && res.data) {
-        const data = res.data;
+        var data = res.data;
+
         setWithdrawals(data.items || []);
         setWithdrawalsTotalPages(data.totalPages || 1);
         setWithdrawalsTotalItems(data.totalItems || 0);
@@ -93,17 +148,29 @@ const Payment = () => {
     }
   }, []);
 
-  const initData = async () => {
+  // ============================================================
+  // HÀM TẢI DỮ LIỆU BAN ĐẦU
+  // ============================================================
+  const initData = async function () {
     setLoading(true);
     setError(null);
-    try {
-      const userRole = localStorage.getItem('userRole');
 
-      const [profileRes, financeRes] = await Promise.allSettled([
+    try {
+      var userRole = localStorage.getItem('userRole');
+
+      // Tải song song: profile + thông tin tài chính
+      var results = await Promise.allSettled([
         profileService.getBasicProfile(),
-        userRole === 'STUDENT' ? studentService.getProfile() : enterpriseService.getMe()
+        // Gọi API khác nhau tùy vai trò
+        userRole === 'STUDENT'
+          ? studentService.getProfile()
+          : enterpriseService.getMe()
       ]);
 
+      var profileRes = results[0];
+      var financeRes = results[1];
+
+      // Xử lý kết quả profile
       if (profileRes.status === 'fulfilled' && profileRes.value.success) {
         setUserData({
           fullName: profileRes.value.data.fullName,
@@ -111,11 +178,15 @@ const Payment = () => {
         });
       }
 
+      // Xử lý kết quả tài chính (số dư)
       if (financeRes.status === 'fulfilled' && financeRes.value.success) {
-        setBalance(financeRes.value.data.walletBalance || 0);
+        var walletBalance = financeRes.value.data.walletBalance || 0;
+        setBalance(walletBalance);
       }
 
+      // Tải giao dịch và rút tiền song song
       await Promise.allSettled([fetchPayments(1), fetchWithdrawals(1)]);
+
     } catch (err) {
       console.error('Lỗi tải dữ liệu:', err);
       setError('Không thể tải dữ liệu tài chính. Vui lòng thử lại.');
@@ -124,82 +195,140 @@ const Payment = () => {
     }
   };
 
-  const handleCreateWithdrawal = async () => {
-    const amount = parseInt(withdrawAmount);
+  // ============================================================
+  // HÀM TẠO YÊU CẦU RÚT TIỀN
+  // ============================================================
+  const handleCreateWithdrawal = async function () {
+    var amount = parseInt(withdrawAmount);
+
+    // Validate số tiền
     if (!amount || amount < 50000) {
       alert('Số tiền tối thiểu 50.000đ');
       return;
     }
+
     if (amount > balance) {
       alert('Số dư không đủ');
       return;
     }
+
+    // Validate thông tin ngân hàng
     if (!withdrawBank.trim() || !withdrawAccount.trim() || !withdrawAccountName.trim()) {
       alert('Vui lòng nhập đầy đủ thông tin ngân hàng');
       return;
     }
 
     setIsProcessing(true);
+
     try {
       await withdrawalService.createWithdrawal({
-        amount,
+        amount: amount,
         bankName: withdrawBank,
-        accountNumber: withdrawAccount,
-        accountName: withdrawAccountName,
-        note: withdrawNote
+        bankAccountNumber: withdrawAccount,
+        bankAccountHolder: withdrawAccountName
       });
+
       alert('Gửi yêu cầu rút tiền thành công!');
       setShowWithdrawModal(false);
       resetForm();
+
+      // Tải lại dữ liệu
       initData();
+
     } catch (err) {
-      alert('Lỗi: ' + (err.response?.data?.message || err.message));
+      var msg = err.message;
+      if (err.response && err.response.data && err.response.data.message) {
+        msg = err.response.data.message;
+      }
+      alert('Lỗi: ' + msg);
     } finally {
       setIsProcessing(false);
     }
   };
 
-  const handleCancelWithdrawal = async (id) => {
-    if (!window.confirm('Bạn muốn hủy yêu cầu rút tiền này?')) return;
+  // ============================================================
+  // HÀM HỦY YÊU CẦU RÚT TIỀN
+  // ============================================================
+  const handleCancelWithdrawal = async function (id) {
+    var confirmed = window.confirm('Bạn muốn hủy yêu cầu rút tiền này?');
+    if (!confirmed) return;
+
     try {
       await withdrawalService.cancelWithdrawal(id);
       alert('Đã hủy yêu cầu');
+
+      // Tải lại danh sách rút tiền
       fetchWithdrawals(withdrawalsPage);
+
     } catch (err) {
-      alert('Lỗi: ' + (err.response?.data?.message || err.message));
+      var msg = err.message;
+      if (err.response && err.response.data && err.response.data.message) {
+        msg = err.response.data.message;
+      }
+      alert('Lỗi: ' + msg);
     }
   };
 
-  const resetForm = () => {
+  // ============================================================
+  // HÀM RESET FORM RÚT TIỀN
+  // ============================================================
+  const resetForm = function () {
     setWithdrawAmount('');
     setWithdrawBank('');
     setWithdrawAccount('');
     setWithdrawAccountName('');
     setWithdrawNote('');
-    setDepositAmount('');
   };
 
-  const formatMoney = (val) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val || 0);
+  // ============================================================
+  // HÀM FORMAT TIỀN TỆ
+  // ============================================================
+  const formatMoney = function (val) {
+    if (!val) val = 0;
+    return new Intl.NumberFormat('vi-VN', {
+      style: 'currency',
+      currency: 'VND'
+    }).format(val);
+  };
 
-  const getTransactionIcon = (type) => {
+  // ============================================================
+  // HÀM LẤY ICON THEO LOẠI GIAO DỊCH
+  // ============================================================
+  const getTransactionIcon = function (type) {
     switch (type) {
-      case 'DEPOSIT': return <ArrowDown size={16} className="text-success" />;
-      case 'WITHDRAWAL': return <ArrowUp size={16} className="text-danger" />;
-      case 'ESCROW': return <Banknote size={16} className="text-warning" />;
-      case 'PAYMENT': return <CreditCard size={16} className="text-primary" />;
-      case 'REFUND': return <RefreshCw size={16} className="text-info" />;
-      default: return <Banknote size={16} className="text-white-50" />;
+      case 'DEPOSIT':
+        return <ArrowDown size={16} className="text-success" />;
+      case 'WITHDRAWAL':
+        return <ArrowUp size={16} className="text-danger" />;
+      case 'ESCROW':
+        return <Banknote size={16} className="text-warning" />;
+      case 'PAYMENT':
+        return <CreditCard size={16} className="text-primary" />;
+      case 'REFUND':
+        return <RefreshCw size={16} className="text-info" />;
+      default:
+        return <Banknote size={16} className="text-white-50" />;
     }
   };
 
-  const getTransactionLabel = (type) => {
+  // ============================================================
+  // HÀM LẤY NHÃN THEO LOẠI GIAO DỊCH
+  // ============================================================
+  const getTransactionLabel = function (type) {
     switch (type) {
-      case 'DEPOSIT': return 'Nạp tiền';
-      case 'WITHDRAWAL': return 'Rút tiền';
-      case 'ESCROW': return 'Ký quỹ';
-      case 'PAYMENT': return 'Thanh toán';
-      case 'REFUND': return 'Hoàn tiền';
-      default: return type || 'Giao dịch';
+      case 'DEPOSIT':
+        return 'Nạp tiền';
+      case 'WITHDRAWAL':
+        return 'Rút tiền';
+      case 'ESCROW':
+        return 'Ký quỹ';
+      case 'PAYMENT':
+        return 'Thanh toán';
+      case 'REFUND':
+        return 'Hoàn tiền';
+      default:
+        if (type) return type;
+        return 'Giao dịch';
     }
   };
 

@@ -93,7 +93,7 @@ const ServiceDetail = () => {
               </div>
 
               <div className="main-image-box mb-4">
-                <img src={service.sampleImageUrl || "https://via.placeholder.com/800x450"} className="w-100 rounded-4 shadow-lg" />
+                <img src={service.sampleImageUrl || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='450' fill='%231e293b'%3E%3Crect width='800' height='450'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%23475569' font-size='20'%3ESTULance%3C/text%3E%3C/svg%3E"} className="w-100 rounded-4 shadow-lg" />
               </div>
 
               <h4 className="text-primary-glow h5 mb-3">Giới thiệu về dịch vụ</h4>
@@ -157,7 +157,7 @@ const ServiceDetail = () => {
                     <Col sm={6} key={s.serviceId}>
                       <Link to={`/service-detail/${s.serviceId}`} className="text-decoration-none">
                         <div className="similar-service-card">
-                          <img src={s.sampleImageUrl || 'https://via.placeholder.com/400x200'} alt={s.title} className="similar-service-img"/>
+                          <img src={s.sampleImageUrl || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='200' fill='%231e293b'%3E%3Crect width='400' height='200'/%3E%3C/svg%3E"} alt={s.title} className="similar-service-img"/>
                           <div className="p-3">
                             <h6 className="fw-bold text-white mb-1 line-clamp-1" style={{fontSize: '0.85rem'}}>{s.title}</h6>
                             <div className="d-flex align-items-center gap-1 mb-2">

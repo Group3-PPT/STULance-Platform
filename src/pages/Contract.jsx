@@ -63,33 +63,88 @@ const Contract = () => {
         isAdmin ? Promise.resolve({ success: false }) : contractService.getRevisionRequests(id)
       ]);
 
+      // === 1. HỢP ĐỒNG CHÍNH ===
       if (contRes.status === 'fulfilled') {
-        setContract(contRes.value.data);
+        const contractData = contRes.value.data;
+        setContract(contractData);
       }
+
+      // === 2. CHỮ KÝ ===
       if (sigRes.status === 'fulfilled') {
-        const sigData = sigRes.value.data;
-        const sigs = Array.isArray(sigData) ? sigData : (sigData?.items || sigData?.signatures || []);
-        console.log("Signatures raw:", sigData, "Parsed:", sigs);
-        setSignatures(sigs);
+        const rawData = sigRes.value.data;
+        let parsedSignatures = [];
+        if (Array.isArray(rawData)) {
+          parsedSignatures = rawData;
+        } else if (rawData && rawData.items) {
+          parsedSignatures = rawData.items;
+        } else if (rawData && rawData.signatures) {
+          parsedSignatures = rawData.signatures;
+        } else {
+          parsedSignatures = [];
+        }
+        console.log("Signatures raw:", rawData, "Parsed:", parsedSignatures);
+        setSignatures(parsedSignatures);
       }
+
+      // === 3. TIẾN ĐỘ ===
       if (progressRes.status === 'fulfilled') {
-        const pData = progressRes.value.data;
-        setProgress(Array.isArray(pData) ? pData[pData.length - 1] : pData);
-        if (pData && Array.isArray(pData) && pData.length > 0) {
-          setProgressPercent(pData[pData.length - 1].progressPercent || 0);
+        const rawData = progressRes.value.data;
+        if (Array.isArray(rawData) && rawData.length > 0) {
+          const latestProgress = rawData[rawData.length - 1];
+          setProgress(latestProgress);
+          setProgressPercent(latestProgress.progressPercent || 0);
+        } else if (rawData && typeof rawData === 'object') {
+          setProgress(rawData);
+          setProgressPercent(rawData.progressPercent || 0);
+        } else {
+          // Không có dữ liệu tiến độ
+          setProgress(null);
+          setProgressPercent(0);
         }
       }
+
+      // === 4. BẢN GIAO ===
       if (deliveryRes.status === 'fulfilled') {
-        const delData = deliveryRes.value.data;
-        setDeliveries(Array.isArray(delData) ? delData : (delData?.items || []));
+        const rawData = deliveryRes.value.data;
+        let parsedDeliveries = [];
+
+        if (Array.isArray(rawData)) {
+          parsedDeliveries = rawData;
+        } else if (rawData && rawData.items) {
+          parsedDeliveries = rawData.items;
+        } else {
+          parsedDeliveries = [];
+        }
+
+        setDeliveries(parsedDeliveries);
       }
+
+      // === 5. ĐÁNH GIÁ ===
       if (evalRes.status === 'fulfilled') {
-        const evalData = evalRes.value.data;
-        setEvaluates(Array.isArray(evalData) ? evalData : (evalData?.items || []));
+        const rawData = evalRes.value.data;
+        let parsedEvaluates = [];
+        if (Array.isArray(rawData)) {
+          parsedEvaluates = rawData;
+        } else if (rawData && rawData.items) {
+          parsedEvaluates = rawData.items;
+        } else {
+          parsedEvaluates = [];
+        }
+        setEvaluates(parsedEvaluates);
       }
+
+      // === 6. YÊU CẦU CHỈNH SỬA ===
       if (revisionRes.status === 'fulfilled') {
-        const revData = revisionRes.value.data;
-        setRevisionRequests(Array.isArray(revData) ? revData : (revData?.items || []));
+        const rawData = revisionRes.value.data;
+        let parsedRevisions = [];
+        if (Array.isArray(rawData)) {
+          parsedRevisions = rawData;
+        } else if (rawData && rawData.items) {
+          parsedRevisions = rawData.items;
+        } else {
+          parsedRevisions = [];
+        }
+        setRevisionRequests(parsedRevisions);
       }
     } catch (err) {
       console.error("Lỗi tải hợp đồng:", err);
@@ -98,100 +153,262 @@ const Contract = () => {
     }
   };
 
-  useEffect(() => { if (id) initData(); }, [id]);
+  // Tự động tải dữ liệu khi component mount hoặc id thay đổi
+  useEffect(() => {
+    if (id) {
+      initData();
+    }
+  }, [id]);
 
-  const isClient = String(contract?.clientInfo?.userId || contract?.clientUserId) === String(currentUserId);
-  const isProvider = String(contract?.providerInfo?.userId || contract?.providerUserId) === String(currentUserId);
+
+  // BIẾN TÍNH TOÁN (Derived Variables)
+  let isClient = false;
+  let isProvider = false;
+
+  if (contract) {
+    // Lấy userId của bên thuê (doanh nghiệp)
+    const clientUserId = contract.clientInfo && contract.clientInfo.userId
+      ? contract.clientInfo.userId
+      : contract.clientUserId;
+
+    // Lấy userId của bên thực hiện (sinh viên)
+    const providerUserId = contract.providerInfo && contract.providerInfo.userId
+      ? contract.providerInfo.userId
+      : contract.providerUserId;
+
+    // So sánh với currentUserId để xác định vai trò của người dùng hiện tại
+    isClient = String(clientUserId) === String(currentUserId);
+    isProvider = String(providerUserId) === String(currentUserId);
+  }
+
+  // Hợp đồng này có phải của tôi không? (dùng để ẩn nút tố cáo)
   const isOwnContract = isClient || isProvider;
 
+  // Đảm bảo sigList luôn là mảng (tránh lỗi nếu signatures bị null/undefined)
   const sigList = Array.isArray(signatures) ? signatures : [];
-  const isLocked = Boolean(contract?.isContentLocked || contract?.contentLockedAt);
-  const pastSigning = contract?.status !== 'SIGNING' && contract?.status !== 'CANCELLED' && contract?.status !== 'EXPIRED';
 
-  const hasEnterpriseSigned = sigList.some(s => s.signerRole === 'CLIENT' || s.signerRole === 'ENTERPRISE') || (pastSigning && isLocked);
-  const hasStudentSigned = sigList.some(s => s.signerRole === 'PROVIDER' || s.signerRole === 'STUDENT') || (pastSigning && isLocked);
-  const iamSigned = sigList.some(s => {
-    const uid = s.userId || s.signerUserId;
-    return uid && String(uid) === String(currentUserId);
-  }) || contract?.status !== 'SIGNING';
+  // Hợp đồng đã bị khóa nội dung chưa?
+  // isLocked = true nghĩa là không ai chỉnh sửa nội dung hợp đồng được nữa
+  const isLocked = contract && (contract.isContentLocked || contract.contentLockedAt);
 
+  // Hợp đồng đã qua giai đoạn ký kết chưa?
+  // pastSigning = true nếu status KHÔNG PHẢI là SIGNING, CANCELLED, hay EXPIRED
+  const pastSigning = contract
+    && contract.status !== 'SIGNING'
+    && contract.status !== 'CANCELLED'
+    && contract.status !== 'EXPIRED';
+
+  // Doanh nghiệp đã ký chưa?
+  // Có 2 cách kiểm tra:
+  //   1. Tìm trong danh sách chữ ký có role là CLIENT hoặc ENTERPRISE
+  //   2. Nếu hợp đồng đã qua giai đoạn ký + đã khóa → coi như đã ký
+  let hasEnterpriseSigned = false;
+  for (let i = 0; i < sigList.length; i++) {
+    const sig = sigList[i];
+    if (sig.signerRole === 'CLIENT' || sig.signerRole === 'ENTERPRISE') {
+      hasEnterpriseSigned = true;
+      break;
+    }
+  }
+  if (!hasEnterpriseSigned && pastSigning && isLocked) {
+    hasEnterpriseSigned = true;
+  }
+
+  // Sinh viên đã ký chưa?
+  let hasStudentSigned = false;
+  for (let i = 0; i < sigList.length; i++) {
+    const sig = sigList[i];
+    if (sig.signerRole === 'PROVIDER' || sig.signerRole === 'STUDENT') {
+      hasStudentSigned = true;
+      break;
+    }
+  }
+  if (!hasStudentSigned && pastSigning && isLocked) {
+    hasStudentSigned = true;
+  }
+
+  // Tôi (người dùng hiện tại) đã ký chưa?
+  // Tìm trong danh sách chữ ký có userId trùng với currentUserId
+  let iamSigned = false;
+  for (let i = 0; i < sigList.length; i++) {
+    const sig = sigList[i];
+    // Lấy userId từ nhiều trường có thể có
+    const sigUserId = sig.userId || sig.signerUserId;
+    if (sigUserId && String(sigUserId) === String(currentUserId)) {
+      iamSigned = true;
+      break;
+    }
+  }
+  // Nếu hợp đồng không ở trạng thái SIGNING → coi như đã ký
+  if (contract && contract.status !== 'SIGNING') {
+    iamSigned = true;
+  }
+
+  // ============================================================
+  // HANDLER: THANH TOÁN KÝ QUỸ QUA VNPAY
+  // ============================================================
   const handlePayContract = async () => {
     try {
+      // Bật loading
       setIsSaving(true);
+
+      // Gọi API tạo link thanh toán VNPAY
       const res = await paymentService.createVnpayQr(id);
-      const paymentUrl = res?.data?.paymentUrl || res?.paymentUrl || res?.data?.url || res?.url;
+
+      // Lấy URL thanh toán từ response
+      // API có thể trả về nhiều dạng khác nhau, thử từng trường
+      let paymentUrl = null;
+
+      if (res && res.data && res.data.paymentUrl) {
+        paymentUrl = res.data.paymentUrl;
+      } else if (res && res.paymentUrl) {
+        paymentUrl = res.paymentUrl;
+      } else if (res && res.data && res.data.url) {
+        paymentUrl = res.data.url;
+      } else if (res && res.url) {
+        paymentUrl = res.url;
+      }
+
+      // Nếu có URL → chuyển hướng sang trang VNPAY
       if (paymentUrl) {
         window.location.href = paymentUrl;
       } else {
         alert("Không nhận được link thanh toán. Vui lòng thử lại.");
         console.error("VNPAY response:", res);
       }
+
     } catch (err) {
-      alert("Lỗi: " + (err.response?.data?.message || "Không thể tạo thanh toán VNPAY"));
+      // Hiển thị lỗi từ server hoặc lỗi mặc định
+      let errorMessage = "Không thể tạo thanh toán VNPAY";
+      if (err.response && err.response.data && err.response.data.message) {
+        errorMessage = err.response.data.message;
+      }
+      alert("Lỗi: " + errorMessage);
     } finally {
+      // Tắt loading (luôn chạy dù thành công hay thất bại)
       setIsSaving(false);
     }
   };
 
+  // ============================================================
+  // HANDLER: HÀNH ĐỘNG TỔNG HỢP TRÊN HỢP ĐỒNG
+  // ============================================================
+  // actionType có thể là: 'complete', 'cancel', 'dispute', 'approveCancel', 'rejectCancel'
+  // disputeReasonText chỉ dùng khi actionType === 'dispute'
   const handleAction = async (actionType, disputeReasonText) => {
-    let confirmMsg = "";
-    if (actionType === 'complete') confirmMsg = "Xác nhận hoàn thành dự án và giải ngân tiền cho sinh viên?";
-    if (actionType === 'cancel') confirmMsg = "Bạn muốn yêu cầu hủy hợp đồng này?";
-    if (actionType === 'approveCancel') confirmMsg = "Bạn đồng ý hủy hợp đồng này?";
-    if (actionType === 'rejectCancel') confirmMsg = "Từ chối yêu cầu hủy? Hợp đồng sẽ tiếp tục.";
 
-    if (actionType !== 'dispute' && !window.confirm(confirmMsg)) return;
+    // Bước 1: Hiển thị xác nhận 
+    let confirmMessage = "";
 
+    if (actionType === 'complete') {
+      confirmMessage = "Xác nhận hoàn thành dự án và giải ngân tiền cho sinh viên?";
+    }
+    if (actionType === 'cancel') {
+      confirmMessage = "Bạn muốn yêu cầu hủy hợp đồng này?";
+    }
+    if (actionType === 'approveCancel') {
+      confirmMessage = "Bạn đồng ý hủy hợp đồng này?";
+    }
+    if (actionType === 'rejectCancel') {
+      confirmMessage = "Từ chối yêu cầu hủy? Hợp đồng sẽ tiếp tục.";
+    }
+
+    // Nếu không phải dispute → hỏi xác nhận. Nếu người dùng bấm Cancel → dừng lại
+    if (actionType !== 'dispute') {
+      const userConfirmed = window.confirm(confirmMessage);
+      if (!userConfirmed) return;
+    }
+
+    // Bước 2: Gọi API tương ứng
     setIsSaving(true);
     try {
-      if (actionType === 'complete') await contractService.completeContract(id);
-      if (actionType === 'cancel') await contractService.cancelContract(id);
+      if (actionType === 'complete') {
+        // Nghiệm thu → giải ngân tiền cho sinh viên
+        await contractService.completeContract(id);
+      }
+
+      if (actionType === 'cancel') {
+        // Yêu cầu hủy hợp đồng
+        await contractService.cancelContract(id);
+      }
+
       if (actionType === 'dispute') {
+        // Tạo tranh chấp với lý do
         await contractService.disputeContract(id, { reason: disputeReasonText });
+        // Đóng modal và xóa lý do
         setShowDisputeModal(false);
         setDisputeReason('');
       }
-      if (actionType === 'approveCancel') await contractService.approveCancelContract(id);
-      if (actionType === 'rejectCancel') await contractService.rejectCancelContract(id);
+
+      if (actionType === 'approveCancel') {
+        // Đồng ý hủy hợp đồng
+        await contractService.approveCancelContract(id);
+      }
+
+      if (actionType === 'rejectCancel') {
+        // Từ chối hủy hợp đồng
+        await contractService.rejectCancelContract(id);
+      }
+
+      // Bước 3: Thông báo thành công và tải lại dữ liệu
       alert("Cập nhật thành công!");
       initData();
+
     } catch (err) {
-      alert("Lỗi: " + (err.response?.data?.message || "Không thể thực hiện"));
+      let errorMessage = "Không thể thực hiện";
+      if (err.response && err.response.data && err.response.data.message) {
+        errorMessage = err.response.data.message;
+      }
+      alert("Lỗi: " + errorMessage);
     } finally {
       setIsSaving(false);
     }
   };
 
+  // ============================================================
+  // HANDLER: XUẤT FILE PDF
+  // ============================================================
   const handleDownload = async () => {
-    const el = document.getElementById('cv-print');
-    if (!el) return;
+    // Tìm element chứa nội dung hợp đồng cần xuất PDF
+    const contractElement = document.getElementById('cv-print');
+    if (!contractElement) return;
 
-    const contractName = `HopDong_${contract?.contractId?.substring(0,8) || 'contract'}`;
-    const opt = {
-      margin: [10, 10, 10, 10],
-      filename: `${contractName}.pdf`,
-      image: { type: 'jpeg', quality: 0.98 },
+    // Tên file PDF: HopDong_xxxxxxxx.pdf (lấy 8 ký tự đầu contractId)
+    let contractName = "HopDong_contract";
+    if (contract && contract.contractId) {
+      contractName = "HopDong_" + contract.contractId.substring(0, 8);
+    }
+
+    // Cấu hình html2pdf
+    const options = {
+      margin: [10, 10, 10, 10],                 // Lề trên, phải, dưới, trái (mm)
+      filename: contractName + ".pdf",           // Tên file
+      image: { type: 'jpeg', quality: 0.98 },   // Chất lượng ảnh
       html2canvas: {
-        scale: 2,
-        useCORS: true,
-        letterRendering: true,
-        logging: false
+        scale: 2,                // Phóng to 2x cho sắc nét
+        useCORS: true,           // Cho phép tải ảnh từ domain khác
+        letterRendering: true,   // Hiển thị chữ đẹp hơn
+        logging: false           // Tắt log debug
       },
       jsPDF: {
-        unit: 'mm',
-        format: 'a4',
-        orientation: 'portrait'
+        unit: 'mm',          // Đơn vị đo: mm
+        format: 'a4',        // Khổ giấy A4
+        orientation: 'portrait'  // Paper dọc
       }
     };
 
     try {
-      await html2pdf().set(opt).from(el).save();
+      // Tạo file PDF và tải xuống
+      await html2pdf().set(options).from(contractElement).save();
     } catch (err) {
       console.error("Lỗi xuất PDF:", err);
       alert("Không thể xuất PDF. Vui lòng thử lại.");
     }
   };
 
+  // ============================================================
+  // HANDLER: GỬI TỐ CÁO
+  // ============================================================
   const handleReport = async () => {
     const reason = prompt("Nhập lý do báo cáo:");
     if (!reason) return;
@@ -203,106 +420,330 @@ const Contract = () => {
       });
       alert("Đã gửi báo cáo!");
     } catch (err) {
-      alert("Lỗi: " + (err.response?.data?.message || "Không thể gửi"));
+      let errorMessage = "Không thể gửi";
+      if (err.response && err.response.data && err.response.data.message) {
+        errorMessage = err.response.data.message;
+      }
+      alert("Lỗi: " + errorMessage);
     }
   };
 
+  // ============================================================
+  // HANDLER: CẬP NHẬT TIẾN ĐỘ (Sinh viên)
+  // ============================================================
   const handleSubmitProgress = async () => {
-    if (!progressNote.trim()) { alert("Vui lòng nhập ghi chú"); return; }
+    // Kiểm tra ghi chú không được để trống
+    if (!progressNote.trim()) {
+      alert("Vui lòng nhập ghi chú");
+      return;
+    }
+
     setIsSaving(true);
     try {
       await contractService.updateProgress(id, {
-        progressPercent,
-        title: `Tiến độ ${progressPercent}%`,
-        content: progressNote,
-        attachmentUrl: ''
+        progressPercent: progressPercent,       // Phần trăm hoàn thành (0-100)
+        title: "Tiến độ " + progressPercent + "%",  // Têu đề tự động
+        content: progressNote,                  // Nội dung ghi chú
+        attachmentUrl: ''                       // Chưa hỗ trợ file đính kèm
       });
+
+      // Xóa form sau khi gửi thành công
       setProgressNote('');
       alert("Cập nhật tiến độ thành công!");
+
+      // Tải lại dữ liệu để hiển thị tiến độ mới
       initData();
+
     } catch (err) {
-      alert("Lỗi: " + (err.response?.data?.message || "Không thể cập nhật"));
+      let errorMessage = "Không thể cập nhật";
+      if (err.response && err.response.data && err.response.data.message) {
+        errorMessage = err.response.data.message;
+      }
+      alert("Lỗi: " + errorMessage);
     } finally {
       setIsSaving(false);
     }
   };
 
+  // ============================================================
+  // HANDLER: NỘP BẢN GIAO (Sinh viên)
+  // ============================================================
   const handleSubmitDelivery = async () => {
-    if (!deliveryTitle.trim()) { alert("Vui lòng nhập link bản giao"); return; }
+    // Kiểm tra link bản giao không được để trống
+    if (!deliveryTitle.trim()) {
+      alert("Vui lòng nhập link bản giao");
+      return;
+    }
+
     setIsSaving(true);
     try {
       await contractService.submitDelivery(id, {
-        deliveryUrl: deliveryTitle,
-        note: deliveryDesc
+        deliveryUrl: deliveryTitle,    
+        note: deliveryDesc             
       });
+
+      // Xóa form sau khi gửi thành công
       setDeliveryTitle('');
       setDeliveryDesc('');
       alert("Nộp bản giao thành công!");
+
+      // Tải lại dữ liệu
       initData();
+
     } catch (err) {
-      alert("Lỗi: " + (err.response?.data?.message || "Không thể nộp"));
+      let errorMessage = "Không thể nộp";
+      if (err.response && err.response.data && err.response.data.message) {
+        errorMessage = err.response.data.message;
+      }
+      alert("Lỗi: " + errorMessage);
     } finally {
       setIsSaving(false);
     }
   };
 
+  // ============================================================
+  // HANDLER: GỬI ĐÁNH GIÁ (Cả hai bên)
+  // ============================================================
   const handleSubmitEvaluate = async () => {
-    if (!evalComment.trim()) { alert("Vui lòng nhập nhận xét"); return; }
+    // Kiểm tra nhận xét không được để trống
+    if (!evalComment.trim()) {
+      alert("Vui lòng nhập nhận xét");
+      return;
+    }
+
     setIsSaving(true);
     try {
       await contractService.submitEvaluate(id, {
-        rating: evalRating,
-        comment: evalComment
+        rating: evalRating,      // Số sao (1-5)
+        comment: evalComment     // Nội dung nhận xét
       });
+
+      // Xóa form sau khi gửi thành công
       setEvalComment('');
-      setEvalRating(5);
+      setEvalRating(5);    // Reset về 5 sao
       alert("Gửi đánh giá thành công!");
+
+      // Tải lại dữ liệu
       initData();
+
     } catch (err) {
-      alert("Lỗi: " + (err.response?.data?.message || "Không thể gửi"));
+      let errorMessage = "Không thể gửi";
+      if (err.response && err.response.data && err.response.data.message) {
+        errorMessage = err.response.data.message;
+      }
+      alert("Lỗi: " + errorMessage);
     } finally {
       setIsSaving(false);
     }
   };
 
+  // ============================================================
+  // HANDLER: YÊU CẦU CHỈNH SỬA (Doanh nghiệp)
+  // ============================================================
   const handleSubmitRevision = async () => {
-    if (!revisionReason.trim()) { alert("Vui lòng nhập lý do chỉnh sửa"); return; }
+    // Kiểm tra lý do không được để trống
+    if (!revisionReason.trim()) {
+      alert("Vui lòng nhập lý do chỉnh sửa");
+      return;
+    }
+
     setIsSaving(true);
     try {
-      await contractService.requestRevision(id, { reason: revisionReason });
+      await contractService.requestRevision(id, {
+        reason: revisionReason     // Lý do cần chỉnh sửa
+      });
+
+      // Xóa form và đóng modal
       setRevisionReason('');
       setShowRevisionModal(false);
       alert("Yêu cầu chỉnh sửa đã được gửi!");
+
+      // Tải lại dữ liệu
       initData();
+
     } catch (err) {
-      alert("Lỗi: " + (err.response?.data?.message || "Không thể gửi yêu cầu"));
+      let errorMessage = "Không thể gửi yêu cầu";
+      if (err.response && err.response.data && err.response.data.message) {
+        errorMessage = err.response.data.message;
+      }
+      alert("Lỗi: " + errorMessage);
     } finally {
       setIsSaving(false);
     }
   };
 
-  const formatMoney = (val) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val || 0);
-  const maskInfo = (str) => showSensitive ? (str || "N/A") : "**********";
-  const contractAmount = contract?.totalBudget || contract?.totalAmount || contract?.bidAmount || contract?.price || contract?.amount || 0;
+  // ============================================================
+  // HÀM TIỆN ÍCH
+  // ============================================================
 
-  const getStatusBadge = (status) => {
-    const statusMap = {
-      'SIGNING': { bg: 'warning', text: 'Đang ký kết' },
-      'AWAITING_PAYMENT': { bg: 'info', text: 'Chờ thanh toán' },
-      'IN_PROGRESS': { bg: 'primary', text: 'Đang thực hiện' },
-      'DELIVERED': { bg: 'success', text: 'Đã bàn giao' },
-      'CANCEL_REQUESTED': { bg: 'danger', text: 'Yêu cầu hủy' },
-      'DISPUTED': { bg: 'danger', text: 'Đang tranh chấp' },
-      'COMPLETED': { bg: 'success', text: 'Hoàn thành' },
-      'CANCELLED': { bg: 'secondary', text: 'Đã hủy' },
-      'EXPIRED': { bg: 'dark', text: 'Hết hạn' },
-    };
-    const info = statusMap[status] || { bg: 'dark', text: status };
-    return <Badge bg={info.bg} className="py-2 px-3 uppercase-tracking">{info.text}</Badge>;
+  // Định dạng tiền VND: 1000000 → "1.000.000₫"
+  const formatMoney = (amount) => {
+    return new Intl.NumberFormat('vi-VN', {
+      style: 'currency',
+      currency: 'VND'
+    }).format(amount || 0);
   };
 
-  if (loading) return <div className="vh-100 d-flex justify-content-center align-items-center bg-dark"><Spinner animation="border" variant="primary" /></div>;
-  if (!contract) return <div className="text-white text-center py-5">Không tìm thấy hợp đồng.</div>;
+  // Ẩn/hiện thông tin nhạy cảm (CCCD, MST, SĐT)
+  // showSensitive = true → hiển thị thật
+  // showSensitive = false → hiển thị "**********"
+  const maskInfo = (text) => {
+    if (showSensitive) {
+      return text || "N/A";
+    } else {
+      return "**********";
+    }
+  };
+
+  // Lấy tổng tiền hợp đồng
+  // Thử nhiều trường có thể chứa giá trị tiền
+  let contractAmount = 0;
+  if (contract) {
+    if (contract.totalBudget) {
+      contractAmount = contract.totalBudget;
+    } else if (contract.totalAmount) {
+      contractAmount = contract.totalAmount;
+    } else if (contract.bidAmount) {
+      contractAmount = contract.bidAmount;
+    } else if (contract.price) {
+      contractAmount = contract.price;
+    } else if (contract.amount) {
+      contractAmount = contract.amount;
+    }
+  }
+
+  // ============================================================
+  // HÀM HIỂN THỊ TRẠNG THÁI (Badge)
+  // ============================================================
+  // Map trạng thái hợp đồng → màu sắc + text hiển thị
+  const getStatusBadge = (status) => {
+    const statusConfig = {
+      'SIGNING':            { backgroundColor: 'warning', text: 'Đang ký kết' },
+      'AWAITING_PAYMENT':   { backgroundColor: 'info',    text: 'Chờ thanh toán' },
+      'IN_PROGRESS':        { backgroundColor: 'primary', text: 'Đang thực hiện' },
+      'DELIVERED':          { backgroundColor: 'success', text: 'Đã bàn giao' },
+      'CANCEL_REQUESTED':   { backgroundColor: 'danger',  text: 'Yêu cầu hủy' },
+      'DISPUTED':           { backgroundColor: 'danger',  text: 'Đang tranh chấp' },
+      'COMPLETED':          { backgroundColor: 'success', text: 'Hoàn thành' },
+      'CANCELLED':          { backgroundColor: 'secondary', text: 'Đã hủy' },
+      'EXPIRED':            { backgroundColor: 'dark',    text: 'Hết hạn' },
+    };
+
+    // Tìm config theo status, nếu không tìm thấy → dùng dark
+    const config = statusConfig[status] || { backgroundColor: 'dark', text: status };
+
+    return (
+      <Badge bg={config.backgroundColor} className="py-2 px-3 uppercase-tracking">
+        {config.text}
+      </Badge>
+    );
+  };
+
+  // ============================================================
+  // HÀM HIỂN THỊ CHỮ KÝ
+  // ============================================================
+
+  // Tìm chữ ký của doanh nghiệp trong danh sách signatures
+  const renderEnterpriseSignature = () => {
+    let enterpriseSignature = null;
+
+    // Tìm chữ ký có role là CLIENT hoặc ENTERPRISE
+    for (let i = 0; i < sigList.length; i++) {
+      const sig = sigList[i];
+      if (sig.signerRole === 'CLIENT' || sig.signerRole === 'ENTERPRISE') {
+        enterpriseSignature = sig;
+        break;
+      }
+    }
+
+    if (!enterpriseSignature) {
+      return <span>ĐÃ KÝ</span>;
+    }
+
+    // Lấy ảnh chữ ký từ nhiều trường có thể có
+    let signatureImageUrl = null;
+    if (enterpriseSignature.signatureImageUrl) {
+      signatureImageUrl = enterpriseSignature.signatureImageUrl;
+    } else if (enterpriseSignature.signatureData) {
+      signatureImageUrl = enterpriseSignature.signatureData;
+    } else if (enterpriseSignature.signatureImageFile) {
+      signatureImageUrl = enterpriseSignature.signatureImageFile;
+    }
+
+    if (signatureImageUrl) {
+      return (
+        <img
+          src={signatureImageUrl}
+          alt="Chữ ký doanh nghiệp"
+          style={{ maxWidth: '180px', maxHeight: '80px', objectFit: 'contain' }}
+        />
+      );
+    }
+
+    return <span>ĐÃ KÝ</span>;
+  };
+
+  // Tìm chữ ký của sinh viên trong danh sách signatures
+  const renderStudentSignature = () => {
+    let studentSignature = null;
+
+    // Tìm chữ ký có role là PROVIDER hoặc STUDENT
+    for (let i = 0; i < sigList.length; i++) {
+      const sig = sigList[i];
+      if (sig.signerRole === 'PROVIDER' || sig.signerRole === 'STUDENT') {
+        studentSignature = sig;
+        break;
+      }
+    }
+
+    if (!studentSignature) {
+      return <span>ĐÃ KÝ</span>;
+    }
+
+    // Lấy ảnh chữ ký từ nhiều trường có thể có
+    let signatureImageUrl = null;
+    if (studentSignature.signatureImageUrl) {
+      signatureImageUrl = studentSignature.signatureImageUrl;
+    } else if (studentSignature.signatureData) {
+      signatureImageUrl = studentSignature.signatureData;
+    } else if (studentSignature.signatureImageFile) {
+      signatureImageUrl = studentSignature.signatureImageFile;
+    }
+
+    if (signatureImageUrl) {
+      return (
+        <img
+          src={signatureImageUrl}
+          alt="Chữ ký sinh viên"
+          style={{ maxWidth: '180px', maxHeight: '80px', objectFit: 'contain' }}
+        />
+      );
+    }
+
+    return <span>ĐÃ KÝ</span>;
+  };
+
+  // ============================================================
+  // RENDER: LOADING STATE
+  // ============================================================
+  if (loading) {
+    return (
+      <div className="vh-100 d-flex justify-content-center align-items-center bg-dark">
+        <Spinner animation="border" variant="primary" />
+      </div>
+    );
+  }
+
+  // ============================================================
+  // RENDER: KHÔNG TÌM THẤY HỢP ĐỒNG
+  // ============================================================
+  if (!contract) {
+    return (
+      <div className="text-white text-center py-5">
+        Không tìm thấy hợp đồng.
+      </div>
+    );
+  }
 
   return (
     <div className="contract-page-container py-5 text-white animate-fade-in">
@@ -441,41 +882,41 @@ const Contract = () => {
                   <p className="ps-2 mb-2" style={{fontSize: '11.5px'}}>8.4. Hợp đồng này được quản lý và lưu trữ trên hệ thống STULance, có giá trị pháp lý theo quy định hiện hành.</p>
                 </div>
 
+                {/* Khu vực chữ ký */}
                 <div className="signature-area mt-5 pt-5 d-flex justify-content-around text-center">
+
+                  {/* CHỮ KÝ BÊN A (DOANH NGHIỆP) */}
                   <div className="sig-block">
                     <p className="fw-bold mb-4">ĐẠI DIỆN BÊN A</p>
+
                     {hasEnterpriseSigned ? (
                       <div className="stamp-box signed">
-                        {(() => {
-                          const entSig = sigList.find(s => s.signerRole === 'CLIENT' || s.signerRole === 'ENTERPRISE');
-                          const sigImg = entSig?.signatureImageUrl || entSig?.signatureData || entSig?.signatureImageFile;
-                          return sigImg ? (
-                            <img src={sigImg} alt="Chữ ký DN" style={{maxWidth: '180px', maxHeight: '80px', objectFit: 'contain'}} />
-                          ) : (
-                            <span>ĐÃ KÝ</span>
-                          );
-                        })()}
+                        {renderEnterpriseSignature()}
                       </div>
-                    ) : <div className="empty-sig">Chờ ký...</div>}
-                    <p className="mt-3 fw-bold">{contract.representName || 'Người thuê'}</p>
+                    ) : (
+                      <div className="empty-sig">Chờ ký...</div>
+                    )}
+
+                    <p className="mt-3 fw-bold">
+                      {contract.representName || 'Người thuê'}
+                    </p>
                   </div>
+
+                  {/* CHỮ KÝ BÊN B (SINH VIÊN) */}
                   <div className="sig-block">
                     <p className="fw-bold mb-4">ĐẠI DIỆN BÊN B</p>
+
                     {hasStudentSigned ? (
                       <div className="stamp-box signed-blue">
-                        {(() => {
-                          const stuSig = sigList.find(s => s.signerRole === 'PROVIDER' || s.signerRole === 'STUDENT');
-                          const sigImg = stuSig?.signatureImageUrl || stuSig?.signatureData || stuSig?.signatureImageFile;
-                          return sigImg ? (
-                            <img src={sigImg} alt="Chữ ký SV" style={{maxWidth: '180px', maxHeight: '80px', objectFit: 'contain'}} />
-                          ) : (
-                            <span>ĐÃ KÝ</span>
-                          );
-                        })()}
+                        {renderStudentSignature()}
                       </div>
-                    ) : <div className="empty-sig">Chờ ký...</div>}
+                    ) : (
+                      <div className="empty-sig">Chờ ký...</div>
+                    )}
+
                     <p className="mt-3 fw-bold">{contract.studentName}</p>
                   </div>
+
                 </div>
               </div>
             </div>

@@ -10,116 +10,217 @@ import PaginationBar from '../../components/PaginationBar';
 import '../../CSS/ManageStudentServices.css';
 
 const ManageStudentServices = () => {
+  // ============================================================
+  // STATE
+  // ============================================================
+
+  // Danh sách dịch vụ
   const [services, setServices] = useState([]);
+
+  // Loading trang
   const [loading, setLoading] = useState(true);
+
+  // Bộ lọc trạng thái
   const [filter, setFilter] = useState("Tất cả");
+
+  // Từ khóa tìm kiếm
   const [searchTerm, setSearchTerm] = useState("");
+
+  // Hiện modal chi tiết
   const [showDetailModal, setShowDetailModal] = useState(false);
+
+  // Dịch vụ đang xem chi tiết
   const [selectedService, setSelectedService] = useState(null);
+
+  // ============================================================
+  // PHÂN TRANG
+  // ============================================================
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
   const pageSize = 15;
 
-  const fetchServices = useCallback(async (page = 1, keyword = '', status = '') => {
+  // ============================================================
+  // HÀM TẢI DỮ LIỆU
+  // ============================================================
+  const fetchServices = useCallback(async function (page, keyword, status) {
+    if (!page) page = 1;
+    if (!keyword) keyword = '';
+    if (!status) status = '';
+
     setLoading(true);
+
     try {
-      const params = { page, pageSize };
-      if (keyword) params.keyword = keyword;
-      if (status) params.status = status;
-      const res = await studentServiceService.adminGetAll(params);
+      var params = { page: page, pageSize: pageSize };
+
+      if (keyword) {
+        params.keyword = keyword;
+      }
+      if (status) {
+        params.status = status;
+      }
+
+      var res = await studentServiceService.adminGetAll(params);
+
       if (res.success && res.data) {
-        const data = res.data;
+        var data = res.data;
+
         setServices(data.items || []);
         setTotalPages(data.totalPages || 1);
         setTotalItems(data.totalItems || 0);
         setCurrentPage(data.page || 1);
       }
+
     } catch (err) {
       console.error("Lỗi tải dịch vụ hệ thống:", err);
+
     } finally {
       setLoading(false);
     }
   }, []);
 
-  useEffect(() => { fetchServices(1); }, [fetchServices]);
+  // ============================================================
+  // EFFECT: Tải dữ liệu khi mount
+  // ============================================================
+  useEffect(function () {
+    fetchServices(1);
+  }, [fetchServices]);
 
-  const handleViewDetail = (service) => {
+  // ============================================================
+  // HÀM XEM CHI TIẾT
+  // ============================================================
+  const handleViewDetail = function (service) {
     setSelectedService(service);
     setShowDetailModal(true);
   };
 
-  const handleUpdateStatus = async (id, newStatus) => {
-    const statusMap = {
+  // ============================================================
+  // HÀM CẬP NHẬT TRẠNG THÁI
+  // ============================================================
+  const handleUpdateStatus = async function (id, newStatus) {
+    // Bản đồ trạng thái → mô tả tiếng Việt
+    var statusMap = {
       'ACTIVE': 'phê duyệt hiển thị',
       'BLOCKED': 'khóa (vi phạm)',
       'HIDDEN': 'tạm ẩn',
       'DELETED': 'xóa vĩnh viễn'
     };
 
-    if (!window.confirm(`Xác nhận ${statusMap[newStatus]} gói dịch vụ này?`)) return;
+    // Xác nhận trước khi thực hiện
+    var confirmed = window.confirm("Xác nhận " + statusMap[newStatus] + " gói dịch vụ này?");
+    if (!confirmed) return;
 
     try {
       await studentServiceService.adminUpdateStatus(id, newStatus);
       alert("Đã cập nhật trạng thái thành công!");
-      fetchServices(currentPage, searchTerm, filter === 'Tất cả' ? '' : filter === 'Đang bán' ? 'ACTIVE' : filter === 'Đã ẩn' ? 'HIDDEN' : 'BLOCKED');
+
+      // Tải lại danh sách
+      var statusFilter = '';
+      if (filter === 'Đang bán') statusFilter = 'ACTIVE';
+      else if (filter === 'Đã ẩn') statusFilter = 'HIDDEN';
+      else if (filter === 'Bị khóa') statusFilter = 'BLOCKED';
+
+      fetchServices(currentPage, searchTerm, statusFilter);
+
     } catch (err) {
       alert("Lỗi khi cập nhật trạng thái.");
     }
   };
 
-  const handleFilterChange = (tab) => {
+  // ============================================================
+  // HÀM XỬ LÝ BỘ LỌC
+  // ============================================================
+  const handleFilterChange = function (tab) {
     setFilter(tab);
     setCurrentPage(1);
-    const statusMap = { 'Tất cả': '', 'Đang bán': 'ACTIVE', 'Đã ẩn': 'HIDDEN', 'Bị khóa': 'BLOCKED' };
+
+    // Chuyển tên tab → status code
+    var statusMap = {
+      'Tất cả': '',
+      'Đang bán': 'ACTIVE',
+      'Đã ẩn': 'HIDDEN',
+      'Bị khóa': 'BLOCKED'
+    };
+
     fetchServices(1, searchTerm, statusMap[tab] || '');
   };
 
-  const handleSearch = () => {
+  // ============================================================
+  // HÀM TÌM KIẾM
+  // ============================================================
+  const handleSearch = function () {
     setCurrentPage(1);
-    const statusMap = { 'Tất cả': '', 'Đang bán': 'ACTIVE', 'Đã ẩn': 'HIDDEN', 'Bị khóa': 'BLOCKED' };
+
+    var statusMap = {
+      'Tất cả': '',
+      'Đang bán': 'ACTIVE',
+      'Đã ẩn': 'HIDDEN',
+      'Bị khóa': 'BLOCKED'
+    };
+
     fetchServices(1, searchTerm, statusMap[filter] || '');
   };
 
-  const handlePageChange = (page) => {
-    const statusMap = { 'Tất cả': '', 'Đang bán': 'ACTIVE', 'Đã ẩn': 'HIDDEN', 'Bị khóa': 'BLOCKED' };
+  // ============================================================
+  // HÀM CHUYỂN TRANG
+  // ============================================================
+  const handlePageChange = function (page) {
+    var statusMap = {
+      'Tất cả': '',
+      'Đang bán': 'ACTIVE',
+      'Đã ẩn': 'HIDDEN',
+      'Bị khóa': 'BLOCKED'
+    };
+
     fetchServices(page, searchTerm, statusMap[filter] || '');
   };
 
-  const renderStatusBadge = (status) => {
+  // ============================================================
+  // HÀM HIỂN THỊ BADGE TRẠNG THÁI
+  // ============================================================
+  const renderStatusBadge = function (status) {
     switch (status) {
-      case 'ACTIVE': 
+      case 'ACTIVE':
         return (
           <span className="svc-badge svc-badge-active">
             <span className="svc-badge-dot"></span>
             Đang hiển thị
           </span>
         );
-      case 'HIDDEN': 
+      case 'HIDDEN':
         return (
           <span className="svc-badge svc-badge-hidden">
             <span className="svc-badge-dot"></span>
             Đang ẩn
           </span>
         );
-      case 'BLOCKED': 
+      case 'BLOCKED':
         return (
           <span className="svc-badge svc-badge-blocked">
             <span className="svc-badge-dot"></span>
             Bị khóa
           </span>
         );
-      default: 
+      default:
         return <span className="svc-badge svc-badge-default">{status}</span>;
     }
   };
 
-  const stats = {
+  // ============================================================
+  // THỐNG KÊ
+  // ============================================================
+  var stats = {
     total: totalItems,
-    active: services.filter(s => s.status === 'ACTIVE').length,
-    hidden: services.filter(s => s.status === 'HIDDEN').length,
-    blocked: services.filter(s => s.status === 'BLOCKED').length,
+    active: 0,
+    hidden: 0,
+    blocked: 0
   };
+
+  for (var i = 0; i < services.length; i++) {
+    if (services[i].status === 'ACTIVE') stats.active++;
+    else if (services[i].status === 'HIDDEN') stats.hidden++;
+    else if (services[i].status === 'BLOCKED') stats.blocked++;
+  }
 
   return (
     <div className="svc-manage-page animate-fade-in">
@@ -219,9 +320,9 @@ const ManageStudentServices = () => {
               {/* Thumbnail */}
               <div className="svc-card-thumb">
                 <img 
-                  src={service.sampleImageUrl || 'https://via.placeholder.com/120x80'} 
+                  src={service.sampleImageUrl || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='80' fill='%231e293b'%3E%3Crect width='120' height='80'/%3E%3C/svg%3E"}
                   alt={service.title}
-                  onError={(e) => e.target.src = 'https://via.placeholder.com/120x80'}
+                  onError={function (e) { e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='80' fill='%231e293b'%3E%3Crect width='120' height='80'/%3E%3C/svg%3E"; }}
                 />
               </div>
 

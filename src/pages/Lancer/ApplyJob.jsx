@@ -7,25 +7,42 @@ import { jobService } from '../../services/jobservice';
 import '../../CSS/PostJob.css'; // Tái sử dụng style form
 
 const ApplyJob = () => {
-  const { jobId } = useParams();
-  const navigate = useNavigate();
-  
+  // ============================================================
+  // ROUTING
+  // ============================================================
+  var params = useParams();
+  var jobId = params.jobId;
+  var navigate = useNavigate();
+
+  // ============================================================
+  // STATE
+  // ============================================================
+
+  // Thông tin công việc
   const [job, setJob] = useState(null);
+
+  // Loading trang
   const [loading, setLoading] = useState(true);
+
+  // Đang gửi đơn ứng tuyển
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // State Form ứng tuyển khớp với yêu cầu Bid
+  // ============================================================
+  // STATE FORM ỨNG TUYỂN
+  // ============================================================
   const [formData, setFormData] = useState({
     bidAmount: '',
     expectedDays: '',
     message: ''
   });
 
-  // 1. Tải thông tin công việc để SV xem lại trước khi apply
-  useEffect(() => {
-    const fetchJob = async () => {
+  // ============================================================
+  // EFFECT: TẢI THÔNG TIN CÔNG VIỆC
+  // ============================================================
+  useEffect(function () {
+    var fetchJob = async function () {
       try {
-        const res = await jobService.getPublicJobDetail(jobId);
+        var res = await jobService.getPublicJobDetail(jobId);
         setJob(res.data);
       } catch (err) {
         console.error("Lỗi tải thông tin dự án");
@@ -33,28 +50,41 @@ const ApplyJob = () => {
         setLoading(false);
       }
     };
+
     fetchJob();
   }, [jobId]);
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+  // ============================================================
+  // HÀM XỬ LÝ THAY ĐỔI FORM
+  // ============================================================
+  const handleChange = function (e) {
+    var name = e.target.name;
+    var value = e.target.value;
+    setFormData({ ...formData, [name]: value });
   };
 
-  // 2. Xử lý Gửi đơn ứng tuyển (Create Bid)
-  const handleSubmit = async (e) => {
+  // ============================================================
+  // HÀM GỬI ĐƠN ỨNG TUYỂN
+  // ============================================================
+  const handleSubmit = async function (e) {
     e.preventDefault();
 
-    const bidAmount = Number(formData.bidAmount);
-    const expectedDays = Number(formData.expectedDays);
+    var bidAmount = Number(formData.bidAmount);
+    var expectedDays = Number(formData.expectedDays);
 
+    // Validate số tiền
     if (!bidAmount || bidAmount <= 0) {
       alert("Số tiền đặt giá phải lớn hơn 0!");
       return;
     }
+
+    // Validate số ngày
     if (!expectedDays || expectedDays <= 0) {
       alert("Số ngày thực hiện phải lớn hơn 0!");
       return;
     }
+
+    // Validate lời nhắn
     if (!formData.message.trim()) {
       alert("Vui lòng nhập lời đề nghị!");
       return;
@@ -63,19 +93,26 @@ const ApplyJob = () => {
     setIsSubmitting(true);
 
     try {
-      const payload = {
-        bidAmount,
-        expectedDays,
+      var payload = {
+        bidAmount: bidAmount,
+        expectedDays: expectedDays,
         message: formData.message
       };
 
       await bidService.createBid(jobId, payload);
-      
+
       alert("🎉 Ứng tuyển thành công! Vui lòng đợi phản hồi từ doanh nghiệp.");
-      navigate('/dashboardlancer'); // Quay về dashboard để theo dõi
+
+      // Quay về dashboard
+      navigate('/dashboardlancer');
+
     } catch (err) {
-      const msg = err.response?.data?.message || "Bạn đã ứng tuyển công việc này rồi hoặc có lỗi xảy ra.";
+      var msg = "Bạn đã ứng tuyển công việc này rồi hoặc có lỗi xảy ra.";
+      if (err.response && err.response.data && err.response.data.message) {
+        msg = err.response.data.message;
+      }
       alert("Lỗi: " + msg);
+
     } finally {
       setIsSubmitting(false);
     }

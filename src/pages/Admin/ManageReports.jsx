@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Table, Badge, Row, Col, Modal, Button } from 'react-bootstrap';
+import { Table, Badge, Row, Col, Modal, Button, Form } from 'react-bootstrap';
 import {
   ShieldAlert, Eye, CheckCircle,
   AlertTriangle, MessageSquare, Search, Loader2, RefreshCw,
-  Clock, User, ExternalLink
+  Clock, User, ExternalLink, Ban, Lock, Unlock
 } from 'lucide-react';
 import { reportService } from '../../services/reportService';
+import { userService } from '../../services/userservice';
 import PaginationBar from '../../components/PaginationBar';
 import '../../CSS/ManageReports.css';
 
@@ -39,6 +40,11 @@ const ManageReports = () => {
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [selectedReport, setSelectedReport] = useState(null);
   const [resolving, setResolving] = useState(false);
+
+  // Trang thai chuyen trang thai nguoi dung
+  const [banStatus, setBanStatus] = useState('');
+  const [banReason, setBanReason] = useState('');
+  const [banning, setBanning] = useState(false);
 
   const fetchData = useCallback(async (page = 1, keyword = '', status = '') => {
     setLoading(true);
@@ -128,6 +134,35 @@ const ManageReports = () => {
       case 'STUDENT': return `/students/${report.targetId}`;
       case 'CONTRACT': return `/contracts/${report.targetId}`;
       default: return null;
+    }
+  };
+
+  // ============================================================
+  // HAM CHUYEN TRANG THAI NGUOI DUNG (LOCK/BAN)
+  // ============================================================
+  const handleBanUser = async function () {
+    if (!selectedReport) return;
+    if (!banStatus) {
+      alert("Vui long chon trang thai.");
+      return;
+    }
+    if (!banReason.trim()) {
+      alert("Vui long nhap ly do.");
+      return;
+    }
+
+    setBanning(true);
+    try {
+      await userService.adminUpdateUserStatus(selectedReport.targetId, banStatus, banReason);
+      alert("Da cap nhat trang thai nguoi dung thanh cong!");
+      setBanStatus('');
+      setBanReason('');
+      setShowDetailModal(false);
+      fetchData(currentPage, searchTerm);
+    } catch (err) {
+      alert("Loi: " + (err.response?.data?.message || "Khong xac dinh"));
+    } finally {
+      setBanning(false);
     }
   };
 
@@ -268,7 +303,7 @@ const ManageReports = () => {
       </div>
 
       {/* MODAL CHI TIẾT BÁO CÁO */}
-      <Modal show={showDetailModal} onHide={() => setShowDetailModal(false)} size="lg" centered dialogClassName="modal-dark">
+      <Modal show={showDetailModal} onHide={function () { setShowDetailModal(false); setBanStatus(''); setBanReason(''); }} size="lg" centered dialogClassName="modal-dark">
         <Modal.Header closeButton className="border-bottom border-white-10">
           <Modal.Title className="fw-bold">
             <ShieldAlert size={20} className="me-2 text-danger" />
@@ -332,18 +367,67 @@ const ManageReports = () => {
               </Row>
 
               {selectedReport.status !== 'RESOLVED' && selectedReport.status !== 'REJECTED' && (
-                <div className="d-flex gap-3 justify-content-end border-top border-white-10 pt-4">
-                  {getTargetLink(selectedReport) && (
-                    <Button as="a" href={getTargetLink(selectedReport)} target="_blank" variant="outline-info" className="fw-bold px-4">
-                      <ExternalLink size={16} className="me-2" /> Xem đối tượng
-                    </Button>
+                <div className="border-top border-white-10 pt-4">
+
+                  {/* PHAN CHUYEN TRANG THAI NGUOI DUNG (chỉ cho STUDENT/ENTERPRISE) */}
+                  {(selectedReport.targetType === 'STUDENT' || selectedReport.targetType === 'ENTERPRISE') && (
+                    <div className="glass-card p-3 mb-4" style={{ border: '1px solid rgba(239,68,68,0.2)' }}>
+                      <div className="d-flex align-items-center gap-2 mb-3">
+                        <Ban size={16} className="text-danger" />
+                        <span className="fw-bold text-white small">Chuyen trang thai nguoi dung</span>
+                        <Badge bg="dark" className="x-small ms-auto">ID: {selectedReport.targetId?.substring(0, 8)}</Badge>
+                      </div>
+                      <Row className="g-3 align-items-end">
+                        <Col md={4}>
+                          <Form.Label className="x-small text-white-50 fw-bold">Trang thai moi</Form.Label>
+                          <Form.Select
+                            className="bg-dark-input text-white border-0 rounded-3"
+                            value={banStatus}
+                            onChange={function (e) { setBanStatus(e.target.value); }}
+                          >
+                            <option value="">-- Chon trang thai --</option>
+                            <option value="ACTIVE">Hoat dong (ACTIVE)</option>
+                            <option value="LOCKED">Khoa tai khoan (LOCKED)</option>
+                            <option value="BANNED">Cam tai khoan (BANNED)</option>
+                          </Form.Select>
+                        </Col>
+                        <Col md={6}>
+                          <Form.Label className="x-small text-white-50 fw-bold">Ly do</Form.Label>
+                          <Form.Control
+                            type="text"
+                            className="bg-dark-input text-white border-0 rounded-3"
+                            placeholder="Nhap ly do chuyen trang thai..."
+                            value={banReason}
+                            onChange={function (e) { setBanReason(e.target.value); }}
+                          />
+                        </Col>
+                        <Col md={2}>
+                          <Button
+                            variant="danger"
+                            className="fw-bold w-100 rounded-3"
+                            disabled={banning || !banStatus || !banReason.trim()}
+                            onClick={handleBanUser}
+                          >
+                            {banning ? <Loader2 size={14} className="spin" /> : <Ban size={14} />}
+                          </Button>
+                        </Col>
+                      </Row>
+                    </div>
                   )}
-                  <Button variant="outline-danger" className="fw-bold px-4" disabled={resolving} onClick={() => handleResolve(selectedReport, 'RESOLVED')}>
-                    <CheckCircle size={16} className="me-2" /> Giải quyết
-                  </Button>
-                  <Button variant="outline-warning" className="fw-bold px-4" disabled={resolving} onClick={() => handleResolve(selectedReport, 'REJECTED')}>
-                    <AlertTriangle size={16} className="me-2" /> Từ chối
-                  </Button>
+
+                  <div className="d-flex gap-3 justify-content-end">
+                    {getTargetLink(selectedReport) && (
+                      <Button as="a" href={getTargetLink(selectedReport)} target="_blank" variant="outline-info" className="fw-bold px-4">
+                        <ExternalLink size={16} className="me-2" /> Xem doi tuong
+                      </Button>
+                    )}
+                    <Button variant="outline-danger" className="fw-bold px-4" disabled={resolving} onClick={() => handleResolve(selectedReport, 'RESOLVED')}>
+                      <CheckCircle size={16} className="me-2" /> Giai quyet
+                    </Button>
+                    <Button variant="outline-warning" className="fw-bold px-4" disabled={resolving} onClick={() => handleResolve(selectedReport, 'REJECTED')}>
+                      <AlertTriangle size={16} className="me-2" /> Tu choi
+                    </Button>
+                  </div>
                 </div>
               )}
             </div>

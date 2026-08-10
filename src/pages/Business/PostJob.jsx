@@ -5,13 +5,31 @@ import { jobService } from "../../services/jobservice";
 import '../../CSS/PostJob.css';
 
 const PostJob = () => {
+  // ============================================================
+  // STATE
+  // ============================================================
+
+  // Đang lưu (disable nút)
   const [isSaving, setIsSaving] = useState(false);
+
+  // Lỗi validation
   const [errors, setErrors] = useState({});
+
+  // Các trường đã chạm vào (để hiển thị lỗi)
   const [touched, setTouched] = useState({});
+
+  // File ảnh đại diện
   const [imageFile, setImageFile] = useState(null);
+
+  // Preview ảnh (base64)
   const [imagePreview, setImagePreview] = useState('');
+
+  // Ref input file (để click programmatic)
   const fileInputRef = useRef(null);
 
+  // ============================================================
+  // STATE FORM DỮ LIỆU
+  // ============================================================
   const [formData, setFormData] = useState({
     title: '',
     jobType: 'Freelance',
@@ -26,116 +44,220 @@ const PostJob = () => {
     saveAsDraft: false
   });
 
-  const validate = (field, value) => {
-    const newErrors = { ...errors };
-    
+  // ============================================================
+  // HÀM VALIDATE
+  // ============================================================
+  const validate = function (field, value) {
+    // Tạo bản sao lỗi hiện tại
+    var newErrors = {};
+    for (var key in errors) {
+      newErrors[key] = errors[key];
+    }
+
     switch (field) {
       case 'title':
-        if (!value || value.trim().length < 5) newErrors.title = 'Tiêu đề phải có ít nhất 5 ký tự';
-        else if (value.length > 200) newErrors.title = 'Tiêu đề không quá 200 ký tự';
-        else delete newErrors.title;
+        if (!value || value.trim().length < 5) {
+          newErrors.title = 'Tiêu đề phải có ít nhất 5 ký tự';
+        } else if (value.length > 200) {
+          newErrors.title = 'Tiêu đề không quá 200 ký tự';
+        } else {
+          delete newErrors.title;
+        }
         break;
+
       case 'deadline':
-        if (!value) newErrors.deadline = 'Vui lòng chọn hạn chót';
-        else if (new Date(value) < new Date()) newErrors.deadline = 'Hạn chót phải sau ngày hôm nay';
-        else delete newErrors.deadline;
+        if (!value) {
+          newErrors.deadline = 'Vui lòng chọn hạn chót';
+        } else if (new Date(value) < new Date()) {
+          newErrors.deadline = 'Hạn chót phải sau ngày hôm nay';
+        } else {
+          delete newErrors.deadline;
+        }
         break;
+
       case 'description':
-        if (!value || value.trim().length < 20) newErrors.description = 'Mô tả phải có ít nhất 20 ký tự';
-        else delete newErrors.description;
+        if (!value || value.trim().length < 20) {
+          newErrors.description = 'Mô tả phải có ít nhất 20 ký tự';
+        } else {
+          delete newErrors.description;
+        }
         break;
+
       case 'contactName':
-        if (!value || value.trim().length < 2) newErrors.contactName = 'Tên liên hệ phải có ít nhất 2 ký tự';
-        else delete newErrors.contactName;
+        if (!value || value.trim().length < 2) {
+          newErrors.contactName = 'Tên liên hệ phải có ít nhất 2 ký tự';
+        } else {
+          delete newErrors.contactName;
+        }
         break;
+
       case 'contactInfo':
-        if (!value || value.trim().length < 3) newErrors.contactInfo = 'Email/SĐT không hợp lệ';
-        else delete newErrors.contactInfo;
+        if (!value || value.trim().length < 3) {
+          newErrors.contactInfo = 'Email/SĐT không hợp lệ';
+        } else {
+          delete newErrors.contactInfo;
+        }
         break;
+
       case 'salary':
-        if (!value || Number(value) < 100000) newErrors.salary = 'Lương tối thiểu 100,000 VND';
-        else delete newErrors.salary;
+        if (!value || Number(value) < 100000) {
+          newErrors.salary = 'Lương tối thiểu 100,000 VND';
+        } else {
+          delete newErrors.salary;
+        }
         break;
-      default: break;
+
+      default:
+        break;
     }
+
     setErrors(newErrors);
   };
 
-  const handleBlur = (field) => {
-    setTouched(prev => ({ ...prev, [field]: true }));
+  // ============================================================
+  // HÀM XỬ LÝ BLUR (RỜI Ô)
+  // ============================================================
+  const handleBlur = function (field) {
+    setTouched(function (prev) {
+      return { ...prev, [field]: true };
+    });
     validate(field, formData[field]);
   };
 
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    const newVal = type === 'checkbox' || type === 'switch' ? checked : value;
-    setFormData(prev => ({ ...prev, [name]: newVal }));
-    if (touched[name]) validate(name, newVal);
+  // ============================================================
+  // HÀM XỬ LÝ THAY ĐỔI GIÁ TRỊ
+  // ============================================================
+  const handleChange = function (e) {
+    var name = e.target.name;
+    var value = e.target.value;
+    var type = e.target.type;
+    var checked = e.target.checked;
+
+    // Xác định giá trị mới
+    var newVal;
+    if (type === 'checkbox' || type === 'switch') {
+      newVal = checked;
+    } else {
+      newVal = value;
+    }
+
+    // Cập nhật form data
+    setFormData(function (prev) {
+      return { ...prev, [name]: newVal };
+    });
+
+    // Validate nếu trường đã được chạm vào
+    if (touched[name]) {
+      validate(name, newVal);
+    }
   };
 
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
+  // ============================================================
+  // HÀM CHỌN FILE ẢNH
+  // ============================================================
+  const handleFileChange = function (e) {
+    var file = e.target.files[0];
     if (!file) return;
+
+    // Kiểm tra loại file
     if (!file.type.startsWith('image/')) {
       alert('Vui lòng chọn file ảnh (JPG, PNG, WebP)');
       return;
     }
+
+    // Kiểm tra kích thước (tối đa 5MB)
     if (file.size > 5 * 1024 * 1024) {
       alert('Kích thước ảnh tối đa 5MB');
       return;
     }
+
     setImageFile(file);
-    const reader = new FileReader();
-    reader.onloadend = () => setImagePreview(reader.result);
+
+    // Tạo preview
+    var reader = new FileReader();
+    reader.onloadend = function () {
+      setImagePreview(reader.result);
+    };
     reader.readAsDataURL(file);
   };
 
-  const handleRemoveImage = () => {
+  // ============================================================
+  // HÀM XÓA ẢNH
+  // ============================================================
+  const handleRemoveImage = function () {
     setImageFile(null);
     setImagePreview('');
-    if (fileInputRef.current) fileInputRef.current.value = '';
+
+    // Reset input file
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
 
-  const handleSubmit = async (e) => {
-  e.preventDefault();
-  
-  ['title', 'deadline', 'description', 'contactName', 'contactInfo', 'salary'].forEach(f => validate(f, formData[f]));
-  
-  if (Object.keys(errors).length > 0) {
-    setTouched({ title: true, deadline: true, description: true, contactName: true, contactInfo: true, salary: true });
-    return;
-  }
+  // ============================================================
+  // HÀM GỬI FORM
+  // ============================================================
+  const handleSubmit = async function (e) {
+    e.preventDefault();
 
-  setIsSaving(true);
+    // Validate tất cả các trường bắt buộc
+    var fieldsToValidate = ['title', 'deadline', 'description', 'contactName', 'contactInfo', 'salary'];
 
-  try {
-    const fd = new FormData();
-    fd.append('title', formData.title);
-    fd.append('jobType', formData.jobType);
-    fd.append('salary', Number(formData.salary));
-    fd.append('quantity', Number(formData.quantity));
-    fd.append('deadline', new Date(formData.deadline).toISOString());
-    fd.append('description', formData.description);
-    fd.append('requirements', formData.requirements || '');
-    fd.append('benefits', formData.benefits || '');
-    fd.append('contactName', formData.contactName);
-    fd.append('contactInfo', formData.contactInfo);
-    fd.append('saveAsDraft', formData.saveAsDraft);
-    fd.append('requesterType', 'ENTERPRISE');
-    if (imageFile) fd.append('thumbnailFile', imageFile);
-
-    const res = await jobService.postJob(fd);
-
-    if (res.success) {
-      alert("Đăng tin thành công!");
+    for (var i = 0; i < fieldsToValidate.length; i++) {
+      var field = fieldsToValidate[i];
+      validate(field, formData[field]);
     }
-  } catch (err) {
-    const serverMsg = err.response?.data?.message || "Lỗi không xác định";
-    alert("Lỗi: " + serverMsg);
-  } finally {
-    setIsSaving(false);
-  }
-};
+
+    // Nếu có lỗi → đánh dấu tất cả là đã chạm và dừng lại
+    if (Object.keys(errors).length > 0) {
+      setTouched({
+        title: true,
+        deadline: true,
+        description: true,
+        contactName: true,
+        contactInfo: true,
+        salary: true
+      });
+      return;
+    }
+
+    setIsSaving(true);
+
+    try {
+      // Backend POST /v1/jobs chi chap nhan JSON (khong ho tro FormData/multipart)
+      // Anh thumbnail se duoc xu ly rieng neu backend ho tro
+      var payload = {
+        title: formData.title,
+        jobType: formData.jobType,
+        salary: Number(formData.salary),
+        quantity: Number(formData.quantity),
+        deadline: new Date(formData.deadline).toISOString(),
+        description: formData.description,
+        requirements: formData.requirements || '',
+        benefits: formData.benefits || '',
+        contactName: formData.contactName,
+        contactInfo: formData.contactInfo,
+        saveAsDraft: formData.saveAsDraft,
+        requesterType: 'ENTERPRISE'
+      };
+
+      var res = await jobService.postJob(payload);
+
+      if (res.success) {
+        alert("Đăng tin thành công!");
+      }
+
+    } catch (err) {
+      var serverMsg = "Lỗi không xác định";
+      if (err.response && err.response.data && err.response.data.message) {
+        serverMsg = err.response.data.message;
+      }
+      alert("Lỗi: " + serverMsg);
+
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   return (
     <div className="post-job-page py-5 text-white animate-fade-in">

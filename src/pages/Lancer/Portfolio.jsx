@@ -4,7 +4,7 @@ import { useParams, Link } from 'react-router-dom';
 import { 
   Edit3, GraduationCap, BookOpen, ExternalLink, MapPin, 
   Smartphone, Star, Eye, Layers, Award, Code2, Briefcase,
-  ChevronLeft, Loader2, ShieldAlert
+  ChevronLeft, Loader2, ShieldAlert, FileText
 } from 'lucide-react';
 import { profileService } from '../../services/profileservice';
 import { studentService } from '../../services/studentservice';
@@ -14,13 +14,34 @@ import ReportModal from '../../components/ReportModal';
 import '../../CSS/Portfolio.css';
 
 const Portfolio = () => {
-  const { id } = useParams();
-  const isPublicView = Boolean(id);
+  // ============================================================
+  // ROUTING
+  // ============================================================
+  var params = useParams();
+  var id = params.id;
+  var isPublicView = Boolean(id);
+
+  // ============================================================
+  // STATE
+  // ============================================================
+
+  // Loading trang
   const [loading, setLoading] = useState(true);
+
+  // Hiện modal tố cáo
   const [showReportModal, setShowReportModal] = useState(false);
+
+  // ID người dùng hiện tại
   const currentUserId = localStorage.getItem('userId');
+
+  // Kiểm tra có phải portfolio của mình không
   const isOwnPortfolio = isPublicView ? String(id) === String(currentUserId) : false;
 
+  // ============================================================
+  // STATE DỮ LIỆU
+  // ============================================================
+
+  // Thông tin hồ sơ
   const [combinedData, setCombinedData] = useState({
     fullName: 'Đang tải...',
     bio: '',
@@ -35,47 +56,93 @@ const Portfolio = () => {
     verificationStatus: 'UNVERIFIED'
   });
 
+  // Danh sách kỹ năng
   const [skills, setSkills] = useState([]);
+
+  // Danh sách dự án
   const [projects, setProjects] = useState([]);
 
-  const loadData = async () => {
+  // ============================================================
+  // HÀM TẢI DỮ LIỆU
+  // ============================================================
+  const loadData = async function () {
     setLoading(true);
+
     try {
       if (isPublicView) {
-        const res = await studentService.getPublicProfile(id);
-        const data = res?.data || {};
+        // Xem công khai → gọi API public
+        var res = await studentService.getPublicProfile(id);
+        var data = (res && res.data) ? res.data : {};
+
         setCombinedData(data);
         setSkills(data.skills || []);
         setProjects(data.portfolios || []);
+
       } else {
-        const results = await Promise.allSettled([
+        // Xem của mình → tải song song
+        var results = await Promise.allSettled([
           profileService.getBasicProfile(),
           studentService.getProfile(),
           studentService.getMySkills(),
           portfolioService.getMyPortfolios()
         ]);
 
-        let tempInfo = {};
+        var tempInfo = {};
 
-        if (results[0].status === 'fulfilled' && results[0].value?.success) {
-          tempInfo = { ...tempInfo, ...results[0].value.data };
+        // Gộp thông tin từ profile và student
+        if (results[0].status === 'fulfilled' && results[0].value && results[0].value.success) {
+          var profileData = results[0].value.data;
+          for (var key in profileData) {
+            tempInfo[key] = profileData[key];
+          }
         }
-        if (results[1].status === 'fulfilled' && results[1].value?.success) {
-          tempInfo = { ...tempInfo, ...results[1].value.data };
+
+        if (results[1].status === 'fulfilled' && results[1].value && results[1].value.success) {
+          var studentData = results[1].value.data;
+          for (var key2 in studentData) {
+            tempInfo[key2] = studentData[key2];
+          }
         }
+
         setCombinedData(tempInfo);
 
-        if (results[2].status === 'fulfilled') setSkills(results[2].value?.data || []);
-        if (results[3].status === 'fulfilled') setProjects(unwrapList(results[3].value));
+        // Lấy kỹ năng
+        if (results[2].status === 'fulfilled') {
+          var skillsData = results[2].value && results[2].value.data;
+          setSkills(skillsData || []);
+        }
+
+        // Lấy dự án
+        if (results[3].status === 'fulfilled') {
+          var projectsValue = results[3].value;
+          var projectsList = [];
+          if (projectsValue && Array.isArray(projectsValue)) {
+            projectsList = projectsValue;
+          } else if (projectsValue && projectsValue.data) {
+            if (Array.isArray(projectsValue.data)) {
+              projectsList = projectsValue.data;
+            } else if (projectsValue.data.items) {
+              projectsList = projectsValue.data.items;
+            }
+          }
+          setProjects(projectsList);
+        }
       }
+
     } catch (err) {
       console.error("Lỗi tải dữ liệu:", err.message);
+
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => { loadData(); }, [id]);
+  // ============================================================
+  // EFFECT: Tải dữ liệu khi mount hoặc id thay đổi
+  // ============================================================
+  useEffect(function () {
+    loadData();
+  }, [id]);
 
   if (loading) return (
     <div className="vh-100 d-flex justify-content-center align-items-center bg-dark">
@@ -154,6 +221,11 @@ const Portfolio = () => {
                     {combinedData.bio}
                   </p>
                 )}
+                <div className="mt-3">
+                  <Button as={Link} to={`/cv/student/${combinedData.userId || id}`} variant="outline-primary" size="sm" className="fw-bold px-3" target="_blank">
+                    <FileText size={14} className="me-1" /> Xem CV
+                  </Button>
+                </div>
               </Col>
             </Row>
           </div>
@@ -262,7 +334,7 @@ const Portfolio = () => {
                     <div className="portfolio-view-card glass-card h-100 border-0 overflow-hidden" style={{animationDelay: `${index * 0.1}s`}}>
                       <div className="portfolio-view-img-wrapper">
                         <img 
-                          src={project.imageUrl || 'https://via.placeholder.com/600x340/0f172a/3b82f6?text=Project'} 
+                          src={project.imageUrl || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='340' fill='%230f172a'%3E%3Crect width='600' height='340'/%3E%3C/svg%3E"} 
                           alt={project.title} 
                           className="portfolio-view-img"
                         />

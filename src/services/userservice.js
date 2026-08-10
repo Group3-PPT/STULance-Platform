@@ -11,4 +11,5 @@ export const userService = {
     adminGetUserDetail: (userId) => api.get(`/v1/users/${userId}`).then(res => res.data),
     adminUpdateUserStatus: (userId, status, reason) =>
         api.patch(`/v1/users/${userId}/status`, { status, reason }).then(res => res.data),
+    getUserByUsername: (userName) => api.get(`/v1/users/name/${userName}`).then(res => res.data),
 };

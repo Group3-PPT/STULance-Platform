@@ -1,10 +1,12 @@
 import React, { useState, useRef } from 'react';
 import { Container, Row, Col, Form, Button, InputGroup, Spinner } from 'react-bootstrap';
+import { useNavigate } from 'react-router-dom';
 import { Image as ImageIcon, DollarSign, Clock, Layout, Loader2, Send, ListChecks, Upload, X } from 'lucide-react';
 import { studentServiceService } from '../../services/studentserviceservice';
 import '../../CSS/PostService.css';
 
 const PostService = () => {
+  const navigate = useNavigate();
   const [isSaving, setIsSaving] = useState(false);
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
@@ -110,6 +112,7 @@ const PostService = () => {
 
       await studentServiceService.createService(fd);
       alert(formData.SaveAsDraft ? "Đã lưu bản nháp thành công!" : "Dịch vụ đã được đăng và đang chờ duyệt!");
+      navigate('/dashboardlancer');
     } catch (err) {
       alert("Lỗi: " + (err.response?.data?.message || "Không thể xử lý yêu cầu"));
     } finally {
@@ -147,16 +150,12 @@ const PostService = () => {
 
                 <Form.Group className="mb-4">
                   <Form.Label className="small-label">DANH MỤC</Form.Label>
-                  <Form.Select 
-                    name="Category" required className={`post-input ${touched.Category && errors.Category ? 'is-invalid' : ''}`}
+                  <Form.Control 
+                    type="text" name="Category" required
+                    className={`post-input ${touched.Category && errors.Category ? 'is-invalid' : ''}`}
+                    placeholder="VD: Thiết kế Đồ họa, Lập trình, Viết lách..."
                     value={formData.Category} onChange={handleInputChange} onBlur={() => handleBlur('Category')}
-                  >
-                    <option value="">-- Chọn lĩnh vực --</option>
-                    <option>Thiết kế Đồ họa</option>
-                    <option>Lập trình & Tech</option>
-                    <option>Viết lách & Dịch thuật</option>
-                    <option>Video & Âm thanh</option>
-                  </Form.Select>
+                  />
                   {touched.Category && errors.Category && <div className="invalid-feedback d-block">{errors.Category}</div>}
                 </Form.Group>
 
@@ -267,7 +266,8 @@ const PostService = () => {
                       className="x-small text-muted"
                     />
                 </div>
-
+                
+                
                 <Button type="submit" variant="primary" className="w-100 py-3 fw-bold shadow-glow d-flex align-items-center justify-content-center gap-2" disabled={isSaving}>
                   {isSaving ? <Loader2 className="spinner" /> : <Send size={18} />}
                   {formData.SaveAsDraft ? 'LƯU BẢN NHÁP' : 'XUẤT BẢN NGAY'}

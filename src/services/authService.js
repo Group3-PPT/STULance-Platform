@@ -74,7 +74,7 @@ export const authService = {
         } catch (err) {
             console.error("Refresh token thất bại:", err.response?.status);
             if (err.response?.status === 401 || err.response?.status === 400) {
-                console.warn("Refresh token hết hạn, logout ngay.");
+                console.warn("Refresh token hết hạn/hợp lệ, logout.");
                 authService.handleSessionExpired();
             }
             return null;
@@ -243,7 +243,9 @@ window.addEventListener("visibilitychange", () => {
             const elapsed = Date.now() - Number(refreshedAt);
             if (elapsed > REFRESH_INTERVAL) {
                 console.log("Tab quay lại, token cũ → refresh ngay");
-                authService.refreshAccessToken();
+                if (!isRefreshing) {
+                    authService.refreshAccessToken();
+                }
             }
         }
     }

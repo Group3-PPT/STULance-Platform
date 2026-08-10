@@ -16,115 +16,286 @@ import PaginationBar from '../../components/PaginationBar';
 import '../../CSS/ManageJobs.css';
 
 const ManageJobs = () => {
+  // ============================================================
+  // STATE: DANH SÁCH DỮ LIỆU
+  // ============================================================
+
+  // Danh sách bài tuyển dụng của doanh nghiệp
   const [jobs, setJobs] = useState([]);
+
+  // Danh sách hợp đồng
   const [contracts, setContracts] = useState([]);
+
+  // Trạng thái loading (hiện spinner)
   const [loading, setLoading] = useState(true);
+
+  // Thông báo lỗi (hiện alert nếu có)
   const [error, setError] = useState(null);
+
+  // Tab đang chọn: 'jobs' | 'orders' | 'contracts'
   const [activeTab, setActiveTab] = useState('jobs');
+
+  // Từ khóa tìm kiếm
   const [searchTerm, setSearchTerm] = useState('');
+
+  // Bộ lọc trạng thái bài đăng (chỉ dùng cho tab jobs)
   const [filterStatus, setFilterStatus] = useState('');
 
+  // ============================================================
+  // STATE: MODAL XEM ỨNG VIÊN (BIDS)
+  // ============================================================
+
+  // Hiển thị modal danh sách ứng viên?
   const [showBidsModal, setShowBidsModal] = useState(false);
+
+  // Bài đăng đang xem ứng viên
   const [selectedJob, setSelectedJob] = useState(null);
+
+  // Danh sách đơn ứng tuyển (bids) của bài đăng đang chọn
   const [bids, setBids] = useState([]);
+
+  // Đang tải danh sách ứng viên?
   const [bidsLoading, setBidsLoading] = useState(false);
+
+  // ID đơn ứng tuyển đang xử lý (để disable nút khi đang gọi API)
   const [actingBidId, setActingBidId] = useState(null);
 
+  // ============================================================
+  // STATE: MODAL CHỈNH SỬA BÀI ĐĂNG
+  // ============================================================
+
+  // Hiển thị modal chỉnh sửa?
   const [showEditModal, setShowEditModal] = useState(false);
+
+  // Bài đăng đang chỉnh sửa
   const [editJob, setEditJob] = useState(null);
-  const [editForm, setEditForm] = useState({ title: '', salary: '', description: '', requirements: '' });
+
+  // Form data khi chỉnh sửa
+  const [editForm, setEditForm] = useState({
+    title: '',           // Tiêu đề
+    salary: '',          // Mức lương
+    description: '',     // Mô tả
+    requirements: ''     // Yêu cầu
+  });
+
+  // ============================================================
+  // STATE: THỐNG KÊ DASHBOARD
+  // ============================================================
+
+  // Thống kê tổng quan từ API dashboard
   const [dashboardStats, setDashboardStats] = useState(null);
 
+  // ============================================================
+  // STATE: ĐƠN DỊCH VỤ
+  // ============================================================
+
+  // Danh sách đơn dịch vụ (service orders)
   const [serviceOrders, setServiceOrders] = useState([]);
+
+  // ID đơn hàng đang xử lý (để disable nút)
   const [creatingContract, setCreatingContract] = useState(null);
 
+  // ============================================================
+  // STATE: MODAL TẠO HỢP ĐỒNG
+  // ============================================================
+
+  // Hiển thị modal tạo hợp đồng?
   const [showCreateContractModal, setShowCreateContractModal] = useState(false);
+
+  // Loại tạo hợp đồng: 'bid' (từ đơn ứng tuyển) hoặc 'order' (từ đơn dịch vụ)
   const [createContractType, setCreateContractType] = useState(null);
+
+  // ID của bid hoặc order đang chọn để tạo hợp đồng
   const [createContractId, setCreateContractId] = useState(null);
-  const [createForm, setCreateForm] = useState({ workContent: '', startDate: '', endDate: '', acceptanceCriteria: '' });
+
+  // Form data khi tạo hợp đồng
+  const [createForm, setCreateForm] = useState({
+    workContent: '',       // Nội dung công việc
+    startDate: '',         // Ngày bắt đầu
+    endDate: '',           // Ngày kết thúc
+    acceptanceCriteria: '' // Tiêu chí nghiệm thu
+  });
+
+  // Đang gửi form tạo hợp đồng?
   const [creatingSubmit, setCreatingSubmit] = useState(false);
 
-  const [jobsPagination, setJobsPagination] = useState({ page: 1, totalPages: 1, totalItems: 0 });
-  const [ordersPagination, setOrdersPagination] = useState({ page: 1, totalPages: 1, totalItems: 0 });
-  const [contractsPagination, setContractsPagination] = useState({ page: 1, totalPages: 1, totalItems: 0 });
+  // ============================================================
+  // STATE: PHÂN TRANG
+  // ============================================================
+
+  // Thông tin phân trang cho từng tab
+  const [jobsPagination, setJobsPagination] = useState({
+    page: 1,           // Trang hiện tại
+    totalPages: 1,     // Tổng số trang
+    totalItems: 0      // Tổng số mục
+  });
+
+  const [ordersPagination, setOrdersPagination] = useState({
+    page: 1,
+    totalPages: 1,
+    totalItems: 0
+  });
+
+  const [contractsPagination, setContractsPagination] = useState({
+    page: 1,
+    totalPages: 1,
+    totalItems: 0
+  });
+
+  // Số mục hiển thị trên mỗi trang
   const pageSize = 12;
 
+  // ============================================================
+  // HÀM TẢI DANH SÁCH BÀI TUYỂN DỤNG
+  // ============================================================
   const fetchMyJobs = useCallback(async (page = 1, keyword = '', status = '') => {
     setLoading(true);
     setError(null);
     try {
+      // Gọi API lấy danh sách bài đăng của tôi
       const res = await jobService.getMyJobs({
-        page,
-        pageSize,
-        keyword: keyword || undefined,
+        page: page,
+        pageSize: pageSize,
+        keyword: keyword || undefined,    // undefined sẽ bị bỏ qua khi gửi lên server
         status: status || undefined
       });
+
       if (res.success && res.data) {
         const data = res.data;
+
+        // Lưu danh sách bài đăng
         const jobList = data.items || [];
+
+        // Lưu thông tin phân trang
         setJobsPagination({
           page: data.page || 1,
           totalPages: data.totalPages || 1,
           totalItems: data.totalItems || 0
         });
 
+        // Bổ sung số lượng ứng viên cho từng bài đăng
+        // Gọi API lấy danh sách bids cho TỪNG bài đăng (song song)
         const enriched = await Promise.allSettled(
           jobList.map(async (job) => {
             try {
+              // Gọi API lấy bids của bài đăng này
               const bidRes = await bidService.getJobBids(job.jobId);
-              const bidArr = Array.isArray(bidRes?.data) ? bidRes.data : (bidRes?.data?.items || []);
+
+              // Parse danh sách bids từ response
+              let bidArr = [];
+              if (Array.isArray(bidRes && bidRes.data)) {
+                bidArr = bidRes.data;
+              } else if (bidRes && bidRes.data && bidRes.data.items) {
+                bidArr = bidRes.data.items;
+              }
+
+              // Lấy số lượng bids
               const bidCount = bidArr.length || (job.bidCount || 0);
-              return { ...job, bidCount };
+
+              // Trả về job kèm bidCount
+              return { ...job, bidCount: bidCount };
             } catch {
+              // Nếu lỗi → giữ nguyên bidCount từ job gốc
               return { ...job, bidCount: job.bidCount || 0 };
             }
           })
         );
-        setJobs(enriched.map(r => r.status === 'fulfilled' ? r.value : r.reason).filter(Boolean));
+
+        // Chuyển kết quả Promise.allSettled thành mảng jobs
+        // fulfilled → lấy value, rejected → lấy reason, filter null
+        const finalJobs = enriched
+          .map(result => {
+            if (result.status === 'fulfilled') {
+              return result.value;
+            } else {
+              return result.reason;
+            }
+          })
+          .filter(Boolean);
+
+        setJobs(finalJobs);
       }
     } catch (err) {
-      if (err.response?.status === 404) setError("Chức năng này chưa sẵn sàng.");
-      else setError("Không thể tải danh sách bài đăng.");
+      if (err.response && err.response.status === 404) {
+        setError("Chức năng này chưa sẵn sàng.");
+      } else {
+        setError("Không thể tải danh sách bài đăng.");
+      }
     } finally {
       setLoading(false);
     }
   }, []);
 
+  // ============================================================
+  // HÀM TẢI DANH SÁCH HỢP ĐỒNG
+  // ============================================================
   const fetchContracts = useCallback(async (page = 1, keyword = '') => {
     setLoading(true);
     try {
       const res = await contractService.getMyContracts({
-        page,
-        pageSize,
+        page: page,
+        pageSize: pageSize,
         keyword: keyword || undefined
       });
+
       if (res.success && res.data) {
         const data = res.data;
         const contractList = data.items || [];
+
+        // Lưu thông tin phân trang
         setContractsPagination({
           page: data.page || 1,
           totalPages: data.totalPages || 1,
           totalItems: data.totalItems || 0
         });
 
+        // Bổ sung thông tin cho từng hợp đồng
         const enriched = contractList.map(c => {
+          // Kiểm tra hợp đồng đã bị khóa chưa
           const isLocked = Boolean(c.isContentLocked || c.contentLockedAt);
+
           return {
             ...c,
+            // Nếu đã khóa hoặc đã ký → coi như đã ký
             hasStudentSigned: isLocked || c.hasStudentSigned || c.studentSignedAt || false,
             hasEnterpriseSigned: isLocked || c.hasEnterpriseSigned || c.enterpriseSignedAt || false,
+            // Hợp đồng hoàn thành → progress = 100%
             progressPercent: c.status === 'COMPLETED' ? 100 : (c.progressPercent || 0),
           };
         });
 
-        const progressPromises = enriched
-          .filter(c => c.status === 'IN_PROGRESS' || c.status === 'DELIVERED')
-          .map(c => contractService.getProgress(c.contractId).then(res => {
-            const progressData = Array.isArray(res?.data) ? res.data[0] : (res?.data || null);
-            if (progressData) c.progressPercent = progressData.progressPercent || 0;
-          }).catch(() => {}));
+        // Tải tiến độ cho hợp đồng đang chạy
+        // Chỉ tải cho hợp đồng có status IN_PROGRESS hoặc DELIVERED
+        const contractsNeedingProgress = enriched.filter(c => {
+          return c.status === 'IN_PROGRESS' || c.status === 'DELIVERED';
+        });
 
+        const progressPromises = contractsNeedingProgress.map(c => {
+          return contractService.getProgress(c.contractId)
+            .then(res => {
+              // Parse dữ liệu tiến độ
+              let progressData = null;
+              if (Array.isArray(res && res.data)) {
+                // Nếu là mảng → lấy phần tử đầu tiên
+                progressData = res.data[0];
+              } else {
+                progressData = res && res.data || null;
+              }
+
+              // Cập nhật progressPercent cho hợp đồng
+              if (progressData) {
+                c.progressPercent = progressData.progressPercent || 0;
+              }
+            })
+            .catch(() => {
+              // Nếu lỗi → giữ nguyên progressPercent cũ
+            });
+        });
+
+        // Đợi tất cả API tiến độ hoàn thành
         await Promise.allSettled(progressPromises);
+
+        // Lưu danh sách hợp đồng đã enriched
         setContracts(enriched);
       }
     } catch (err) {
@@ -134,17 +305,25 @@ const ManageJobs = () => {
     }
   }, []);
 
+  // ============================================================
+  // HÀM TẢI DANH SÁCH ĐƠN DỊCH VỤ
+  // ============================================================
   const fetchServiceOrders = useCallback(async (page = 1, keyword = '') => {
     setLoading(true);
     try {
       const res = await serviceOrderService.getEnterpriseOrders({
-        page,
-        pageSize,
+        page: page,
+        pageSize: pageSize,
         keyword: keyword || undefined
       });
+
       if (res.success && res.data) {
         const data = res.data;
+
+        // Lưu danh sách đơn dịch vụ
         setServiceOrders(data.items || []);
+
+        // Lưu thông tin phân trang
         setOrdersPagination({
           page: data.page || 1,
           totalPages: data.totalPages || 1,
@@ -158,112 +337,239 @@ const ManageJobs = () => {
     }
   }, []);
 
+  // ============================================================
+  // useEffect: TẢI DỮ LIỆU KHI CHUYỂN TAB
+  // ============================================================
   useEffect(() => {
-    if (activeTab === 'jobs') fetchMyJobs(1, '', filterStatus);
-    else if (activeTab === 'contracts') fetchContracts(1);
-    else if (activeTab === 'orders') fetchServiceOrders(1);
+    // Tải dữ liệu tương ứng với tab đang chọn
+    if (activeTab === 'jobs') {
+      fetchMyJobs(1, '', filterStatus);
+    } else if (activeTab === 'contracts') {
+      fetchContracts(1);
+    } else if (activeTab === 'orders') {
+      fetchServiceOrders(1);
+    }
+
+    // Xóa từ khóa tìm kiếm khi chuyển tab
     setSearchTerm('');
   }, [activeTab, filterStatus]);
 
+  // ============================================================
+  // useEffect: TẢI THỐNG KÊ DASHBOARD (chỉ chạy 1 lần)
+  // ============================================================
   useEffect(() => {
     dashboardService.getEnterpriseDashboard()
-      .then(res => setDashboardStats(res.data))
-      .catch(() => {});
+      .then(res => {
+        setDashboardStats(res.data);
+      })
+      .catch(() => {
+        // Nếu lỗi → bỏ qua, không hiển thị thống kê
+      });
   }, []);
 
+  // ============================================================
+  // HÀM TÌM KIẾM TRONG TAB HIỆN TẠI
+  // ============================================================
   const handleTabSearch = () => {
-    if (activeTab === 'jobs') fetchMyJobs(1, searchTerm, filterStatus);
-    else if (activeTab === 'contracts') fetchContracts(1, searchTerm);
-    else if (activeTab === 'orders') fetchServiceOrders(1, searchTerm);
+    if (activeTab === 'jobs') {
+      fetchMyJobs(1, searchTerm, filterStatus);
+    } else if (activeTab === 'contracts') {
+      fetchContracts(1, searchTerm);
+    } else if (activeTab === 'orders') {
+      fetchServiceOrders(1, searchTerm);
+    }
   };
 
+  // ============================================================
+  // HÀM CHUYỂN TRANG TRONG TAB HIỆN TẠI
+  // ============================================================
   const handleTabPageChange = (page) => {
-    if (activeTab === 'jobs') fetchMyJobs(page, searchTerm, filterStatus);
-    else if (activeTab === 'contracts') fetchContracts(page, searchTerm);
-    else if (activeTab === 'orders') fetchServiceOrders(page, searchTerm);
+    if (activeTab === 'jobs') {
+      fetchMyJobs(page, searchTerm, filterStatus);
+    } else if (activeTab === 'contracts') {
+      fetchContracts(page, searchTerm);
+    } else if (activeTab === 'orders') {
+      fetchServiceOrders(page, searchTerm);
+    }
   };
 
+  // ============================================================
+  // HÀM MỞ MODAL TẠO HỢP ĐỒNG TỪ ĐƠN ỨNG TUYỂN
+  // ============================================================
   const handleCreateContractFromBid = (bidId) => {
-    setCreateContractType('bid');
-    setCreateContractId(bidId);
-    setCreateForm({ workContent: '', startDate: '', endDate: '', acceptanceCriteria: '' });
-    setShowCreateContractModal(true);
+    setCreateContractType('bid');         // Loại: từ đơn ứng tuyển
+    setCreateContractId(bidId);          // ID đơn ứng tuyển
+    setCreateForm({                       // Reset form
+      workContent: '',
+      startDate: '',
+      endDate: '',
+      acceptanceCriteria: ''
+    });
+    setShowCreateContractModal(true);    // Mở modal
   };
 
+  // ============================================================
+  // HÀM MỞ MODAL TẠO HỢP ĐỒNG TỪ ĐƠN DỊCH VỤ
+  // ============================================================
   const handleCreateContractFromOrder = (orderId) => {
-    setCreateContractType('order');
-    setCreateContractId(orderId);
-    setCreateForm({ workContent: '', startDate: '', endDate: '', acceptanceCriteria: '' });
-    setShowCreateContractModal(true);
+    setCreateContractType('order');       // Loại: từ đơn dịch vụ
+    setCreateContractId(orderId);        // ID đơn dịch vụ
+    setCreateForm({                       // Reset form
+      workContent: '',
+      startDate: '',
+      endDate: '',
+      acceptanceCriteria: ''
+    });
+    setShowCreateContractModal(true);    // Mở modal
   };
 
+  // ============================================================
+  // HÀM GỬI FORM TẠO HỢP ĐỒNG
+  // ============================================================
   const handleSubmitCreateContract = async () => {
-    if (!createForm.workContent.trim()) return alert("Vui lòng nhập nội dung công việc");
-    if (!createForm.startDate) return alert("Vui lòng chọn ngày bắt đầu");
-    if (!createForm.endDate) return alert("Vui lòng chọn ngày kết thúc");
+    // Kiểm tra dữ liệu đầu vào
+    if (!createForm.workContent.trim()) {
+      alert("Vui lòng nhập nội dung công việc");
+      return;
+    }
+    if (!createForm.startDate) {
+      alert("Vui lòng chọn ngày bắt đầu");
+      return;
+    }
+    if (!createForm.endDate) {
+      alert("Vui lòng chọn ngày kết thúc");
+      return;
+    }
 
+    // Bắt đầu gửi form
     setCreatingSubmit(true);
     try {
+      // Tùy loại (bid hoặc order) mà gọi API khác nhau
       if (createContractType === 'bid') {
         await contractService.createFromBid(createContractId, createForm);
       } else {
         await contractService.createFromServiceOrder(createContractId, createForm);
       }
+
       alert("Tạo hợp đồng thành công!");
+
+      // Đóng modal
       setShowCreateContractModal(false);
+
+      // Tải lại dữ liệu cho cả 3 tab
       fetchMyJobs(jobsPagination.page, '', filterStatus);
       fetchContracts(contractsPagination.page);
       fetchServiceOrders(ordersPagination.page);
     } catch (err) {
-      alert("Lỗi: " + (err.response?.data?.message || "Không thể tạo hợp đồng"));
+      let errorMessage = "Không thể tạo hợp đồng";
+      if (err.response && err.response.data && err.response.data.message) {
+        errorMessage = err.response.data.message;
+      }
+      alert("Lỗi: " + errorMessage);
     } finally {
       setCreatingSubmit(false);
     }
   };
 
+  // ============================================================
+  // HÀM CHẤP NHẬN ĐƠN DỊCH VỤ
+  // ============================================================
   const handleAcceptOrder = async (orderId) => {
-    setCreatingContract(orderId);
+    setCreatingContract(orderId);  // Đánh dấu đang xử lý đơn này
     try {
       await serviceOrderService.acceptOrder(orderId);
-      setServiceOrders(serviceOrders.map(o => o.orderId === orderId ? { ...o, status: 'ACCEPTED' } : o));
+
+      // Cập nhật local state: đổi trạng thái đơn hàng
+      setServiceOrders(serviceOrders.map(o => {
+        if (o.orderId === orderId) {
+          return { ...o, status: 'ACCEPTED' };
+        }
+        return o;
+      }));
     } catch (err) {
-      alert("Lỗi: " + (err.response?.data?.message || "Không thể chấp nhận"));
+      let errorMessage = "Không thể chấp nhận";
+      if (err.response && err.response.data && err.response.data.message) {
+        errorMessage = err.response.data.message;
+      }
+      alert("Lỗi: " + errorMessage);
     } finally {
-      setCreatingContract(null);
+      setCreatingContract(null);  // Xóa đánh dấu xử lý
     }
   };
 
+  // ============================================================
+  // HÀM TỪ CHỐI ĐƠN DỊCH VỤ
+  // ============================================================
   const handleRejectOrder = async (orderId) => {
-    if (!window.confirm('Từ chối đơn dịch vụ này?')) return;
+    const userConfirmed = window.confirm('Từ chối đơn dịch vụ này?');
+    if (!userConfirmed) return;
+
     setCreatingContract(orderId);
     try {
       await serviceOrderService.rejectOrder(orderId);
-      setServiceOrders(serviceOrders.map(o => o.orderId === orderId ? { ...o, status: 'REJECTED' } : o));
+
+      // Cập nhật local state
+      setServiceOrders(serviceOrders.map(o => {
+        if (o.orderId === orderId) {
+          return { ...o, status: 'REJECTED' };
+        }
+        return o;
+      }));
     } catch (err) {
-      alert("Lỗi: " + (err.response?.data?.message || "Không thể từ chối"));
+      let errorMessage = "Không thể từ chối";
+      if (err.response && err.response.data && err.response.data.message) {
+        errorMessage = err.response.data.message;
+      }
+      alert("Lỗi: " + errorMessage);
     } finally {
       setCreatingContract(null);
     }
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('Xóa bài tuyển dụng này?')) return;
+  // ============================================================
+  // HÀM XÓA BÀI TUYỂN DỤNG
+  // ============================================================
+  const handleDelete = async (jobId) => {
+    const userConfirmed = window.confirm('Xóa bài tuyển dụng này?');
+    if (!userConfirmed) return;
+
     try {
-      await jobService.deleteJob(id);
-      setJobs(jobs.filter(j => j.jobId !== id));
+      await jobService.deleteJob(jobId);
+
+      // Cập nhật local state: xóa bài đăng vừa xóa khỏi danh sách
+      setJobs(jobs.filter(j => j.jobId !== jobId));
     } catch (err) {
       alert("Lỗi khi xóa.");
     }
   };
 
+  // ============================================================
+  // HÀM XEM DANH SÁCH ỨNG VIÊN CỦA MỘT BÀI ĐĂNG
+  // ============================================================
   const handleViewBids = async (job) => {
+    // Lưu bài đăng đang xem
     setSelectedJob(job);
+
+    // Mở modal
     setShowBidsModal(true);
+
+    // Bắt đầu tải danh sách ứng viên
     setBidsLoading(true);
     try {
       const res = await bidService.getJobBids(job.jobId);
-      const bidData = res?.data;
-      const bidList = bidData?.items || (Array.isArray(bidData) ? bidData : []);
+
+      // Parse danh sách bids từ response
+      const bidData = res && res.data;
+      let bidList = [];
+
+      if (bidData && bidData.items) {
+        // Dạng PagedResponse: { items: [...] }
+        bidList = bidData.items;
+      } else if (Array.isArray(bidData)) {
+        // Dạng mảng trực tiếp: [...]
+        bidList = bidData;
+      }
+
       setBids(bidList);
     } catch (err) {
       setBids([]);
@@ -272,31 +578,64 @@ const ManageJobs = () => {
     }
   };
 
+  // ============================================================
+  // HÀM CHẤP NHẬN ĐƠN ỨNG TUYỂN
+  // ============================================================
   const handleAcceptBid = async (bidId) => {
-    setActingBidId(bidId);
+    setActingBidId(bidId);  // Đánh dấu đang xử lý
     try {
       await bidService.acceptBid(bidId);
-      setBids(bids.map(b => b.bidId === bidId ? { ...b, status: 'ACCEPTED' } : b));
+
+      // Cập nhật local state
+      setBids(bids.map(b => {
+        if (b.bidId === bidId) {
+          return { ...b, status: 'ACCEPTED' };
+        }
+        return b;
+      }));
     } catch (err) {
-      alert("Lỗi: " + (err.response?.data?.message || "Không xác định"));
+      let errorMessage = "Không xác định";
+      if (err.response && err.response.data && err.response.data.message) {
+        errorMessage = err.response.data.message;
+      }
+      alert("Lỗi: " + errorMessage);
     } finally {
       setActingBidId(null);
     }
   };
 
+  // ============================================================
+  // HÀM TỪ CHỐI ĐƠN ỨNG TUYỂN
+  // ============================================================
   const handleRejectBid = async (bidId) => {
-    if (!window.confirm('Từ chối ứng viên này?')) return;
+    const userConfirmed = window.confirm('Từ chối ứng viên này?');
+    if (!userConfirmed) return;
+
     setActingBidId(bidId);
     try {
       await bidService.rejectBid(bidId);
-      setBids(bids.map(b => b.bidId === bidId ? { ...b, status: 'REJECTED' } : b));
+
+      // Cập nhật local state
+      setBids(bids.map(b => {
+        if (b.bidId === bidId) {
+          return { ...b, status: 'REJECTED' };
+        }
+        return b;
+      }));
     } catch (err) {
-      alert("Lỗi: " + (err.response?.data?.message || "Không xác định"));
+      let errorMessage = "Không xác định";
+      if (err.response && err.response.data && err.response.data.message) {
+        errorMessage = err.response.data.message;
+      }
+      alert("Lỗi: " + errorMessage);
     } finally {
       setActingBidId(null);
     }
   };
 
+  // ============================================================
+  // HÀM MỞ MODAL CHỈNH SỬA BÀI ĐĂNG
+  // ============================================================
   const handleEditJob = (job) => {
     setEditJob(job);
     setEditForm({
@@ -308,75 +647,173 @@ const ManageJobs = () => {
     setShowEditModal(true);
   };
 
+  // ============================================================
+  // HÀM LƯU THAY ĐỔI BÀI ĐĂNG
+  // ============================================================
   const handleSaveEdit = async () => {
     if (!editForm.title.trim()) {
       alert("Vui lòng nhập tiêu đề");
       return;
     }
+
     try {
       await jobService.updateJob(editJob.jobId, {
         ...editForm,
-        salary: Number(editForm.salary) || 0
+        salary: Number(editForm.salary) || 0   // Chuyển string → number
       });
+
       alert("Cập nhật thành công!");
       setShowEditModal(false);
+
+      // Tải lại danh sách bài đăng
       fetchMyJobs(jobsPagination.page, '', filterStatus);
     } catch (err) {
-      alert("Lỗi: " + (err.response?.data?.message || "Không thể cập nhật"));
+      let errorMessage = "Không thể cập nhật";
+      if (err.response && err.response.data && err.response.data.message) {
+        errorMessage = err.response.data.message;
+      }
+      alert("Lỗi: " + errorMessage);
     }
   };
 
+  // ============================================================
+  // HÀM XÁC ĐỊNH TRẠNG THÁI BÀI ĐĂNG
+  // Input: status (string)
+  // Output: { label, color, bg, icon }
+  // ============================================================
   const getStatusConfig = (status) => {
-    const map = {
-      'APPROVED': { label: 'Đang hiển thị', color: '#10b981', bg: 'rgba(16,185,129,0.12)', icon: <CheckCircle size={12} /> },
-      'OPEN': { label: 'Đang hiển thị', color: '#10b981', bg: 'rgba(16,185,129,0.12)', icon: <CheckCircle size={12} /> },
-      'PENDING': { label: 'Chờ duyệt', color: '#f59e0b', bg: 'rgba(245,158,11,0.12)', icon: <Clock size={12} /> },
-      'REJECTED': { label: 'Bị từ chối', color: '#ef4444', bg: 'rgba(239,68,68,0.12)', icon: <X size={12} /> },
-      'CLOSED': { label: 'Đã đóng', color: '#6b7280', bg: 'rgba(107,114,128,0.12)', icon: <X size={12} /> },
+    const statusMap = {
+      'APPROVED': {
+        label: 'Đang hiển thị',
+        color: '#10b981',
+        bg: 'rgba(16,185,129,0.12)',
+        icon: <CheckCircle size={12} />
+      },
+      'OPEN': {
+        label: 'Đang hiển thị',
+        color: '#10b981',
+        bg: 'rgba(16,185,129,0.12)',
+        icon: <CheckCircle size={12} />
+      },
+      'PENDING': {
+        label: 'Chờ duyệt',
+        color: '#f59e0b',
+        bg: 'rgba(245,158,11,0.12)',
+        icon: <Clock size={12} />
+      },
+      'REJECTED': {
+        label: 'Bị từ chối',
+        color: '#ef4444',
+        bg: 'rgba(239,68,68,0.12)',
+        icon: <X size={12} />
+      },
+      'CLOSED': {
+        label: 'Đã đóng',
+        color: '#6b7280',
+        bg: 'rgba(107,114,128,0.12)',
+        icon: <X size={12} />
+      },
     };
-    return map[status] || { label: status, color: '#60a5fa', bg: 'rgba(96,165,250,0.12)', icon: <Briefcase size={12} /> };
+
+    // Tìm theo status, nếu không tìm thấy → dùng mặc định
+    if (statusMap[status]) {
+      return statusMap[status];
+    }
+    return {
+      label: status,
+      color: '#60a5fa',
+      bg: 'rgba(96,165,250,0.12)',
+      icon: <Briefcase size={12} />
+    };
   };
 
+  // ============================================================
+  // HÀM XÁC ĐỊNH TRẠNG THÁI HỢP ĐỒNG
+  // ============================================================
   const getContractStatusConfig = (status) => {
-    const map = {
-      'SIGNING': { label: 'Chờ ký', color: '#f59e0b', bg: 'rgba(245,158,11,0.12)' },
-      'AWAITING_PAYMENT': { label: 'Chờ thanh toán', color: '#60a5fa', bg: 'rgba(96,165,250,0.12)' },
-      'IN_PROGRESS': { label: 'Đang thực hiện', color: '#3b82f6', bg: 'rgba(59,130,246,0.12)' },
-      'DELIVERED': { label: 'Đã bàn giao', color: '#22c55e', bg: 'rgba(34,197,94,0.12)' },
-      'CANCEL_REQUESTED': { label: 'Yêu cầu hủy', color: '#ef4444', bg: 'rgba(239,68,68,0.12)' },
-      'COMPLETED': { label: 'Hoàn thành', color: '#10b981', bg: 'rgba(16,185,129,0.12)' },
-      'DISPUTED': { label: 'Tranh chấp', color: '#ef4444', bg: 'rgba(239,68,68,0.12)' },
-      'CANCELLED': { label: 'Đã hủy', color: '#6b7280', bg: 'rgba(107,114,128,0.12)' },
-      'EXPIRED': { label: 'Hết hạn', color: '#6b7280', bg: 'rgba(107,114,128,0.12)' },
+    const statusMap = {
+      'SIGNING':          { label: 'Chờ ký',          color: '#f59e0b', bg: 'rgba(245,158,11,0.12)' },
+      'AWAITING_PAYMENT': { label: 'Chờ thanh toán',  color: '#60a5fa', bg: 'rgba(96,165,250,0.12)' },
+      'IN_PROGRESS':      { label: 'Đang thực hiện',  color: '#3b82f6', bg: 'rgba(59,130,246,0.12)' },
+      'DELIVERED':        { label: 'Đã bàn giao',     color: '#22c55e', bg: 'rgba(34,197,94,0.12)' },
+      'CANCEL_REQUESTED': { label: 'Yêu cầu hủy',    color: '#ef4444', bg: 'rgba(239,68,68,0.12)' },
+      'COMPLETED':        { label: 'Hoàn thành',      color: '#10b981', bg: 'rgba(16,185,129,0.12)' },
+      'DISPUTED':         { label: 'Tranh chấp',      color: '#ef4444', bg: 'rgba(239,68,68,0.12)' },
+      'CANCELLED':        { label: 'Đã hủy',          color: '#6b7280', bg: 'rgba(107,114,128,0.12)' },
+      'EXPIRED':          { label: 'Hết hạn',         color: '#6b7280', bg: 'rgba(107,114,128,0.12)' },
     };
-    return map[status] || { label: status, color: '#60a5fa', bg: 'rgba(96,165,250,0.12)' };
+
+    if (statusMap[status]) {
+      return statusMap[status];
+    }
+    return {
+      label: status,
+      color: '#60a5fa',
+      bg: 'rgba(96,165,250,0.12)'
+    };
   };
 
+  // ============================================================
+  // HÀM XÁC ĐỊNH TRẠNG THÁI ĐƠN ỨNG TUYỂN
+  // ============================================================
   const getBidStatusConfig = (status) => {
-    const map = {
-      'ACCEPTED': { label: 'Chấp nhận', color: '#10b981', bg: 'rgba(16,185,129,0.12)' },
-      'PENDING': { label: 'Chờ duyệt', color: '#f59e0b', bg: 'rgba(245,158,11,0.12)' },
-      'REJECTED': { label: 'Từ chối', color: '#ef4444', bg: 'rgba(239,68,68,0.12)' },
-      'WITHDRAWN': { label: 'Đã rút', color: '#6b7280', bg: 'rgba(107,114,128,0.12)' },
+    const statusMap = {
+      'ACCEPTED':  { label: 'Chấp nhận', color: '#10b981', bg: 'rgba(16,185,129,0.12)' },
+      'PENDING':   { label: 'Chờ duyệt', color: '#f59e0b', bg: 'rgba(245,158,11,0.12)' },
+      'REJECTED':  { label: 'Từ chối',   color: '#ef4444', bg: 'rgba(239,68,68,0.12)' },
+      'WITHDRAWN': { label: 'Đã rút',    color: '#6b7280', bg: 'rgba(107,114,128,0.12)' },
     };
-    return map[status] || { label: status, color: '#60a5fa', bg: 'rgba(96,165,250,0.12)' };
+
+    if (statusMap[status]) {
+      return statusMap[status];
+    }
+    return {
+      label: status,
+      color: '#60a5fa',
+      bg: 'rgba(96,165,250,0.12)'
+    };
   };
 
+  // ============================================================
+  // HÀM XÁC ĐỊNH TRẠNG THÁI ĐƠN DỊCH VỤ
+  // ============================================================
   const getOrderStatusConfig = (status) => {
-    const map = {
-      'PENDING': { label: 'Chờ xử lý', color: '#f59e0b', bg: 'rgba(245,158,11,0.12)' },
-      'ACCEPTED': { label: 'Đã chấp nhận', color: '#10b981', bg: 'rgba(16,185,129,0.12)' },
-      'REJECTED': { label: 'Từ chối', color: '#ef4444', bg: 'rgba(239,68,68,0.12)' },
-      'IN_PROGRESS': { label: 'Đang thực hiện', color: '#3b82f6', bg: 'rgba(59,130,246,0.12)' },
-      'COMPLETED': { label: 'Hoàn thành', color: '#22c55e', bg: 'rgba(34,197,94,0.12)' },
-      'CANCELLED': { label: 'Đã hủy', color: '#6b7280', bg: 'rgba(107,114,128,0.12)' },
+    const statusMap = {
+      'PENDING':      { label: 'Chờ xử lý',     color: '#f59e0b', bg: 'rgba(245,158,11,0.12)' },
+      'ACCEPTED':     { label: 'Đã chấp nhận',  color: '#10b981', bg: 'rgba(16,185,129,0.12)' },
+      'REJECTED':     { label: 'Từ chối',       color: '#ef4444', bg: 'rgba(239,68,68,0.12)' },
+      'IN_PROGRESS':  { label: 'Đang thực hiện', color: '#3b82f6', bg: 'rgba(59,130,246,0.12)' },
+      'COMPLETED':    { label: 'Hoàn thành',     color: '#22c55e', bg: 'rgba(34,197,94,0.12)' },
+      'CANCELLED':    { label: 'Đã hủy',         color: '#6b7280', bg: 'rgba(107,114,128,0.12)' },
     };
-    return map[status] || { label: status, color: '#60a5fa', bg: 'rgba(96,165,250,0.12)' };
+
+    if (statusMap[status]) {
+      return statusMap[status];
+    }
+    return {
+      label: status,
+      color: '#60a5fa',
+      bg: 'rgba(96,165,250,0.12)'
+    };
   };
 
-  const formatMoney = (val) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val || 0);
+  // ============================================================
+  // HÀM TIỆN ÍCH
+  // ============================================================
 
-  const totalBids = jobs.reduce((sum, j) => sum + (j.bidCount || 0), 0);
+  // Định dạng tiền VND
+  const formatMoney = (amount) => {
+    return new Intl.NumberFormat('vi-VN', {
+      style: 'currency',
+      currency: 'VND'
+    }).format(amount || 0);
+  };
+
+  // Tổng số đơn ứng tuyển (cộng dồn từ tất cả bài đăng)
+  let totalBids = 0;
+  for (let i = 0; i < jobs.length; i++) {
+    totalBids = totalBids + (jobs[i].bidCount || 0);
+  }
 
   return (
     <div className="mj-page py-5 text-white animate-fade-in">
@@ -762,6 +1199,11 @@ const ManageJobs = () => {
                       </div>
                     </div>
                     <div className="d-flex gap-2 mt-2">
+                      {studentId && (
+                        <Link to={`/cv/student/${studentId}`} target="_blank" className="mj-btn-sm secondary text-decoration-none">
+                          <FileText size={13} /> CV
+                        </Link>
+                      )}
                       {studentId && (
                         <Link to={`/portfolio/${studentId}`} target="_blank" className="mj-btn-sm primary text-decoration-none">
                           <ExternalLink size={13} /> Profile

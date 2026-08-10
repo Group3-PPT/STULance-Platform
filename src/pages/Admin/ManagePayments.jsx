@@ -17,110 +17,241 @@ const WITHDRAW_STATUS = {
 };
 
 const ManagePayments = () => {
+  // ============================================================
+  // STATE
+  // ============================================================
+
+  // Tab đang xem (giao dịch / rút tiền)
   const [activeTab, setActiveTab] = useState(TABS.TRANSACTIONS);
+
+  // Danh sách hợp đồng
   const [contracts, setContracts] = useState([]);
+
+  // Danh sách đơn hàng dịch vụ
   const [orders, setOrders] = useState([]);
+
+  // Danh sách yêu cầu rút tiền
   const [withdrawals, setWithdrawals] = useState([]);
+
+  // Loading trang
   const [loading, setLoading] = useState(true);
+
+  // Yêu cầu rút tiền đang xem chi tiết
   const [selectedWithdrawal, setSelectedWithdrawal] = useState(null);
+
+  // Hiện modal chi tiết
   const [showDetailModal, setShowDetailModal] = useState(false);
+
+  // Lý do từ chối
   const [rejectReason, setRejectReason] = useState('');
+
+  // Đang xử lý (duyệt/từ chối)
   const [processing, setProcessing] = useState(false);
 
+  // ============================================================
+  // PHÂN TRANG - GIAO DỊCH
+  // ============================================================
   const [txPage, setTxPage] = useState(1);
   const [txTotalPages, setTxTotalPages] = useState(1);
   const [txTotalItems, setTxTotalItems] = useState(0);
+
+  // ============================================================
+  // PHÂN TRANG - RÚT TIỀN
+  // ============================================================
   const [wdPage, setWdPage] = useState(1);
   const [wdTotalPages, setWdTotalPages] = useState(1);
   const [wdTotalItems, setWdTotalItems] = useState(0);
+
   const pageSize = 15;
 
-  const fetchData = useCallback(async (page = 1) => {
+  // ============================================================
+  // HÀM TẢI DỮ LIỆU GIAO DỊCH
+  // ============================================================
+  const fetchData = useCallback(async function (page) {
+    if (!page) page = 1;
+
     setLoading(true);
+
     try {
-      const [contractsRes, ordersRes] = await Promise.all([
-        adminService.getAllContracts({ page, pageSize }),
-        serviceOrderService.adminGetAllOrders({ page, pageSize })
+      // Tải song song hợp đồng và đơn hàng dịch vụ
+      var results = await Promise.all([
+        adminService.getAllContracts({ page: page, pageSize: pageSize }),
+        serviceOrderService.adminGetAllOrders({ page: page, pageSize: pageSize })
       ]);
+
+      var contractsRes = results[0];
+      var ordersRes = results[1];
+
+      // Xử lý hợp đồng
       if (contractsRes.success && contractsRes.data) {
         setContracts(contractsRes.data.items || []);
         setTxTotalPages(contractsRes.data.totalPages || 1);
         setTxTotalItems(contractsRes.data.totalItems || 0);
         setTxPage(contractsRes.data.page || 1);
       }
+
+      // Xử lý đơn hàng dịch vụ
       if (ordersRes.success && ordersRes.data) {
         setOrders(ordersRes.data.items || []);
       }
+
     } catch (err) {
       console.error('Lỗi tải dữ liệu:', err);
+
     } finally {
       setLoading(false);
     }
   }, []);
 
-  const fetchWithdrawals = useCallback(async (page = 1) => {
+  // ============================================================
+  // HÀM TẢI YÊU CẦU RÚT TIỀN
+  // ============================================================
+  const fetchWithdrawals = useCallback(async function (page) {
+    if (!page) page = 1;
+
     setLoading(true);
+
     try {
-      const res = await withdrawalService.adminGetAllWithdrawals({ page, pageSize });
+      var res = await withdrawalService.adminGetAllWithdrawals({ page: page, pageSize: pageSize });
+
       if (res.success && res.data) {
         setWithdrawals(res.data.items || []);
         setWdTotalPages(res.data.totalPages || 1);
         setWdTotalItems(res.data.totalItems || 0);
         setWdPage(res.data.page || 1);
       }
+
     } catch (err) {
       console.error('Lỗi tải withdrawals:', err);
+
     } finally {
       setLoading(false);
     }
   }, []);
 
-  useEffect(() => {
-    if (activeTab === TABS.TRANSACTIONS) fetchData(1);
-    else fetchWithdrawals(1);
+  // ============================================================
+  // EFFECT: Tải dữ liệu khi chuyển tab
+  // ============================================================
+  useEffect(function () {
+    if (activeTab === TABS.TRANSACTIONS) {
+      fetchData(1);
+    } else {
+      fetchWithdrawals(1);
+    }
   }, [activeTab, fetchData, fetchWithdrawals]);
 
-  const handleApprove = async (id) => {
-    if (!window.confirm('Duyệt yêu cầu rút tiền này?')) return;
+  // ============================================================
+  // HÀM DUYỆT RÚT TIỀN
+  // ============================================================
+  const handleApprove = async function (id) {
+    var confirmed = window.confirm('Duyệt yêu cầu rút tiền này?');
+    if (!confirmed) return;
+
     setProcessing(true);
+
     try {
-      await withdrawalService.adminApprove(id);
+      await withdrawalService.adminApprove(id, {
+        adminNote: 'Đã duyệt bởi admin',
+        transferReference: 'REF-' + Date.now()
+      });
       alert('Đã duyệt!');
       setShowDetailModal(false);
+
+      // Tải lại danh sách
       fetchWithdrawals(wdPage);
+
     } catch (err) {
-      alert('Lỗi: ' + (err.response?.data?.message || err.message));
+      var msg = err.message;
+      if (err.response && err.response.data && err.response.data.message) {
+        msg = err.response.data.message;
+      }
+      alert('Lỗi: ' + msg);
+
     } finally {
       setProcessing(false);
     }
   };
 
-  const handleReject = async (id) => {
+  // ============================================================
+  // HÀM TỪ CHỐI RÚT TIỀN
+  // ============================================================
+  const handleReject = async function (id) {
+    // Validate lý do từ chối
     if (!rejectReason.trim()) {
       alert('Vui lòng nhập lý do từ chối');
       return;
     }
+
     setProcessing(true);
+
     try {
       await withdrawalService.adminReject(id, { reason: rejectReason });
       alert('Đã từ chối!');
       setShowDetailModal(false);
       setRejectReason('');
+
+      // Tải lại danh sách
       fetchWithdrawals(wdPage);
+
     } catch (err) {
-      alert('Lỗi: ' + (err.response?.data?.message || err.message));
+      var msg = err.message;
+      if (err.response && err.response.data && err.response.data.message) {
+        msg = err.response.data.message;
+      }
+      alert('Lỗi: ' + msg);
+
     } finally {
       setProcessing(false);
     }
   };
 
-  const totalEscrow = contracts.reduce((sum, c) => sum + (c.totalBudget || c.totalAmount || 0), 0);
-  const completedRevenue = contracts.filter(c => c.status === 'COMPLETED').reduce((sum, c) => sum + (c.totalBudget || c.totalAmount || 0), 0);
-  const serviceOrderRevenue = orders.filter(o => o.status === 'COMPLETED').reduce((sum, o) => sum + (o.totalBudget || o.totalAmount || 0), 0);
-  const totalRevenue = completedRevenue + serviceOrderRevenue;
-  const pendingWithdrawals = withdrawals.filter(w => w.status === 'PENDING').length;
+  // ============================================================
+  // TÍNH TOÁN THỐNG KÊ
+  // ============================================================
 
-  const formatMoney = (val) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val || 0);
+  // Tổng ký quỹ (tất cả hợp đồng)
+  var totalEscrow = 0;
+  for (var i = 0; i < contracts.length; i++) {
+    totalEscrow += contracts[i].totalBudget || contracts[i].totalAmount || 0;
+  }
+
+  // Doanh thu từ hợp đồng hoàn thành
+  var completedRevenue = 0;
+  for (var j = 0; j < contracts.length; j++) {
+    if (contracts[j].status === 'COMPLETED') {
+      completedRevenue += contracts[j].totalBudget || contracts[j].totalAmount || 0;
+    }
+  }
+
+  // Doanh thu từ đơn hàng dịch vụ hoàn thành
+  var serviceOrderRevenue = 0;
+  for (var k = 0; k < orders.length; k++) {
+    if (orders[k].status === 'COMPLETED') {
+      serviceOrderRevenue += orders[k].totalBudget || orders[k].totalAmount || 0;
+    }
+  }
+
+  // Tổng doanh thu
+  var totalRevenue = completedRevenue + serviceOrderRevenue;
+
+  // Số yêu cầu rút tiền chờ duyệt
+  var pendingWithdrawals = 0;
+  for (var l = 0; l < withdrawals.length; l++) {
+    if (withdrawals[l].status === 'PENDING') {
+      pendingWithdrawals++;
+    }
+  }
+
+  // ============================================================
+  // HÀM FORMAT TIỀN TỆ
+  // ============================================================
+  const formatMoney = function (val) {
+    if (!val) val = 0;
+    return new Intl.NumberFormat('vi-VN', {
+      style: 'currency',
+      currency: 'VND'
+    }).format(val);
+  };
 
   return (
     <div className="pay-manage-container animate-fade-in">
@@ -230,7 +361,7 @@ const ManagePayments = () => {
             </thead>
             <tbody>
               {[...contracts.map(c => ({
-                id: c.contractId?.substring(0, 8),
+                id: 'c-' + c.contractId?.substring(0, 8),
                 from: c.clientName || c.enterpriseName || 'N/A',
                 to: c.providerName || c.studentName || 'N/A',
                 amount: c.totalBudget || c.totalAmount || c.amount || 0,
@@ -239,7 +370,7 @@ const ManagePayments = () => {
                 date: new Date(c.createdAt).toLocaleDateString('vi-VN')
               })),
               ...orders.map(o => ({
-                id: o.orderId?.substring(0, 8),
+                id: 'o-' + o.orderId?.substring(0, 8),
                 from: o.buyerName || 'N/A',
                 to: o.sellerName || 'N/A',
                 amount: o.totalBudget || o.totalAmount || o.amount || 0,
@@ -345,11 +476,11 @@ const ManagePayments = () => {
                 </div>
                 <div className="d-flex justify-content-between mb-2">
                   <span className="text-white-50 small">Số tài khoản</span>
-                  <span className="fw-bold small">{selectedWithdrawal.accountNumber}</span>
+                  <span className="fw-bold small">{selectedWithdrawal.bankAccountNumber}</span>
                 </div>
                 <div className="d-flex justify-content-between mb-2">
                   <span className="text-white-50 small">Chủ tài khoản</span>
-                  <span className="fw-bold small">{selectedWithdrawal.accountName}</span>
+                  <span className="fw-bold small">{selectedWithdrawal.bankAccountHolder}</span>
                 </div>
                 {selectedWithdrawal.note && (
                   <div className="d-flex justify-content-between mb-2">

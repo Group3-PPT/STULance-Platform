@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Container, Row, Col, Button, Badge, Form, InputGroup, Modal } from 'react-bootstrap';
 import {
   Search, GraduationCap, ShieldCheck, Eye, Filter, Users, Loader2, RefreshCw,
-  Briefcase, X, Mail, Star, BookOpen, Calendar
+  Briefcase, X, Mail, Star, BookOpen, Calendar, FileText
 } from 'lucide-react';
 import { studentService } from '../../services/studentservice';
 import PaginationBar from '../../components/PaginationBar';
@@ -240,6 +240,9 @@ const FindStudents = () => {
                             )}
 
                             <div className="d-flex gap-2 justify-content-end">
+                                <Button as={Link} to={`/cv/student/${selectedStudent.studentId}`} variant="outline-primary" className="fw-bold px-4" target="_blank">
+                                    <FileText size={16} className="me-1"/> Xem CV
+                                </Button>
                                 <Button as={Link} to={`/portfolio/${selectedStudent.studentId}`} variant="primary" className="fw-bold px-4">
                                     <Eye size={16} className="me-1"/> Xem Portfolio
                                 </Button>

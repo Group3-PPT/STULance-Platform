@@ -13,128 +13,288 @@ import { unwrapList } from '../../services/responseUtils';
 import '../../CSS/ProfileSettings.css';
 
 const ProfileSettings = () => {
+  // ============================================================
+  // STATE
+  // ============================================================
+
+  // Tab đang xem
   const [activeTab, setActiveTab] = useState('personal');
+
+  // Loading trang
   const [loading, setLoading] = useState(true);
+
+  // Đang lưu
   const [isSaving, setIsSaving] = useState(false);
+
+  // Ref dropdown tìm kiếm kỹ năng
   const dropdownRef = useRef(null);
 
-  // --- STATE DỮ LIỆU ---
+  // ============================================================
+  // STATE DỮ LIỆU CƠ BẢN
+  // ============================================================
   const [basicInfo, setBasicInfo] = useState({
-    fullName: '', birthday: '', gender: true, phoneNumber: '', avatarUrl: '', location: '', bio: ''
+    fullName: '',
+    birthday: '',
+    gender: true,
+    phoneNumber: '',
+    avatarUrl: '',
+    location: '',
+    bio: ''
   });
 
+  // ============================================================
+  // STATE THÔNG TIN SINH VIÊN
+  // ============================================================
   const [studentInfo, setStudentInfo] = useState({
-    studentCode: '', school: '', major: '', gpa: 0, graduationYear: 2024, citizenId: ''
+    studentCode: '',
+    school: '',
+    major: '',
+    gpa: 0,
+    graduationYear: 2024,
+    citizenId: ''
   });
 
-  const [mySkills, setMySkills] = useState([]); // Kỹ năng hiện tại của SV
-  const [systemSkills, setSystemSkills] = useState([]); // Danh mục kỹ năng hệ thống (Approved)
+  // ============================================================
+  // STATE KỸ NĂNG
+  // ============================================================
+
+  // Kỹ năng hiện tại của sinh viên
+  const [mySkills, setMySkills] = useState([]);
+
+  // Danh mục kỹ năng hệ thống (Approved)
+  const [systemSkills, setSystemSkills] = useState([]);
+
+  // Từ khóa tìm kiếm kỹ năng
   const [searchTerm, setSearchTerm] = useState('');
+
+  // Hiện dropdown gợi ý
   const [showDropdown, setShowDropdown] = useState(false);
 
+  // ============================================================
+  // STATE MẬT KHẨU
+  // ============================================================
   const [passwordData, setPasswordData] = useState({
-    currentPassword: '', newPassword: '', confirmNewPassword: ''
+    currentPassword: '',
+    newPassword: '',
+    confirmNewPassword: ''
   });
 
-  // --- 1. TẢI DỮ LIỆU BAN ĐẦU ---
-  const initData = async () => {
+  // ============================================================
+  // HÀM TẢI DỮ LIỆU BAN ĐẦU
+  // ============================================================
+  const initData = async function () {
     setLoading(true);
+
     try {
-      const results = await Promise.allSettled([
+      var results = await Promise.allSettled([
         profileService.getBasicProfile(),
         studentService.getProfile(),
         studentService.getMySkills(),
         skillService.getApprovedSkills()
       ]);
 
-      if (results[0].status === 'fulfilled') setBasicInfo(results[0].value.data);
-      if (results[1].status === 'fulfilled') setStudentInfo(results[1].value.data);
-      if (results[2].status === 'fulfilled') setMySkills(unwrapList(results[2].value));
-      if (results[3].status === 'fulfilled') setSystemSkills(unwrapList(results[3].value));
-      
+      // Profile cơ bản
+      if (results[0].status === 'fulfilled') {
+        setBasicInfo(results[0].value.data);
+      }
+
+      // Thông tin sinh viên
+      if (results[1].status === 'fulfilled') {
+        setStudentInfo(results[1].value.data);
+      }
+
+      // Kỹ năng của tôi
+      if (results[2].status === 'fulfilled') {
+        var skillsValue = results[2].value;
+        var skillsList = [];
+        if (skillsValue && Array.isArray(skillsValue)) {
+          skillsList = skillsValue;
+        } else if (skillsValue && skillsValue.data) {
+          if (Array.isArray(skillsValue.data)) {
+            skillsList = skillsValue.data;
+          } else if (skillsValue.data.items) {
+            skillsList = skillsValue.data.items;
+          }
+        }
+        setMySkills(skillsList);
+      }
+
+      // Danh mục kỹ năng hệ thống
+      if (results[3].status === 'fulfilled') {
+        var sysSkillsValue = results[3].value;
+        var sysSkillsList = [];
+        if (sysSkillsValue && Array.isArray(sysSkillsValue)) {
+          sysSkillsList = sysSkillsValue;
+        } else if (sysSkillsValue && sysSkillsValue.data) {
+          if (Array.isArray(sysSkillsValue.data)) {
+            sysSkillsList = sysSkillsValue.data;
+          } else if (sysSkillsValue.data.items) {
+            sysSkillsList = sysSkillsValue.data.items;
+          }
+        }
+        setSystemSkills(sysSkillsList);
+      }
+
     } catch (err) {
       console.error("Lỗi khởi tạo dữ liệu");
+
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => { initData(); }, []);
+  // ============================================================
+  // EFFECT: Tải dữ liệu khi mount
+  // ============================================================
+  useEffect(function () {
+    initData();
+  }, []);
 
-  // --- 2. XỬ LÝ AVATAR ---
-  const handleAvatarUpdate = async (url) => {
+  // ============================================================
+  // HÀM CẬP NHẬT AVATAR
+  // ============================================================
+  const handleAvatarUpdate = async function (url) {
     try {
       await profileService.updateAvatar(url);
       setBasicInfo({ ...basicInfo, avatarUrl: url });
       alert("Đã cập nhật ảnh đại diện!");
-    } catch (err) { alert("Lỗi cập nhật ảnh"); }
+    } catch (err) {
+      alert("Lỗi cập nhật ảnh");
+    }
   };
 
-  // --- 3. LOGIC KỸ NĂNG (ADD/SUGGEST) ---
-  const handleSelectSkill = (skill) => {
-    if (!mySkills.find(s => s.skillId === skill.skillId)) {
+  // ============================================================
+  // HÀM CHỌN KỸ NĂNG
+  // ============================================================
+  const handleSelectSkill = function (skill) {
+    // Kiểm tra đã có chưa
+    var exists = false;
+    for (var i = 0; i < mySkills.length; i++) {
+      if (mySkills[i].skillId === skill.skillId) {
+        exists = true;
+        break;
+      }
+    }
+
+    if (!exists) {
       setMySkills([...mySkills, skill]);
     }
+
     setSearchTerm('');
     setShowDropdown(false);
   };
 
-  const handleSuggestSkill = async () => {
+  // ============================================================
+  // HÀM ĐỀ XUẤT KỸ NĂNG MỚI
+  // ============================================================
+  const handleSuggestSkill = async function () {
     if (!searchTerm.trim()) return;
+
     try {
-      const res = await studentService.suggestSkill(searchTerm.trim());
-      setMySkills([...mySkills, res.data]); // Thêm ngay vào list với status PENDING
+      var res = await studentService.suggestSkill(searchTerm.trim());
+      setMySkills([...mySkills, res.data]);
       setSearchTerm('');
       setShowDropdown(false);
       alert("Đã gửi đề xuất kỹ năng mới!");
-    } catch (err) { alert("Kỹ năng đã tồn tại hoặc có lỗi."); }
+    } catch (err) {
+      alert("Kỹ năng đã tồn tại hoặc có lỗi.");
+    }
   };
 
-  const removeSkill = (id) => setMySkills(mySkills.filter(s => s.skillId !== id));
+  // ============================================================
+  // HÀM XÓA KỸ NĂNG
+  // ============================================================
+  const removeSkill = function (id) {
+    setMySkills(function (prev) {
+      return prev.filter(function (s) {
+        return s.skillId !== id;
+      });
+    });
+  };
 
-  // --- 4. XỬ LÝ LƯU TỔNG THỂ ---
-  const handleSave = async (e) => {
+  // ============================================================
+  // HÀM LƯU TỔNG THỂ
+  // ============================================================
+  const handleSave = async function (e) {
     e.preventDefault();
     setIsSaving(true);
+
     try {
       if (activeTab === 'personal') {
-        const payload = { ...basicInfo, gender: Boolean(basicInfo.gender) };
+        // Lưu thông tin cá nhân
+        var payload = { ...basicInfo, gender: Boolean(basicInfo.gender) };
         await profileService.updateBasicProfile(payload);
         alert("Lưu thông tin cá nhân thành công!");
-      } 
-      else if (activeTab === 'edu') {
+
+      } else if (activeTab === 'edu') {
         // A. Lưu thông tin học vấn
-        const eduPayload = {
+        var eduPayload = {
           ...studentInfo,
           gpa: parseFloat(studentInfo.gpa),
           graduationYear: parseInt(studentInfo.graduationYear)
         };
         await studentService.updateProfile(eduPayload);
 
-        // B. Lưu danh sách kỹ năng (QUY TẮC 4.2: Chỉ gửi skill APPROVED)
-        const approvedIds = mySkills
-          .filter(s => s.status === 'APPROVED')
-          .map(s => s.skillId);
+        // B. Lưu danh sách kỹ năng (chỉ gửi skill APPROVED)
+        var approvedIds = [];
+        for (var i = 0; i < mySkills.length; i++) {
+          if (mySkills[i].status === 'APPROVED') {
+            approvedIds.push(mySkills[i].skillId);
+          }
+        }
         await studentService.updateMySkills(approvedIds);
 
         alert("Lưu hồ sơ học vấn và kỹ năng thành công!");
-      }
-      else if (activeTab === 'security') {
-        if (passwordData.newPassword !== passwordData.confirmNewPassword) return alert("Mật khẩu mới không khớp!");
+
+      } else if (activeTab === 'security') {
+        // Validate mật khẩu mới
+        if (passwordData.newPassword !== passwordData.confirmNewPassword) {
+          alert("Mật khẩu mới không khớp!");
+          return;
+        }
+
         await authService.changePassword(passwordData);
         alert("Đổi mật khẩu thành công!");
         setPasswordData({ currentPassword: '', newPassword: '', confirmNewPassword: '' });
       }
+
+      // Tải lại dữ liệu
       initData();
+
     } catch (err) {
-      alert("Lỗi: " + (err.response?.data?.message || "Không thể thực hiện"));
-    } finally { setIsSaving(false); }
+      var msg = "Không thể thực hiện";
+      if (err.response && err.response.data && err.response.data.message) {
+        msg = err.response.data.message;
+      }
+      alert("Lỗi: " + msg);
+
+    } finally {
+      setIsSaving(false);
+    }
   };
 
-  const filteredSuggestions = systemSkills.filter(s => 
-    s.skillName.toLowerCase().includes(searchTerm.toLowerCase()) &&
-    !mySkills.find(ms => ms.skillId === s.skillId)
-  );
+  // ============================================================
+  // LỌC GỢI Ý KỸ NĂNG
+  // ============================================================
+  var filteredSuggestions = [];
+  var searchLower = searchTerm.toLowerCase();
+
+  for (var j = 0; j < systemSkills.length; j++) {
+    var skill = systemSkills[j];
+    if (skill.skillName.toLowerCase().indexOf(searchLower) !== -1) {
+      // Kiểm tra chưa có trong mySkills
+      var alreadyHas = false;
+      for (var k = 0; k < mySkills.length; k++) {
+        if (mySkills[k].skillId === skill.skillId) {
+          alreadyHas = true;
+          break;
+        }
+      }
+      if (!alreadyHas) {
+        filteredSuggestions.push(skill);
+      }
+    }
+  }
 
   if (loading) return <div className="vh-100 d-flex justify-content-center align-items-center bg-dark"><Spinner animation="border" variant="primary" /></div>;
 

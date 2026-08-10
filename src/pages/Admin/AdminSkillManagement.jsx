@@ -6,122 +6,237 @@ import PaginationBar from '../../components/PaginationBar';
 import '../../CSS/AdminSkillManagement.css';
 
 const AdminSkillManager = () => {
+    // ============================================================
+    // STATE
+    // ============================================================
+
+    // Danh sách kỹ năng chờ duyệt
     const [pendingSkills, setPendingSkills] = useState([]);
+
+    // Danh sách kỹ năng đã duyệt (tất cả)
     const [allSkills, setAllSkills] = useState([]);
+
+    // Từ khóa tìm kiếm
     const [searchTerm, setSearchTerm] = useState('');
+
+    // Chế độ hiển thị: true = chờ duyệt, false = danh mục
     const [isPendingMode, setIsPendingMode] = useState(true);
+
+    // Loading trang
     const [loading, setLoading] = useState(false);
 
+    // ============================================================
+    // PHÂN TRANG - CHỜ DUYỆT
+    // ============================================================
     const [pendingPage, setPendingPage] = useState(1);
     const [pendingTotalPages, setPendingTotalPages] = useState(1);
     const [pendingTotalItems, setPendingTotalItems] = useState(0);
+
+    // ============================================================
+    // PHÂN TRANG - DANH MỤC
+    // ============================================================
     const [allPage, setAllPage] = useState(1);
     const [allTotalPages, setAllTotalPages] = useState(1);
     const [allTotalItems, setAllTotalItems] = useState(0);
+
     const pageSize = 20;
 
+    // ============================================================
+    // STATE MODAL
+    // ============================================================
+
+    // Modal thêm/sửa kỹ năng
     const [showSkillModal, setShowSkillModal] = useState(false);
+
+    // Modal gộp kỹ năng
     const [showMergeModal, setShowMergeModal] = useState(false);
-    
+
+    // Kỹ năng đang chỉnh sửa
     const [currentSkill, setCurrentSkill] = useState({ skillId: '', skillName: '' });
+
+    // Kỹ năng nguồn (gộp)
     const [sourceSkill, setSourceSkill] = useState(null);
+
+    // Kỹ năng đích (gộp)
     const [targetSkillId, setTargetSkillId] = useState('');
 
-    const fetchPending = useCallback(async (page = 1, keyword = '') => {
+    // ============================================================
+    // HÀM TẢI KỸ NĂNG CHỜ DUYỆT
+    // ============================================================
+    const fetchPending = useCallback(async function (page, keyword) {
+        if (!page) page = 1;
+        if (!keyword) keyword = '';
+
         try {
-            const params = { page, pageSize };
+            var params = { page: page, pageSize: pageSize };
             if (keyword) params.keyword = keyword;
-            const res = await skillService.getPendingSkills(params);
+
+            var res = await skillService.getPendingSkills(params);
+
             if (res.success && res.data) {
                 setPendingSkills(res.data.items || []);
                 setPendingTotalPages(res.data.totalPages || 1);
                 setPendingTotalItems(res.data.totalItems || 0);
                 setPendingPage(res.data.page || 1);
             }
-        } catch (err) { console.error("Lỗi tải chờ duyệt:", err); }
+
+        } catch (err) {
+            console.error("Lỗi tải chờ duyệt:", err);
+        }
     }, []);
 
-    const fetchAll = useCallback(async (page = 1, keyword = '') => {
+    // ============================================================
+    // HÀM TẢI KỸ NĂNG ĐÃ DUYỆT
+    // ============================================================
+    const fetchAll = useCallback(async function (page, keyword) {
+        if (!page) page = 1;
+        if (!keyword) keyword = '';
+
         try {
-            const params = { page, pageSize };
+            var params = { page: page, pageSize: pageSize };
             if (keyword) params.keyword = keyword;
-            const res = await skillService.getApprovedSkills(params);
+
+            var res = await skillService.getApprovedSkills(params);
+
             if (res.success && res.data) {
                 setAllSkills(res.data.items || []);
                 setAllTotalPages(res.data.totalPages || 1);
                 setAllTotalItems(res.data.totalItems || 0);
                 setAllPage(res.data.page || 1);
             }
-        } catch (err) { console.error("Lỗi tải danh mục:", err); }
+
+        } catch (err) {
+            console.error("Lỗi tải danh mục:", err);
+        }
     }, []);
 
-    const fetchData = useCallback(async () => {
+    // ============================================================
+    // HÀM TẢI TẤT CẢ DỮ LIỆU
+    // ============================================================
+    const fetchData = useCallback(async function () {
         setLoading(true);
         await Promise.all([fetchPending(1, searchTerm), fetchAll(1, searchTerm)]);
         setLoading(false);
     }, [fetchPending, fetchAll, searchTerm]);
 
-    useEffect(() => { fetchData(); }, []);
+    // ============================================================
+    // EFFECT: Tải dữ liệu khi mount
+    // ============================================================
+    useEffect(function () {
+        fetchData();
+    }, []);
 
-    const handleApprove = async (id) => {
-        if (!window.confirm("Xác nhận đưa kỹ năng này vào danh mục chính thức?")) return;
+    // ============================================================
+    // HÀM DUYỆT KỸ NĂNG
+    // ============================================================
+    const handleApprove = async function (id) {
+        var confirmed = window.confirm("Xác nhận đưa kỹ năng này vào danh mục chính thức?");
+        if (!confirmed) return;
+
         try {
             await skillService.approveSkill(id);
             fetchPending(pendingPage, searchTerm);
-        } catch (err) { alert("Lỗi khi duyệt kỹ năng."); }
+        } catch (err) {
+            alert("Lỗi khi duyệt kỹ năng.");
+        }
     };
 
-    const handleReject = async (id) => {
-        if (!window.confirm("Bạn có chắc muốn từ chối đề xuất này?")) return;
+    // ============================================================
+    // HÀM TỪ CHỐI KỸ NĂNG
+    // ============================================================
+    const handleReject = async function (id) {
+        var confirmed = window.confirm("Bạn có chắc muốn từ chối đề xuất này?");
+        if (!confirmed) return;
+
         try {
             await skillService.rejectSkill(id);
             fetchPending(pendingPage, searchTerm);
-        } catch (err) { alert("Lỗi khi từ chối."); }
+        } catch (err) {
+            alert("Lỗi khi từ chối.");
+        }
     };
 
-    const handleMerge = async () => {
-        if (!targetSkillId) return alert("Vui lòng chọn một kỹ năng đích chuẩn!");
+    // ============================================================
+    // HÀM GỘP KỸ NĂNG
+    // ============================================================
+    const handleMerge = async function () {
+        if (!targetSkillId) {
+            alert("Vui lòng chọn một kỹ năng đích chuẩn!");
+            return;
+        }
+
         try {
             await skillService.mergeSkill(sourceSkill.skillId, targetSkillId);
             setShowMergeModal(false);
             setTargetSkillId('');
             fetchData();
-        } catch (err) { alert("Lỗi khi gộp kỹ năng."); }
+        } catch (err) {
+            alert("Lỗi khi gộp kỹ năng.");
+        }
     };
 
-    const handleSave = async () => {
-        if (!currentSkill.skillName.trim()) return alert("Tên kỹ năng không được để trống");
+    // ============================================================
+    // HÀM LƯU KỸ NĂNG (THÊM/SỬA)
+    // ============================================================
+    const handleSave = async function () {
+        if (!currentSkill.skillName.trim()) {
+            alert("Tên kỹ năng không được để trống");
+            return;
+        }
+
         try {
-            currentSkill.skillId 
-                ? await skillService.updateSkill(currentSkill.skillId, currentSkill.skillName)
-                : await skillService.adminCreateSkill(currentSkill.skillName);
+            if (currentSkill.skillId) {
+                // Cập nhật
+                await skillService.updateSkill(currentSkill.skillId, currentSkill.skillName);
+            } else {
+                // Thêm mới
+                await skillService.adminCreateSkill(currentSkill.skillName);
+            }
+
             setShowSkillModal(false);
             fetchAll(allPage, searchTerm);
-        } catch (err) { alert("Lỗi khi lưu dữ liệu."); }
+
+        } catch (err) {
+            alert("Lỗi khi lưu dữ liệu.");
+        }
     };
 
-    const handleDelete = async (id) => {
-        if (!window.confirm("Xóa vĩnh viễn kỹ năng này?")) return;
+    // ============================================================
+    // HÀM XÓA KỸ NĂNG
+    // ============================================================
+    const handleDelete = async function (id) {
+        var confirmed = window.confirm("Xóa vĩnh viễn kỹ năng này?");
+        if (!confirmed) return;
+
         try {
             await skillService.deleteSkill(id);
             fetchAll(allPage, searchTerm);
-        } catch (err) { alert("Không thể xóa kỹ năng đang được sử dụng."); }
+        } catch (err) {
+            alert("Không thể xóa kỹ năng đang được sử dụng.");
+        }
     };
 
-    const handleSearch = () => {
+    // ============================================================
+    // HÀM TÌM KIẾM
+    // ============================================================
+    const handleSearch = function () {
         fetchPending(1, searchTerm);
         fetchAll(1, searchTerm);
     };
 
-    const handlePendingPageChange = (page) => {
+    // ============================================================
+    // HÀM CHUYỂN TRANG
+    // ============================================================
+    const handlePendingPageChange = function (page) {
         fetchPending(page, searchTerm);
     };
 
-    const handleAllPageChange = (page) => {
+    const handleAllPageChange = function (page) {
         fetchAll(page, searchTerm);
     };
 
-    const filtered = isPendingMode ? pendingSkills : allSkills;
+    // Danh sách hiển thị tùy chế độ
+    var filtered = isPendingMode ? pendingSkills : allSkills;
 
     return (
         <div className="adm-dashboard-content py-4 animate-fade-in text-white">

@@ -16,75 +16,161 @@ import { studentService } from '../services/studentservice';
 import '../CSS/Home.css';
 
 const Home = () => {
-  const [recommendations, setRecommendations] = useState({ jobs: [], studentServices: [] });
+  // ============================================================
+  // STATE
+  // ============================================================
+
+  // Job và dịch vụ được đề xuất (dùng khi người dùng đã đăng nhập)
+  const [recommendations, setRecommendations] = useState({
+    jobs: [],
+    studentServices: []
+  });
+
+  // Job và dịch vụ ngẫu nhiên (dùng khi chưa đăng nhập)
   const [randomJobs, setRandomJobs] = useState([]);
   const [randomServices, setRandomServices] = useState([]);
+
+  // Top doanh nghiệp nổi bật
   const [topBusinesses, setTopBusinesses] = useState([]);
+
+  // Sinh viên được đề xuất
   const [recommendedStudents, setRecommendedStudents] = useState([]);
+
+  // Trạng thái loading
   const [loading, setLoading] = useState(true);
+
+  // Vai trò người dùng (STUDENT, ENTERPRISE, ADMIN, hoặc null)
   const [userRole, setUserRole] = useState(null);
 
+  // Token đăng nhập (null nếu chưa đăng nhập)
   const token = localStorage.getItem('accessToken');
 
+  // ============================================================
+  // TẢI DỮ LIỆU TRANG CHỦ
+  // ============================================================
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       try {
+        // Lấy vai trò người dùng từ localStorage
         const role = localStorage.getItem('userRole');
-        if (role) setUserRole(role);
-
-        const promises = [
-          enterpriseService.getAllPublicEnterprises().catch(e => { console.error("Enterprises err:", e); return null; }),
-          studentService.getAllPublicStudents().catch(e => { console.error("Students err:", e); return null; }),
-        ];
-        if (!token) {
-          promises.push(jobService.getAllPublicJobs().catch(() => null));
-          promises.push(studentServiceService.getAllPublic().catch(() => null));
+        if (role) {
+          setUserRole(role);
         }
 
-        const results = await Promise.all(promises);
-        const bizRes = results[0];
-        const stuRes = results[1];
+        // ============================================================
+        // BƯỚC 1: Luôn tải doanh nghiệp và sinh viên nổi bật
+        // ============================================================
+        const promises = [
+          // Tải danh sách doanh nghiệp công khai
+          enterpriseService.getAllPublicEnterprises()
+            .catch(e => {
+              console.error("Enterprises err:", e);
+              return null;
+            }),
 
+          // Tải danh sách sinh viên công khai
+          studentService.getAllPublicStudents()
+            .catch(e => {
+              console.error("Students err:", e);
+              return null;
+            }),
+        ];
+
+        // ============================================================
+        // BƯỚC 2: Tải job/dịch vụ ngẫu nhiên (dùng cho KHách + fallback cho SV)
+        // ============================================================
+        promises.push(
+          jobService.getAllPublicJobs().catch(() => null)
+        );
+        promises.push(
+          studentServiceService.getAllPublic().catch(() => null)
+        );
+
+        // Chờ tất cả API hoàn thành
+        const results = await Promise.all(promises);
+
+        // Lấy kết quả theo thứ tự
+        const bizRes = results[0];   // Doanh nghiệp
+        const stuRes = results[1];   // Sinh viên
+        const jobsRes = results[2];  // Viec lam
+        const servicesRes = results[3]; // Dich vu
+
+        // ============================================================
+        // BƯỚC 3: Parse dữ liệu (xử lý nhiều dạng response)
+        // ============================================================
+
+        // Hàm unwrap: chuyển response thành mảng
         const unwrap = (res) => {
           if (!res) return [];
+
           if (Array.isArray(res)) return res;
-          const d = res?.data;
-          if (Array.isArray(d)) return d;
-          if (d?.data && Array.isArray(d.data)) return d.data;
+
+          const data = res.data;
+
+          if (Array.isArray(data)) return data;
+
+          if (data && data.data && Array.isArray(data.data)) return data.data;
+
           return [];
         };
 
-        setTopBusinesses(unwrap(bizRes).slice(0, 4));
-        setRecommendedStudents(unwrap(stuRes).slice(0, 4));
+        // Lưu top 4 doanh nghiệp
+        const allBusinesses = unwrap(bizRes);
+        setTopBusinesses(allBusinesses.slice(0, 4));
 
-        if (!token) {
-          const jobsRes = results[2];
-          const servicesRes = results[3];
-          const unwrapList = (res) => {
-            if (!res) return [];
-            if (Array.isArray(res)) return res;
-            const d = res?.data;
-            if (Array.isArray(d)) return d;
-            if (d?.items && Array.isArray(d.items)) return d.items;
-            if (d?.data && Array.isArray(d.data)) return d.data;
-            if (d?.data?.items && Array.isArray(d.data.items)) return d.data.items;
-            return [];
-          };
-          if (jobsRes) setRandomJobs(unwrapList(jobsRes).slice(0, 6));
-          if (servicesRes) setRandomServices(unwrapList(servicesRes).slice(0, 6));
-        } else {
-          const res = await recommendationService.getMyRecommendations().catch(() => null);
-          if (res?.success && res.data) {
-            setRecommendations({ jobs: res.data.jobs || [], studentServices: res.data.studentServices || [] });
+        // Lưu top 4 sinh viên
+        const allStudents = unwrap(stuRes);
+        setRecommendedStudents(allStudents.slice(0, 4));
+
+        // ============================================================
+        // BƯỚC 4: Parse job và dịch vụ ngẫu nhiên (luon tai)
+        // ============================================================
+        const unwrapList = (res) => {
+          if (!res) return [];
+          if (Array.isArray(res)) return res;
+
+          const d = res.data;
+          if (Array.isArray(d)) return d;
+          if (d && d.items && Array.isArray(d.items)) return d.items;
+          if (d && d.data && Array.isArray(d.data)) return d.data;
+          if (d && d.data && d.data.items && Array.isArray(d.data.items)) return d.data.items;
+
+          return [];
+        };
+
+        var allJobs = unwrapList(jobsRes);
+        var allServices = unwrapList(servicesRes);
+
+        setRandomJobs(allJobs.slice(0, 6));
+        setRandomServices(allServices.slice(0, 6));
+
+        // ============================================================
+        // BƯỚC 5: Neu dang nhap → tai recommendation ca nhan hoa
+        // ============================================================
+        if (token) {
+          const res = await recommendationService.getMyRecommendations()
+            .catch(() => null);
+
+          if (res && res.success && res.data) {
+            var recJobs = res.data.jobs || [];
+            var recServices = res.data.studentServices || [];
+
+            // Merge: recommendation truoc, fallback bang random neu trong
+            setRecommendations({
+              jobs: recJobs.length > 0 ? recJobs : allJobs.slice(0, 6),
+              studentServices: recServices.length > 0 ? recServices : allServices.slice(0, 6)
+            });
           }
         }
+
       } catch (err) {
         console.error("Lỗi tải dữ liệu trang chủ:", err);
       } finally {
         setLoading(false);
       }
     };
+
     fetchData();
   }, []);
 
@@ -274,7 +360,7 @@ const Home = () => {
                         <div className="svc-card-h" style={{animationDelay: `${index * 0.1}s`}}>
                           <div className="svc-card-h-img">
                             <img 
-                              src={svc.sampleImageUrl || 'https://via.placeholder.com/400x300/0f172a/3b82f6?text=Service'} 
+                              src={svc.sampleImageUrl || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300' fill='%230f172a'%3E%3Crect width='400' height='300'/%3E%3C/svg%3E"} 
                               alt={svc.title} 
                               loading="lazy"
                             />
@@ -394,6 +480,10 @@ const Home = () => {
                           <div style={{fontSize: '0.6rem', color: 'rgba(255,255,255,0.4)'}}>GPA</div>
                         </div>
                       </div>
+                      <Link to={`/cv/student/${stu.studentId}`} className="mt-2 d-block text-center" style={{fontSize: '0.65rem'}} onClick={function (e) { e.stopPropagation(); }}>
+                        <FileText size={10} className="me-1 text-primary" />
+                        <span className="text-primary fw-bold">Xem CV</span>
+                      </Link>
                     </div>
                   </Link>
                 </Col>

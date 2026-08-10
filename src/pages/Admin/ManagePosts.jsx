@@ -9,105 +9,195 @@ const JOB_TYPES = ['Tất cả', 'Part-time', 'Full-time', 'Freelance', 'Interns
 const STATUS_TABS = ["Tất cả", "Chờ duyệt", "Đang hiển thị", "Vi phạm/Khác"];
 
 const ManagePosts = () => {
+  // ============================================================
+  // STATE
+  // ============================================================
+
+  // Danh sách bài đăng
   const [posts, setPosts] = useState([]);
+
+  // Loading trang
   const [loading, setLoading] = useState(true);
+
+  // Bộ lọc trạng thái
   const [filter, setFilter] = useState("Tất cả");
+
+  // Từ khóa tìm kiếm
   const [searchTerm, setSearchTerm] = useState("");
+
+  // Bộ lọc loại công việc
   const [jobTypeFilter, setJobTypeFilter] = useState("Tất cả");
+
+  // Bộ lọc khoảng lương
   const [minSalary, setMinSalary] = useState('');
   const [maxSalary, setMaxSalary] = useState('');
+
+  // Hiện modal chi tiết
   const [showDetailModal, setShowDetailModal] = useState(false);
+
+  // Bài đăng đang xem chi tiết
   const [selectedPost, setSelectedPost] = useState(null);
+
+  // ============================================================
+  // PHÂN TRANG
+  // ============================================================
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
   const pageSize = 15;
 
-  const statusMap = {
+  // ============================================================
+  // BẢN ĐỒ TRẠNG THÁI
+  // ============================================================
+  var statusMap = {
     "Tất cả": '',
     "Chờ duyệt": 'PENDING',
     "Đang hiển thị": 'OPEN',
     "Vi phạm/Khác": 'BLOCKED'
   };
 
-  const fetchPosts = useCallback(async (page = 1, keyword = '', status = '', jobType = '', minSal = '', maxSal = '') => {
+  // ============================================================
+  // HÀM TẢI DỮ LIỆU
+  // ============================================================
+  const fetchPosts = useCallback(async function (page, keyword, status, jobType, minSal, maxSal) {
+    if (!page) page = 1;
+    if (!keyword) keyword = '';
+    if (!status) status = '';
+    if (!jobType) jobType = '';
+    if (!minSal) minSal = '';
+    if (!maxSal) maxSal = '';
+
     setLoading(true);
+
     try {
-      const params = { page, pageSize };
+      var params = { page: page, pageSize: pageSize };
+
       if (keyword) params.keyword = keyword;
       if (status) params.status = status;
       if (jobType && jobType !== 'Tất cả') params.jobType = jobType;
       if (minSal) params.minSalary = minSal;
       if (maxSal) params.maxSalary = maxSal;
-      const res = await jobService.adminGetAllJobs(params);
+
+      var res = await jobService.adminGetAllJobs(params);
+
       if (res.success && res.data) {
-        const data = res.data;
+        var data = res.data;
+
         setPosts(data.items || []);
         setTotalPages(data.totalPages || 1);
         setTotalItems(data.totalItems || 0);
         setCurrentPage(data.page || 1);
       }
-    } catch (err) { console.error("Lỗi tải bài đăng:", err); } 
-    finally { setLoading(false); }
+
+    } catch (err) {
+      console.error("Lỗi tải bài đăng:", err);
+
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  useEffect(() => { fetchPosts(1); }, [fetchPosts]);
+  // ============================================================
+  // EFFECT: Tải dữ liệu khi mount
+  // ============================================================
+  useEffect(function () {
+    fetchPosts(1);
+  }, [fetchPosts]);
 
-  const handleViewDetail = (post) => {
+  // ============================================================
+  // HÀM XEM CHI TIẾT
+  // ============================================================
+  const handleViewDetail = function (post) {
     setSelectedPost(post);
     setShowDetailModal(true);
   };
 
-  const handleStatusChange = async (id, newStatus) => {
-    const statusLabels = {
-        'OPEN': 'Mở công khai (Duyệt)',
-        'REJECTED': 'Từ chối bài đăng',
-        'PAUSED': 'Tạm dừng bài đăng',
-        'BLOCKED': 'KHÓA (Vi phạm)',
-        'CLOSED': 'Đóng bài đăng'
+  // ============================================================
+  // HÀM CẬP NHẬT TRẠNG THÁI
+  // ============================================================
+  const handleStatusChange = async function (id, newStatus) {
+    // Bản đồ trạng thái → mô tả tiếng Việt
+    var statusLabels = {
+      'OPEN': 'Mở công khai (Duyệt)',
+      'REJECTED': 'Từ chối bài đăng',
+      'PAUSED': 'Tạm dừng bài đăng',
+      'BLOCKED': 'KHÓA (Vi phạm)',
+      'CLOSED': 'Đóng bài đăng'
     };
 
-    if (!window.confirm(`Xác nhận chuyển bài đăng sang trạng thái: ${statusLabels[newStatus]}?`)) return;
+    // Xác nhận trước khi thực hiện
+    var confirmed = window.confirm("Xác nhận chuyển bài đăng sang trạng thái: " + statusLabels[newStatus] + "?");
+    if (!confirmed) return;
 
     try {
-      const res = await jobService.adminUpdateStatus(id, newStatus);
+      var res = await jobService.adminUpdateStatus(id, newStatus);
+
       if (res.success) {
+        // Tải lại danh sách
         fetchPosts(currentPage, searchTerm);
       }
+
     } catch (err) {
-      alert("Lỗi: " + (err.response?.data?.message || "Không thể cập nhật"));
+      var msg = "Không thể cập nhật";
+      if (err.response && err.response.data && err.response.data.message) {
+        msg = err.response.data.message;
+      }
+      alert("Lỗi: " + msg);
     }
   };
 
-  const renderStatusBadge = (status) => {
+  // ============================================================
+  // HÀM HIỂN THỊ BADGE TRẠNG THÁI
+  // ============================================================
+  const renderStatusBadge = function (status) {
     switch (status) {
-      case 'OPEN': return <Badge bg="success" className="adm-status-pill">Đang hiển thị</Badge>;
-      case 'PENDING': return <Badge bg="warning" className="adm-status-pill text-dark">Chờ duyệt</Badge>;
-      case 'REJECTED': return <Badge bg="danger" className="adm-status-pill">Đã từ chối</Badge>;
-      case 'PAUSED': return <Badge bg="info" className="adm-status-pill">Tạm dừng</Badge>;
-      case 'BLOCKED': return <Badge bg="dark" className="adm-status-pill"><ShieldAlert size={10} className="me-1"/> Bị khóa</Badge>;
-      case 'CLOSED': return <Badge bg="secondary" className="adm-status-pill">Đã đóng</Badge>;
-      case 'DRAFT': return <Badge bg="light" className="adm-status-pill text-dark border">Bản nháp</Badge>;
-      default: return <Badge bg="primary">{status}</Badge>;
+      case 'OPEN':
+        return <Badge bg="success" className="adm-status-pill">Đang hiển thị</Badge>;
+      case 'PENDING':
+        return <Badge bg="warning" className="adm-status-pill text-dark">Chờ duyệt</Badge>;
+      case 'REJECTED':
+        return <Badge bg="danger" className="adm-status-pill">Đã từ chối</Badge>;
+      case 'PAUSED':
+        return <Badge bg="info" className="adm-status-pill">Tạm dừng</Badge>;
+      case 'BLOCKED':
+        return <Badge bg="dark" className="adm-status-pill"><ShieldAlert size={10} className="me-1"/> Bị khóa</Badge>;
+      case 'CLOSED':
+        return <Badge bg="secondary" className="adm-status-pill">Đã đóng</Badge>;
+      case 'DRAFT':
+        return <Badge bg="light" className="adm-status-pill text-dark border">Bản nháp</Badge>;
+      default:
+        return <Badge bg="primary">{status}</Badge>;
     }
   };
 
-  const handleFilterChange = (newFilter) => {
+  // ============================================================
+  // HÀM XỬ LÝ BỘ LỌC
+  // ============================================================
+  const handleFilterChange = function (newFilter) {
     setFilter(newFilter);
     setCurrentPage(1);
     fetchPosts(1, searchTerm, statusMap[newFilter] || '', jobTypeFilter, minSalary, maxSalary);
   };
 
-  const handleSearch = () => {
+  // ============================================================
+  // HÀM TÌM KIẾM
+  // ============================================================
+  const handleSearch = function () {
     setCurrentPage(1);
     fetchPosts(1, searchTerm, statusMap[filter] || '', jobTypeFilter, minSalary, maxSalary);
   };
 
-  const handlePageChange = (page) => {
+  // ============================================================
+  // HÀM CHUYỂN TRANG
+  // ============================================================
+  const handlePageChange = function (page) {
     fetchPosts(page, searchTerm, statusMap[filter] || '', jobTypeFilter, minSalary, maxSalary);
   };
 
-  const handleClearFilters = () => {
+  // ============================================================
+  // HÀM XÓA BỘ LỌC
+  // ============================================================
+  const handleClearFilters = function () {
     setSearchTerm('');
     setFilter('Tất cả');
     setJobTypeFilter('Tất cả');
@@ -117,10 +207,19 @@ const ManagePosts = () => {
     fetchPosts(1, '', '', 'Tất cả', '', '');
   };
 
-  const hasActiveFilters = searchTerm || filter !== 'Tất cả' || jobTypeFilter !== 'Tất cả' || minSalary || maxSalary;
+  // Kiểm tra có bộ lọc nào đang_active không
+  var hasActiveFilters = searchTerm || filter !== 'Tất cả' || jobTypeFilter !== 'Tất cả' || minSalary || maxSalary;
 
-  const pendingCount = posts.filter(p => p.status === "PENDING").length;
-  const activeCount = posts.filter(p => p.status === "OPEN").length;
+  // ============================================================
+  // THỐNG KÊ
+  // ============================================================
+  var pendingCount = 0;
+  var activeCount = 0;
+
+  for (var i = 0; i < posts.length; i++) {
+    if (posts[i].status === "PENDING") pendingCount++;
+    if (posts[i].status === "OPEN") activeCount++;
+  }
 
   return (
     <div className="adm-page-content animate-fade-in text-white py-4">

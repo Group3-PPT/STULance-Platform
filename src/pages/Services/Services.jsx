@@ -23,46 +23,109 @@ const PRICE_RANGES = [
 ];
 
 const Services = () => {
+  // ============================================================
+  // ROUTING
+  // ============================================================
   const location = useLocation();
   const navigate = useNavigate();
+
+  // ============================================================
+  // STATE
+  // ============================================================
+
+  // Danh sách dịch vụ
   const [services, setServices] = useState([]);
+
+  // Set các dịch vụ đã lưu
   const [savedServiceIds, setSavedServiceIds] = useState(new Set());
+
+  // ID sinh viên hiện tại (để check owns service)
   const [myStudentId, setMyStudentId] = useState(null);
+
+  // Loading trang
   const [loading, setLoading] = useState(true);
+
+  // Đang thực hiện thao tác (lưu/bỏ lưu)
   const [actionLoading, setActionLoading] = useState(null);
 
+  // ============================================================
+  // PHÂN TRANG
+  // ============================================================
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
   const pageSize = 12;
 
+  // ============================================================
+  // BỘ LỌC
+  // ============================================================
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Tất cả');
   const [selectedPriceRange, setSelectedPriceRange] = useState(0);
 
+  // ============================================================
+  // AUTH
+  // ============================================================
   const token = localStorage.getItem('accessToken');
-  const mainTitle = location.state?.mainTitle || "Tất cả dịch vụ";
-  const subName = location.state?.subName;
 
-  useEffect(() => {
-    if (subName) setSelectedCategory(subName);
+  // ============================================================
+  // DATA TỪ LOCATION STATE
+  // ============================================================
+  var mainTitle = "Tất cả dịch vụ";
+  if (location.state && location.state.mainTitle) {
+    mainTitle = location.state.mainTitle;
+  }
+
+  var subName = null;
+  if (location.state && location.state.subName) {
+    subName = location.state.subName;
+  }
+
+  // ============================================================
+  // EFFECT: Set category từ location state
+  // ============================================================
+  useEffect(function () {
+    if (subName) {
+      setSelectedCategory(subName);
+    }
   }, [subName]);
 
-  const fetchData = useCallback(async (page = 1, keyword = '', category = '', minPrice = '', maxPrice = '') => {
+  // ============================================================
+  // HÀM TẢI DỮ LIỆU
+  // ============================================================
+  const fetchData = useCallback(async function (page, keyword, category, minPrice, maxPrice) {
+    if (!page) page = 1;
+    if (!keyword) keyword = '';
+    if (!category) category = '';
+    if (minPrice === undefined) minPrice = '';
+    if (maxPrice === undefined) maxPrice = '';
+
     setLoading(true);
+
     try {
-      const params = { page, pageSize };
+      // Xây dựng params
+      var params = { page: page, pageSize: pageSize };
       if (keyword) params.keyword = keyword;
       if (category && category !== 'Tất cả') params.category = category;
       if (minPrice !== '') params.minPrice = minPrice;
       if (maxPrice !== '') params.maxPrice = maxPrice;
 
-      const res = await studentServiceService.getAllPublic(params);
-      
+      // Tải danh sách dịch vụ
+      var res = await studentServiceService.getAllPublic(params);
+
       if (res.success && res.data) {
-        const data = res.data;
-        const items = data.items || [];
-        setServices(items.filter(s => s.studentId !== myStudentId));
+        var data = res.data;
+        var items = data.items || [];
+
+        // Lọc bỏ dịch vụ của chính mình
+        var filteredItems = items;
+        if (myStudentId) {
+          filteredItems = items.filter(function (s) {
+            return s.studentId !== myStudentId;
+          });
+        }
+
+        setServices(filteredItems);
         setTotalPages(data.totalPages || 1);
         setTotalItems(data.totalItems || 0);
         setCurrentPage(data.page || 1);
@@ -70,97 +133,140 @@ const Services = () => {
         setServices([]);
       }
 
+      // Tải dịch vụ đã lưu nếu đã đăng nhập
       if (token) {
-        const role = localStorage.getItem('userRole');
-        const promises = [savedItemsService.getMySavedServices()];
-        if (role === 'STUDENT') promises.push(studentService.getProfile());
-        else promises.push(Promise.resolve(null));
+        var role = localStorage.getItem('userRole');
+        var promises = [savedItemsService.getMySavedServices()];
 
-        const [savedRes, profileRes] = await Promise.allSettled(promises);
+        if (role === 'STUDENT') {
+          promises.push(studentService.getProfile());
+        } else {
+          promises.push(Promise.resolve(null));
+        }
 
-        if (role === 'STUDENT' && profileRes.status === 'fulfilled' && profileRes.value?.success) {
-          const currentId = profileRes.value.data.studentId;
+        var results = await Promise.allSettled(promises);
+        var savedRes = results[0];
+        var profileRes = results[1];
+
+        // Lấy studentId từ profile
+        if (role === 'STUDENT' && profileRes.status === 'fulfilled' && profileRes.value && profileRes.value.success) {
+          var currentId = profileRes.value.data.studentId;
           setMyStudentId(currentId);
         }
 
+        // Lấy danh sách đã lưu
         if (savedRes.status === 'fulfilled') {
-          const savedData = savedRes.value?.data;
-          const savedList = savedData?.items || (Array.isArray(savedData) ? savedData : []);
+          var savedData = savedRes.value && savedRes.value.data;
+          var savedList = [];
+
+          if (savedData && savedData.items) {
+            savedList = savedData.items;
+          } else if (Array.isArray(savedData)) {
+            savedList = savedData;
+          }
+
           if (savedList.length > 0) {
-            const ids = new Set(savedList.map(item => item.serviceId));
+            var ids = new Set();
+            for (var i = 0; i < savedList.length; i++) {
+              ids.add(savedList[i].serviceId);
+            }
             setSavedServiceIds(ids);
           }
         }
       }
+
     } catch (err) {
       console.error("Lỗi tải trang:", err);
+
     } finally {
       setLoading(false);
     }
   }, [myStudentId, token]);
 
-  useEffect(() => {
-    const price = PRICE_RANGES[selectedPriceRange];
+  // ============================================================
+  // EFFECT: Tải dữ liệu khi bộ lọc thay đổi
+  // ============================================================
+  useEffect(function () {
+    var price = PRICE_RANGES[selectedPriceRange];
     fetchData(1, searchTerm, selectedCategory, price.min, price.max);
   }, [selectedCategory, selectedPriceRange]);
 
-  const handleSearch = () => {
-    const price = PRICE_RANGES[selectedPriceRange];
+  // ============================================================
+  // HÀM TÌM KIẾM
+  // ============================================================
+  const handleSearch = function () {
+    var price = PRICE_RANGES[selectedPriceRange];
     setCurrentPage(1);
     fetchData(1, searchTerm, selectedCategory, price.min, price.max);
   };
 
-  const handlePageChange = (page) => {
-    const price = PRICE_RANGES[selectedPriceRange];
+  // ============================================================
+  // HÀM CHUYỂN TRANG
+  // ============================================================
+  const handlePageChange = function (page) {
+    var price = PRICE_RANGES[selectedPriceRange];
     fetchData(page, searchTerm, selectedCategory, price.min, price.max);
   };
 
-  const handleClearFilters = () => {
+  // ============================================================
+  // HÀM XÓA BỘ LỌC
+  // ============================================================
+  const handleClearFilters = function () {
     setSearchTerm('');
     setSelectedCategory('Tất cả');
     setSelectedPriceRange(0);
     fetchData(1, '', 'Tất cả', '', '');
   };
 
-  const hasActiveFilters = searchTerm || selectedCategory !== 'Tất cả' || selectedPriceRange !== 0;
+  // Kiểm tra có bộ lọc nào đang active không
+  var hasActiveFilters = searchTerm || selectedCategory !== 'Tất cả' || selectedPriceRange !== 0;
 
-  const handleToggleSave = async (e, serviceId, ownerId) => {
+  // ============================================================
+  // HÀM LƯU / BỎ LƯU DỊCH VỤ
+  // ============================================================
+  const handleToggleSave = async function (e, serviceId, ownerId) {
     e.preventDefault();
     e.stopPropagation();
 
+    // Kiểm tra đăng nhập
     if (!token) {
       alert("Vui lòng đăng nhập!");
       return navigate('/login');
     }
 
-    const role = localStorage.getItem('userRole');
+    var role = localStorage.getItem('userRole');
+
+    // Kiểm tra không được lưu dịch vụ của chính mình
     if (role === 'STUDENT' && myStudentId === ownerId) {
       alert("Bạn không thể thả tim vào dịch vụ của chính mình.");
       return;
     }
 
+    // Kiểm tra profile sinh viên tồn tại
     if (role === 'STUDENT' && !myStudentId) {
       alert("Hồ sơ sinh viên của bạn chưa tồn tại trên hệ thống. Vui lòng cập nhật MSSV tại trang Cài đặt.");
       return navigate('/profile-settings');
     }
 
-    const isCurrentlyActive = savedServiceIds.has(serviceId);
+    var isCurrentlyActive = savedServiceIds.has(serviceId);
     setActionLoading(serviceId);
 
     try {
       if (isCurrentlyActive) {
+        // ĐÃ LƯ → BỎ LƯU
         await savedItemsService.unsaveService(serviceId);
-        const newIds = new Set(savedServiceIds);
+        var newIds = new Set(savedServiceIds);
         newIds.delete(serviceId);
         setSavedServiceIds(newIds);
       } else {
+        // CHƯA LƯ → LƯU
         await savedItemsService.saveService(serviceId);
-        const newIds = new Set(savedServiceIds);
-        newIds.add(serviceId);
-        setSavedServiceIds(newIds);
+        var newIds2 = new Set(savedServiceIds);
+        newIds2.add(serviceId);
+        setSavedServiceIds(newIds2);
       }
     } catch (err) {
-      if (err.response?.status === 403) {
+      if (err.response && err.response.status === 403) {
         alert("Server từ chối: Tài khoản của bạn có thể đang bị khóa hoặc chưa đủ quyền xác minh để thực hiện hành động này.");
       } else {
         alert("Lỗi kết nối server.");

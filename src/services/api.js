@@ -25,6 +25,13 @@ rawApi.interceptors.request.use(
     (config) => {
         const token = localStorage.getItem('accessToken');
         if (token) config.headers.Authorization = `Bearer ${token}`;
+        const method = (config.method || '').toUpperCase();
+        if (method === 'GET' || method === 'HEAD' || method === 'DELETE') {
+            delete config.headers['Content-Type'];
+        }
+        if (config.data instanceof FormData) {
+            delete config.headers['Content-Type'];
+        }
         return config;
     },
     (error) => Promise.reject(error)
@@ -58,6 +65,13 @@ api.interceptors.request.use(
     (config) => {
         const token = localStorage.getItem('accessToken');
         if (token) config.headers.Authorization = `Bearer ${token}`;
+        const method = (config.method || '').toUpperCase();
+        if (method === 'GET' || method === 'HEAD' || method === 'DELETE') {
+            delete config.headers['Content-Type'];
+        }
+        if (config.data instanceof FormData) {
+            delete config.headers['Content-Type'];
+        }
         return config;
     },
     (error) => Promise.reject(error)

@@ -10,6 +10,6 @@ export const withdrawalService = {
     // --- Admin ---
     adminGetAllWithdrawals: (params) => api.get('/v1/withdrawals/admin', { params }).then(res => res.data),
     adminGetWithdrawalDetail: (id) => api.get(`/v1/withdrawals/admin/${id}`).then(res => res.data),
-    adminApprove: (id) => api.patch(`/v1/withdrawals/admin/${id}/approve`).then(res => res.data),
+    adminApprove: (id, data) => api.patch(`/v1/withdrawals/admin/${id}/approve`, data || {}).then(res => res.data),
     adminReject: (id, data) => api.patch(`/v1/withdrawals/admin/${id}/reject`, data).then(res => res.data),
 };

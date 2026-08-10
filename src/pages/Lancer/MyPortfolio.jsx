@@ -11,16 +11,35 @@ import PaginationBar from '../../components/PaginationBar';
 import '../../CSS/Portfolio.css';
 
 const MyPortfolio = () => {
+  // ============================================================
+  // STATE
+  // ============================================================
+
+  // Danh sách dự án
   const [portfolios, setPortfolios] = useState([]);
+
+  // Loading trang
   const [loading, setLoading] = useState(true);
+
+  // Đang lưu dự án
   const [isSaving, setIsSaving] = useState(false);
 
+  // ============================================================
+  // PHÂN TRANG
+  // ============================================================
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
   const pageSize = 9;
 
+  // ============================================================
+  // STATE MODAL
+  // ============================================================
+
+  // Hiện modal thêm/sửa dự án
   const [showModal, setShowModal] = useState(false);
+
+  // Dự án đang chỉnh sửa
   const [currentProject, setCurrentProject] = useState({
     title: '',
     description: '',
@@ -28,65 +47,114 @@ const MyPortfolio = () => {
     projectUrl: ''
   });
 
-  const fetchMyPortfolios = useCallback(async (page = 1) => {
+  // ============================================================
+  // HÀM TẢI DỮ LIỆU
+  // ============================================================
+  const fetchMyPortfolios = useCallback(async function (page) {
+    if (!page) page = 1;
+
     setLoading(true);
+
     try {
-      const res = await portfolioService.getMyPortfolios({ page, pageSize });
+      var res = await portfolioService.getMyPortfolios({ page: page, pageSize: pageSize });
+
       if (res.success && res.data) {
-        const data = res.data;
+        var data = res.data;
+
         setPortfolios(data.items || []);
         setTotalPages(data.totalPages || 1);
         setTotalItems(data.totalItems || 0);
         setCurrentPage(data.page || 1);
       }
+
     } catch (err) {
       console.error("Lỗi tải danh sách dự án:", err);
+
     } finally {
       setLoading(false);
     }
   }, []);
 
-  useEffect(() => { fetchMyPortfolios(1); }, []);
+  // ============================================================
+  // EFFECT: Tải dữ liệu khi mount
+  // ============================================================
+  useEffect(function () {
+    fetchMyPortfolios(1);
+  }, []);
 
-  const handlePageChange = (page) => {
+  // ============================================================
+  // HÀM CHUYỂN TRANG
+  // ============================================================
+  const handlePageChange = function (page) {
     fetchMyPortfolios(page);
   };
 
-  const handleOpenModal = (project = null) => {
+  // ============================================================
+  // HÀM MỞ MODAL
+  // ============================================================
+  const handleOpenModal = function (project) {
     if (project) {
+      // Sửa dự án
       setCurrentProject(project);
     } else {
+      // Thêm mới
       setCurrentProject({ title: '', description: '', imageUrl: '', projectUrl: '' });
     }
     setShowModal(true);
   };
 
-  const handleSaveProject = async (e) => {
+  // ============================================================
+  // HÀM LƯU DỰ ÁN
+  // ============================================================
+  const handleSaveProject = async function (e) {
     e.preventDefault();
     setIsSaving(true);
+
     try {
       if (currentProject.portfolioId) {
+        // Cập nhật
         await portfolioService.updatePortfolio(currentProject.portfolioId, currentProject);
         alert("Đã cập nhật dự án thành công!");
       } else {
+        // Thêm mới
         await portfolioService.createPortfolio(currentProject);
         alert("Đã thêm dự án mới!");
       }
+
       setShowModal(false);
       fetchMyPortfolios(currentPage);
+
     } catch (err) {
-      alert("Lỗi khi lưu dự án: " + (err.response?.data?.message || "Vui lòng thử lại"));
+      var msg = "Vui lòng thử lại";
+      if (err.response && err.response.data && err.response.data.message) {
+        msg = err.response.data.message;
+      }
+      alert("Lỗi khi lưu dự án: " + msg);
+
     } finally {
       setIsSaving(false);
     }
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm("Bạn có chắc chắn muốn xóa dự án này khỏi Portfolio?")) return;
+  // ============================================================
+  // HÀM XÓA DỰ ÁN
+  // ============================================================
+  const handleDelete = async function (id) {
+    var confirmed = window.confirm("Bạn có chắc chắn muốn xóa dự án này khỏi Portfolio?");
+    if (!confirmed) return;
+
     try {
       await portfolioService.deletePortfolio(id);
-      setPortfolios(portfolios.filter(p => p.portfolioId !== id));
+
+      // Xóa khỏi danh sách
+      setPortfolios(function (prev) {
+        return prev.filter(function (p) {
+          return p.portfolioId !== id;
+        });
+      });
+
       alert("Đã xóa dự án.");
+
     } catch (err) {
       alert("Không thể xóa dự án này.");
     }
@@ -153,7 +221,7 @@ const MyPortfolio = () => {
                     {/* Image Section */}
                     <div className="portfolio-img-wrapper">
                       <img 
-                        src={item.imageUrl || 'https://via.placeholder.com/600x340/0f172a/3b82f6?text=No+Image'} 
+                        src={item.imageUrl || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='340' fill='%230f172a'%3E%3Crect width='600' height='340'/%3E%3C/svg%3E"} 
                         alt={item.title} 
                         className="portfolio-img"
                       />

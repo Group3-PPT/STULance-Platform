@@ -20,79 +20,186 @@ const SALARY_RANGES = [
 ];
 
 const Jobs = () => {
+  // ============================================================
+  // STATE
+  // ============================================================
+
+  // Danh sách job hiển thị trong sidebar
   const [jobs, setJobs] = useState([]);
+
+  // Job đang được chọn xem chi tiết (bên phải)
   const [selectedJob, setSelectedJob] = useState(null);
+
+  // Thông tin doanh nghiệp đăng bài (fetch riêng khi chọn job)
   const [enterpriseInfo, setEnterpriseInfo] = useState(null);
+
+  // Loading chung (trang đang tải)
   const [loading, setLoading] = useState(true);
+
+  // Loading thông tin doanh nghiệp (khi chọn job mới)
   const [loadingEnterprise, setLoadingEnterprise] = useState(false);
+
+  // Từ khóa tìm kiếm
   const [searchTerm, setSearchTerm] = useState("");
+
+  // Thông báo lỗi
   const [error, setError] = useState(null);
+
+  // Set các job đã lưu (đánh dấu bookmark)
   const [savedJobIds, setSavedJobIds] = useState(new Set());
+
+  // Job đang thực hiện thao tác lưu/bỏ lưu (hiện spinner)
   const [actionLoading, setActionLoading] = useState(null);
+
+  // Hiện/ẩn modal tố cáo
   const [showReportModal, setShowReportModal] = useState(false);
+
+  // Đang chạy AI Matching
   const [aiMatching, setAiMatching] = useState(false);
+
+  // ID người dùng hiện tại
   const currentUserId = localStorage.getItem('userId');
+
+  // Kiểm tra: job đang chọn có phải của mình không (không cho tố cáo)
   const isOwnJob = selectedJob && String(selectedJob.enterpriseId) === String(currentUserId);
 
+  // Bộ lọc loại job (Part-time, Full-time, Freelance, Thực tập)
   const [selectedJobType, setSelectedJobType] = useState('Tất cả');
+
+  // Bộ lọc khoảng lương (index trong SALARY_RANGES)
   const [selectedSalaryRange, setSelectedSalaryRange] = useState(0);
+
+  // Ref lưu job đang chọn (dùng để so sánh khi dữ liệu mới加载)
   const selectedJobRef = useRef(null);
+
+  // ============================================================
+  // PHÂN TRANG
+  // ============================================================
 
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
   const pageSize = 12;
 
+  // ============================================================
+  // AUTH
+  // ============================================================
+
   const token = localStorage.getItem('accessToken');
   const userRole = localStorage.getItem('userRole');
+
+  // Kiểm tra người dùng có phải sinh viên không
   const isStudent = userRole === 'STUDENT';
 
-  const fetchJobs = useCallback(async (page = 1, keyword = '') => {
+  // ============================================================
+  // HÀM TẢI DANH SÁCH JOB (phân trang + bộ lọc)
+  // ============================================================
+  const fetchJobs = useCallback(async (page, keyword) => {
+    // Gán mặc định nếu không truyền
+    if (!page) page = 1;
+    if (!keyword) keyword = '';
+
     try {
       setLoading(true);
+
+      // Gọi API lấy danh sách job công khai
       const res = await jobService.getAllPublicJobs({
-        page,
-        pageSize,
+        page: page,
+        pageSize: pageSize,
         keyword: keyword || undefined
       });
 
+      // Kiểm tra response thành công
       if (res.success && res.data) {
         const data = res.data;
+
+        // Lấy mảng job từ response
         let jobList = data.items || [];
 
+        // ============================================================
+        // BỘ LỌC LOẠI JOB (nếu không phải "Tất cả")
+        // ============================================================
         if (selectedJobType !== 'Tất cả') {
-          jobList = jobList.filter(j => j.jobType === selectedJobType);
-        }
-        const salary = SALARY_RANGES[selectedSalaryRange];
-        if (salary.min > 0 || salary.max < Infinity) {
-          jobList = jobList.filter(j => j.salary >= salary.min && j.salary < salary.max);
+          jobList = jobList.filter(function (j) {
+            return j.jobType === selectedJobType;
+          });
         }
 
+        // ============================================================
+        // BỘ LỌC LƯƠNG
+        // ============================================================
+        var salaryRange = SALARY_RANGES[selectedSalaryRange];
+
+        // Nếu khoảng lương có giới hạn (không phải "Tất cả")
+        if (salaryRange.min > 0 || salaryRange.max < Infinity) {
+          jobList = jobList.filter(function (j) {
+            return j.salary >= salaryRange.min && j.salary < salaryRange.max;
+          });
+        }
+
+        // Lưu danh sách job đã lọc
         setJobs(jobList);
+
+        // Lưu thông tin phân trang
         setTotalPages(data.totalPages || 1);
         setTotalItems(jobList.length);
         setCurrentPage(data.page || 1);
 
+        // ============================================================
+        // QUẢN LÝ JOB ĐANG CHỌN
+        // ============================================================
         if (jobList.length > 0) {
-          const currentStillExists = selectedJobRef.current && jobList.some(j => j.jobId === selectedJobRef.current.jobId);
+          // Kiểm tra job đang chọn có còn trong danh sách mới không
+          var currentStillExists = false;
+
+          if (selectedJobRef.current) {
+            // Duyệt danh sách để tìm job cũ
+            for (var i = 0; i < jobList.length; i++) {
+              if (jobList[i].jobId === selectedJobRef.current.jobId) {
+                currentStillExists = true;
+                break;
+              }
+            }
+          }
+
+          // Nếu job cũ không còn → chọn job đầu tiên
           if (!currentStillExists) {
             setSelectedJob(jobList[0]);
             selectedJobRef.current = jobList[0];
           }
         } else {
+          // Không có job nào → bỏ chọn
           setSelectedJob(null);
           selectedJobRef.current = null;
         }
       }
 
+      // ============================================================
+      // TẢI JOB ĐÃ LƯ (nếu là sinh viên đã đăng nhập)
+      // ============================================================
       if (token && isStudent) {
-        const savedRes = await savedItemsService.getMySavedJobs();
+        var savedRes = await savedItemsService.getMySavedJobs();
+
         if (savedRes.success) {
-          const savedData = savedRes.data;
-          const savedList = savedData?.items || (Array.isArray(savedData) ? savedData : []);
-          setSavedJobIds(new Set(savedList.map(item => item.jobId)));
+          var savedData = savedRes.data;
+          var savedList = [];
+
+          // Xử lý nhiều dạng response
+          if (savedData && savedData.items) {
+            savedList = savedData.items;
+          } else if (Array.isArray(savedData)) {
+            savedList = savedData;
+          }
+
+          // Tạo Set chứa các jobId đã lưu
+          var newSavedIds = new Set();
+          for (var j = 0; j < savedList.length; j++) {
+            newSavedIds.add(savedList[j].jobId);
+          }
+          setSavedJobIds(newSavedIds);
         }
       }
+
     } catch (err) {
       console.error("Lỗi lấy dữ liệu:", err);
       setError("Không thể tải danh sách việc làm.");
@@ -101,20 +208,32 @@ const Jobs = () => {
     }
   }, [token, isStudent, selectedJobType, selectedSalaryRange]);
 
-  useEffect(() => { fetchJobs(1); }, []);
+  // ============================================================
+  // EFFECT: Tải danh sách khi trang loads
+  // ============================================================
+  useEffect(function () {
+    fetchJobs(1);
+  }, []);
 
-  useEffect(() => {
-    if (selectedJob?.enterpriseId) {
+  // ============================================================
+  // EFFECT: Khi chọn job mới → tải thông tin doanh nghiệp
+  // ============================================================
+  useEffect(function () {
+    if (selectedJob && selectedJob.enterpriseId) {
       fetchEnterpriseInfo(selectedJob.enterpriseId);
     } else {
       setEnterpriseInfo(null);
     }
   }, [selectedJob]);
 
-  const fetchEnterpriseInfo = async (enterpriseId) => {
+  // ============================================================
+  // HÀM TẢI THÔNG TIN DOANH NGHIỆP
+  // ============================================================
+  const fetchEnterpriseInfo = async function (enterpriseId) {
     setLoadingEnterprise(true);
     try {
-      const res = await enterpriseService.getPublicProfile(enterpriseId);
+      var res = await enterpriseService.getPublicProfile(enterpriseId);
+
       if (res.success && res.data) {
         setEnterpriseInfo(res.data);
       } else {
@@ -128,33 +247,50 @@ const Jobs = () => {
     }
   };
 
-  const handleSearch = () => {
+  // ============================================================
+  // HÀM XỬ LÝ TÌM KIẾM
+  // ============================================================
+  const handleSearch = function () {
     setCurrentPage(1);
     fetchJobs(1, searchTerm);
   };
 
-  const handlePageChange = (page) => {
+  // ============================================================
+  // HÀM XỬ LÝ CHUYỂN TRANG
+  // ============================================================
+  const handlePageChange = function (page) {
     fetchJobs(page, searchTerm);
   };
 
-  const handleToggleSave = async (jobId) => {
+  // ============================================================
+  // HÀM LƯU / BỎ LƯU JOB
+  // ============================================================
+  const handleToggleSave = async function (jobId) {
+    // Chỉ sinh viên mới được lưu
     if (!token || !isStudent) return;
-    const isSaved = savedJobIds.has(jobId);
+
+    var isSaved = savedJobIds.has(jobId);
     setActionLoading(jobId);
+
     try {
       if (isSaved) {
+        // ĐÃ LƯ → BỎ LƯ
         await savedItemsService.unsaveJob(jobId);
-        const newIds = new Set(savedJobIds);
+
+        var newIds = new Set(savedJobIds);
         newIds.delete(jobId);
         setSavedJobIds(newIds);
+
       } else {
+        // CHƯA LƯ → LƯ
         await savedItemsService.saveJob(jobId);
-        const newIds = new Set(savedJobIds);
-        newIds.add(jobId);
-        setSavedJobIds(newIds);
+
+        var newIds2 = new Set(savedJobIds);
+        newIds2.add(jobId);
+        setSavedJobIds(newIds2);
       }
     } catch (err) {
-      if (err.response?.status === 403) {
+      if (err.response && err.response.status === 403) {
         alert("Server từ chối: Tài khoản của bạn có thể đang bị khóa hoặc chưa đủ quyền xác minh.");
       } else {
         alert("Lỗi kết nối server.");
@@ -164,45 +300,79 @@ const Jobs = () => {
     }
   };
 
-  const handleAIMatching = async () => {
+  // ============================================================
+  // HÀM AI MATCHING
+  // ============================================================
+  const handleAIMatching = async function () {
+    // Kiểm tra đăng nhập
     if (!token) {
       alert("Vui lòng đăng nhập để sử dụng AI Matching!");
       return;
     }
+
     setAiMatching(true);
+
     try {
-      const res = await recommendationService.getMyRecommendations();
-      if (res.success && res.data?.jobs) {
+      var res = await recommendationService.getMyRecommendations();
+
+      if (res.success && res.data && res.data.jobs) {
         setJobs(res.data.jobs);
+
+        // Chọn job đầu tiên nếu có kết quả
         if (res.data.jobs.length > 0) {
           setSelectedJob(res.data.jobs[0]);
           selectedJobRef.current = res.data.jobs[0];
         }
-        alert(`AI đã tìm được ${res.data.jobs.length} việc làm phù hợp với bạn!`);
+
+        alert("AI đã tìm được " + res.data.jobs.length + " việc làm phù hợp với bạn!");
       }
     } catch (err) {
-      alert("Lỗi AI Matching: " + (err.response?.data?.message || "Không thể phân tích"));
+      var msg = "Không thể phân tích";
+      if (err.response && err.response.data && err.response.data.message) {
+        msg = err.response.data.message;
+      }
+      alert("Lỗi AI Matching: " + msg);
     } finally {
       setAiMatching(false);
     }
   };
 
-  const getJobPosterName = (job) => {
+  // ============================================================
+  // CÁC HÀM LẤY THÔNG TIN HIỂN THỊ
+  // ============================================================
+
+  // Lấy tên doanh nghiệp đăng bài
+  const getJobPosterName = function (job) {
     if (enterpriseInfo && job.enterpriseId === enterpriseInfo.enterpriseId) {
-      return enterpriseInfo.companyName || job.enterpriseName || 'Doanh nghiệp';
+      if (enterpriseInfo.companyName) {
+        return enterpriseInfo.companyName;
+      }
+      if (job.enterpriseName) {
+        return job.enterpriseName;
+      }
+      return 'Doanh nghiệp';
     }
-    return job.enterpriseName || 'Doanh nghiệp';
+    if (job.enterpriseName) {
+      return job.enterpriseName;
+    }
+    return 'Doanh nghiệp';
   };
 
-  const getJobPosterLogo = (job) => {
+  // Lấy logo doanh nghiệp
+  const getJobPosterLogo = function (job) {
     if (enterpriseInfo && job.enterpriseId === enterpriseInfo.enterpriseId && enterpriseInfo.logoUrl) {
       return enterpriseInfo.logoUrl;
     }
-    if (job.enterpriseLogoUrl) return job.enterpriseLogoUrl;
-    return `https://ui-avatars.com/api/?name=${encodeURIComponent(job.enterpriseName || 'D')}&background=0d6efd&color=fff&size=48`;
+    if (job.enterpriseLogoUrl) {
+      return job.enterpriseLogoUrl;
+    }
+    // Fallback: avatar từ tên
+    var name = job.enterpriseName || 'D';
+    return "https://ui-avatars.com/api/?name=" + encodeURIComponent(name) + "&background=0d6efd&color=fff&size=48";
   };
 
-  const getJobPosterEmail = (job) => {
+  // Lấy email doanh nghiệp
+  const getJobPosterEmail = function (job) {
     if (enterpriseInfo && job.enterpriseId === enterpriseInfo.enterpriseId) {
       return enterpriseInfo.email || '';
     }

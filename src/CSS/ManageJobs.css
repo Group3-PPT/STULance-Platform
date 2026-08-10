@@ -444,4 +444,37 @@
     .mj-job-card {
         padding: 20px;
     }
+
+    /* Tabs: scrollable on mobile */
+    .mj-tabs {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+    }
+    .mj-tabs::-webkit-scrollbar { display: none; }
+    .mj-tabs .nav-link {
+        padding: 10px 14px;
+        font-size: 13px;
+        white-space: nowrap;
+    }
+
+    /* Action buttons: stack on mobile */
+    .mj-action-btn {
+        padding: 10px 14px;
+        min-height: 44px;
+        font-size: 13px;
+    }
+
+    /* Contract card: full-width on mobile */
+    .mj-contract-card {
+        padding: 16px;
+        border-radius: 12px;
+    }
+    .mj-contract-avatar { width: 40px; height: 40px; border-radius: 10px; }
+    .mj-contract-name { font-size: 13px; }
+    .mj-contract-amount { font-size: 13px; }
+
+    /* Bid card */
+    .mj-bid-card { padding: 14px; border-radius: 12px; flex-direction: column; }
+    .mj-bid-avatar { width: 36px; height: 36px; }
 }

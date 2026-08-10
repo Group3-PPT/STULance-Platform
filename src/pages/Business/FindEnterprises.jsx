@@ -10,52 +10,95 @@ import PaginationBar from '../../components/PaginationBar';
 import '../../CSS/Businesses.css';
 
 const FindEnterprises = () => {
+    // ============================================================
+    // STATE
+    // ============================================================
+
+    // Danh sách doanh nghiệp
     const [enterprises, setEnterprises] = useState([]);
+
+    // Loading trang
     const [loading, setLoading] = useState(true);
+
+    // Từ khóa tìm kiếm
     const [searchTerm, setSearchTerm] = useState('');
+
+    // Doanh nghiệp đang xem chi tiết
     const [selectedEnterprise, setSelectedEnterprise] = useState(null);
+
+    // Hiện modal chi tiết
     const [showModal, setShowModal] = useState(false);
+
+    // ============================================================
+    // PHÂN TRANG
+    // ============================================================
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [totalItems, setTotalItems] = useState(0);
     const pageSize = 12;
 
-    const fetchEnterprises = useCallback(async (page = 1, keyword = '') => {
+    // ============================================================
+    // HÀM TẢI DỮ LIỆU
+    // ============================================================
+    const fetchEnterprises = useCallback(async function (page, keyword) {
+        if (!page) page = 1;
+        if (!keyword) keyword = '';
+
         setLoading(true);
+
         try {
-            const res = await enterpriseService.getAllPublicEnterprises({
-                page,
-                pageSize,
+            var res = await enterpriseService.getAllPublicEnterprises({
+                page: page,
+                pageSize: pageSize,
                 keyword: keyword || undefined
             });
+
             if (res.success && res.data) {
-                const data = res.data;
+                var data = res.data;
+
                 setEnterprises(data.items || []);
                 setTotalPages(data.totalPages || 1);
                 setTotalItems(data.totalItems || 0);
                 setCurrentPage(data.page || 1);
             }
+
         } catch (err) {
             console.error("Lỗi tải danh sách doanh nghiệp:", err);
+
         } finally {
             setLoading(false);
         }
     }, []);
 
-    useEffect(() => { fetchEnterprises(1); }, [fetchEnterprises]);
+    // ============================================================
+    // EFFECT: Tải dữ liệu khi mount
+    // ============================================================
+    useEffect(function () {
+        fetchEnterprises(1);
+    }, [fetchEnterprises]);
 
-    const handleSearch = () => {
+    // ============================================================
+    // HÀM TÌM KIẾM
+    // ============================================================
+    const handleSearch = function () {
         setCurrentPage(1);
         fetchEnterprises(1, searchTerm);
     };
 
-    const handlePageChange = (page) => {
+    // ============================================================
+    // HÀM CHUYỂN TRANG
+    // ============================================================
+    const handlePageChange = function (page) {
         fetchEnterprises(page, searchTerm);
     };
 
-    const getLogo = (ent) => {
+    // ============================================================
+    // HÀM LẤY LOGO
+    // ============================================================
+    const getLogo = function (ent) {
         if (ent.logoUrl) return ent.logoUrl;
-        return `https://ui-avatars.com/api/?name=${encodeURIComponent(ent.companyName || 'D')}&background=10b981&color=fff&size=120`;
+        var name = ent.companyName || 'D';
+        return "https://ui-avatars.com/api/?name=" + encodeURIComponent(name) + "&background=10b981&color=fff&size=120";
     };
 
     return (
