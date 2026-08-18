@@ -444,11 +444,25 @@ const ManageJobs = () => {
     // Bắt đầu gửi form
     setCreatingSubmit(true);
     try {
-      // Tùy loại (bid hoặc order) mà gọi API khác nhau
+      const selectedOrder = serviceOrders.find(o => o.orderId === createContractId);
+      const selectedBid = bids.find(b => b.bidId === createContractId);
+
+      const payload = {
+        WorkContent: createForm.workContent,
+        StartDate: createForm.startDate,
+        EndDate: createForm.endDate,
+        Requirements: createForm.acceptanceCriteria,
+        TotalBudget: createContractType === 'bid' 
+          ? (selectedBid?.bidAmount || selectedBid?.amount || 0)
+          : (selectedOrder?.orderPrice || selectedOrder?.totalAmount || 0)
+      };
+
+      console.log('Create contract payload:', payload);
+
       if (createContractType === 'bid') {
-        await contractService.createFromBid(createContractId, createForm);
+        await contractService.createFromBid(createContractId, payload);
       } else {
-        await contractService.createFromServiceOrder(createContractId, createForm);
+        await contractService.createFromServiceOrder(createContractId, payload);
       }
 
       alert("Tạo hợp đồng thành công!");
@@ -1088,7 +1102,7 @@ const ManageJobs = () => {
                         </div>
                         <div className="flex-fill">
                           <div className="d-flex align-items-center gap-2 mb-1">
-                            <h6 className="mj-contract-name mb-0">{c.contractName || 'Hợp đồng'}</h6>
+                            <h6 className="mj-contract-name mb-0">{c.contractName || c.jobTitle || c.description || c.workContent || c.title || 'Hợp đồng'}</h6>
                             <span className="mj-contract-id">#{c.contractId?.substring(0, 8)}</span>
                           </div>
                           <p className="mj-contract-student mb-0">

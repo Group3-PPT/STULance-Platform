@@ -385,8 +385,19 @@ const DashboardLancer = () => {
     // Bắt đầu gửi form
     setCreatingSubmit(true);
     try {
-      // Gọi API tạo hợp đồng từ đơn dịch vụ
-      await contractService.createFromServiceOrder(createContractOrderId, createForm);
+      const selectedOrder = providerOrders.find(o => o.orderId === createContractOrderId) 
+        || myOrders.find(o => o.orderId === createContractOrderId);
+
+      const payload = {
+        WorkContent: createForm.workContent,
+        StartDate: createForm.startDate,
+        EndDate: createForm.endDate,
+        Requirements: createForm.acceptanceCriteria,
+        TotalBudget: selectedOrder?.orderPrice || 0
+      };
+
+      console.log('Create contract payload:', payload);
+      await contractService.createFromServiceOrder(createContractOrderId, payload);
 
       alert("Tạo hợp đồng thành công!");
 
@@ -396,9 +407,10 @@ const DashboardLancer = () => {
       // Tải lại toàn bộ dữ liệu
       fetchData();
     } catch (err) {
+      console.error('Create contract error:', err.response?.data || err.message);
       let errorMessage = "Không thể tạo hợp đồng";
-      if (err.response && err.response.data && err.response.data.message) {
-        errorMessage = err.response.data.message;
+      if (err.response && err.response.data) {
+        errorMessage = err.response.data.message || JSON.stringify(err.response.data);
       }
       alert("Lỗi: " + errorMessage);
     } finally {
@@ -687,7 +699,7 @@ const DashboardLancer = () => {
                           <Row className="align-items-center">
                             <Col md={9}>
                               <Badge bg={cfg.variant} className="text-dark x-small-badge mb-2 fw-bold">{cfg.label.toUpperCase()}</Badge>
-                              <h6 className="fw-bold text-white mb-1">{item.jobTitle || item.contractName || "Dự án Freelance"}</h6>
+                              <h6 className="fw-bold text-white mb-1">{item.jobTitle || item.contractName || item.description || item.workContent || item.title || 'Dự án Freelance'}</h6>
                               <div className="d-flex gap-3 x-small text-white-50 mb-2">
                                 <span><Clock size={12} className="me-1" /> {new Date(item.updatedAt).toLocaleDateString()}</span>
                                 <span>Đối tác: {item.clientInfo?.displayName || item.clientName || item.enterpriseName || 'Enterprise'}</span>
@@ -734,7 +746,7 @@ const DashboardLancer = () => {
                               <ShoppingBag size={14} className="text-primary" />
                               <h6 className="fw-bold mb-0 text-white small">{order.serviceTitle}</h6>
                             </div>
-                            <div className="x-small text-white-50">Giá: {formatMoney(order.orderPrice)} | {new Date(order.createdAt).toLocaleDateString()}</div>
+                            <div className="x-small text-white-50">Giá: {formatMoney(order.orderPrice || order.totalAmount || order.totalPrice || order.price || order.servicePrice || order.amount || 0)} | {new Date(order.createdAt).toLocaleDateString()}</div>
                           </div>
                           <div className="text-end">
                             <Badge bg={order.status === 'ACCEPTED' ? 'info' : 'warning'} className="mb-2 d-block px-3 text-dark">{order.status}</Badge>
@@ -820,9 +832,10 @@ const DashboardLancer = () => {
                               </div>
                             )}
                             {order.status === 'ACCEPTED' && (
-                              <Button variant="primary" size="sm" className="x-small fw-bold px-3 py-1 shadow-glow" onClick={() => handleCreateContract(order.orderId)}>
-                                <CheckCircle size={12} className="me-1" /> TẠO HỢP ĐỒNG
-                              </Button>
+                              <div className="x-small text-success fst-italic">Đã chấp nhận — chờ khách tạo hợp đồng</div>
+                            )}
+                            {order.status === 'IN_PROGRESS' && (
+                              <div className="x-small text-primary fst-italic">Đang thực hiện</div>
                             )}
                           </div>
                         </div>

@@ -150,11 +150,11 @@ api.interceptors.response.use(
             console.error(`Refresh attempt ${refreshAttempts} failed:`, status || refreshError.message);
 
             if (status === 401 || status === 400 || refreshAttempts >= MAX_REFRESH_ATTEMPTS) {
-                console.error("Refresh token hết hạn hoặc quá số lần thử, logout.");
+                console.error("Refresh token hết hạn, logout.");
                 clearAuth();
                 window.dispatchEvent(new Event("local-storage-update"));
             } else {
-                console.error("Refresh lỗi server:", status, "- KHÔNG logout, sẽ thử lại ở request tiếp.");
+                console.error("Refresh lỗi server:", status, "- sẽ thử lại ở request tiếp.");
             }
             return Promise.reject(refreshError);
         } finally {

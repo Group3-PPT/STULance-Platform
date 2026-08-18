@@ -12,7 +12,8 @@ const rawApi = axios.create({
 
 let refreshTimer = null;
 let isRefreshing = false;
-const REFRESH_INTERVAL = 14 * 60 * 1000; // 14 phút
+const REFRESH_INTERVAL = 2 * 60 * 1000; // 2 phút — refresh trước khi token hết hạn
+const VISIBILITY_REFRESH_THRESHOLD = 1 * 60 * 1000; // 1 phút — check khi quay lại tab
 const SESSION_MAX_AGE = 7 * 24 * 60 * 60 * 1000; // 7 ngày
 
 const storage = {
@@ -72,11 +73,11 @@ export const authService = {
             }
             return null;
         } catch (err) {
-            console.error("Refresh token thất bại:", err.response?.status);
-            if (err.response?.status === 401 || err.response?.status === 400) {
-                console.warn("Refresh token hết hạn/hợp lệ, logout.");
-                authService.handleSessionExpired();
-            }
+            const status = err.response?.status;
+            console.error("Refresh token thất bại:", status);
+
+            // Không logout ở đây — api.js interceptor sẽ xử lý
+            // Chỉ log để debug
             return null;
         } finally {
             isRefreshing = false;
@@ -135,7 +136,7 @@ export const authService = {
         const rfToken = storage.getRefresh();
         if (!token || !rfToken) return;
 
-        console.log("Bắt đầu auto-refresh token mỗi 14 phút");
+        console.log("Bắt đầu auto-refresh token mỗi 2 phút");
 
         refreshTimer = setInterval(async () => {
             const currentRefreshToken = storage.getRefresh();
@@ -147,8 +148,9 @@ export const authService = {
             console.log("Đang tự động refresh token...");
             const newToken = await authService.refreshAccessToken();
             if (!newToken) {
-                console.error("Auto-refresh thất bại, dừng timer");
-                authService.stopAutoRefresh();
+                // KHÔNG dừng timer — đợi interval tiếp theo thử lại
+                // Chỉ dừng khi refresh token đã hết hạn (đã xử lý trong refreshAccessToken)
+                console.warn("Auto-refresh thất bại, sẽ thử lại ở interval tiếp theo");
             }
         }, REFRESH_INTERVAL);
     },
@@ -182,7 +184,7 @@ export const authService = {
         if (refreshedAt) {
             const elapsed = Date.now() - Number(refreshedAt);
             if (elapsed > REFRESH_INTERVAL) {
-                console.log("Token cũ hơn 14 phút, refresh ngay...");
+                console.log("Token cũ hơn 2 phút, refresh ngay...");
                 const newToken = await authService.refreshAccessToken();
                 if (!newToken) return;
             }
@@ -241,11 +243,16 @@ window.addEventListener("visibilitychange", () => {
         const refreshedAt = storage.getTokenRefreshedAt();
         if (refreshedAt) {
             const elapsed = Date.now() - Number(refreshedAt);
-            if (elapsed > REFRESH_INTERVAL) {
-                console.log("Tab quay lại, token cũ → refresh ngay");
+            if (elapsed > VISIBILITY_REFRESH_THRESHOLD) {
+                console.log("Tab quay lại, token cũ hơn 1 phút → refresh ngay");
                 if (!isRefreshing) {
                     authService.refreshAccessToken();
                 }
+            }
+        } else {
+            // Chưa có thông tin refresh → refresh ngay
+            if (!isRefreshing) {
+                authService.refreshAccessToken();
             }
         }
     }

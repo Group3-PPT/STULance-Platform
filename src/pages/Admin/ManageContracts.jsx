@@ -141,7 +141,7 @@ const ManageContracts = () => {
                     </div>
                     <div className="flex-fill">
                       <div className="d-flex align-items-center gap-2 mb-1">
-                        <h6 className="mj-contract-name mb-0">{c.contractName || c.jobTitle || 'Hợp đồng'}</h6>
+                        <h6 className="mj-contract-name mb-0">{c.contractName || c.jobTitle || c.description || c.workContent || c.title || 'Hợp đồng'}</h6>
                         <span className="mj-contract-id">#{c.contractId?.substring(0, 8)}</span>
                       </div>
                       <p className="mj-contract-student mb-0">

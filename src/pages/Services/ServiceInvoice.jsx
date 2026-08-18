@@ -43,7 +43,8 @@ const ServiceInvoice = () => {
 
       const payload = {
         buyerType: buyerTypeName, 
-        requirements: "Đặt hàng qua hệ thống STULance" 
+        requirements: "Đặt hàng qua hệ thống STULance",
+        orderPrice: service.price || 0
       };
 
       // GỌI API TẠO ĐƠN HÀNG (POST /v1/service-orders/services/{id})
