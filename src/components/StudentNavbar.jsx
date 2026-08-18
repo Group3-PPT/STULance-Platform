@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Navbar, Nav, Container, Button, NavDropdown, Image, Badge } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
-import { Bell, User, LogOut, LayoutDashboard, Layers, History, Check, CheckCheck, Wallet, FileText } from 'lucide-react';
+import { Bell, User, LogOut, LayoutDashboard, Layers, History, Check, CheckCheck, Wallet, FileText, Bookmark } from 'lucide-react';
 import { authService } from '../services/authService';
 import { profileService } from '../services/profileservice';
 import { studentService } from '../services/studentservice';
@@ -117,6 +117,9 @@ const StudentNavbar = () => {
             <Nav.Link as={Link} to="/jobs" className="nav-hover-link">Việc làm</Nav.Link>
             <Nav.Link as={Link} to="/services" className="nav-hover-link">Dịch vụ</Nav.Link>
             <Nav.Link as={Link} to="/find-enterprises" className="nav-hover-link">Tìm DN</Nav.Link>
+            <Nav.Link as={Link} to="/dashboardlancer" className="nav-hover-link d-flex align-items-center gap-1">
+              <Bookmark size={14} /> Lưu
+            </Nav.Link>
             <Nav.Link as={Link} to="/handbook" className="nav-hover-link">Cẩm nang</Nav.Link>
           </Nav>
 

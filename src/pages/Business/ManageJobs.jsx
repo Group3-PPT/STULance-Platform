@@ -1200,7 +1200,13 @@ const ManageJobs = () => {
                             <DollarSign size={12} /> {bid.bidAmount ? formatMoney(bid.bidAmount) : 'Chưa có'}
                           </span>
                           <span className="d-flex align-items-center gap-1">
-                            <Calendar size={12} /> {bid.expectedDays || '?'} ngày
+                            <Calendar size={12} /> {
+                              bid.expectedDays 
+                                ? bid.expectedDays + ' ngày'
+                                : bid.deadlineCommit 
+                                  ? Math.max(1, Math.ceil((new Date(bid.deadlineCommit) - new Date(bid.createdAt)) / (1000 * 60 * 60 * 24))) + ' ngày'
+                                  : '? ngày'
+                            }
                           </span>
                           {bid.createdAt && (
                             <span className="d-flex align-items-center gap-1">

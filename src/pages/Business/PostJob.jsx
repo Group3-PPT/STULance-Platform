@@ -374,49 +374,6 @@ const PostJob = () => {
               </Row>
             </div>
 
-            {/* 5. ẢNH ĐẠI DIỆN */}
-            <div className="form-section-wrapper mb-5">
-              <div className="section-header-title mb-4 d-flex align-items-center gap-2 text-primary-glow fw-bold uppercase-tracking">
-                <ImageIcon size={20} /> 5. Ảnh đại diện tin tuyển dụng
-              </div>
-              <Form.Group>
-                <div 
-                  className="text-center p-4 rounded-4"
-                  style={{ 
-                    border: '2px dashed rgba(255,255,255,0.15)', 
-                    background: 'rgba(255,255,255,0.02)',
-                    cursor: 'pointer',
-                    transition: '0.3s'
-                  }}
-                  onClick={() => fileInputRef.current?.click()}
-                  onDragOver={(e) => { e.preventDefault(); e.currentTarget.style.borderColor = 'var(--primary-blue)'; }}
-                  onDragLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.15)'; }}
-                  onDrop={(e) => { e.preventDefault(); e.currentTarget.style.borderColor = 'rgba(255,255,255,0.15)'; handleFileChange({ target: { files: e.dataTransfer.files } }); }}
-                >
-                  {imagePreview ? (
-                    <div className="position-relative">
-                      <img src={imagePreview} alt="Preview" className="rounded-3" style={{ maxHeight: '250px', objectFit: 'cover', width: '100%' }} />
-                      <Button 
-                        variant="danger" size="sm" 
-                        className="position-absolute top-0 end-0 m-2 rounded-circle d-flex align-items-center justify-content-center"
-                        style={{ width: '32px', height: '32px' }}
-                        onClick={(e) => { e.stopPropagation(); handleRemoveImage(); }}
-                      >
-                        <X size={16} />
-                      </Button>
-                    </div>
-                  ) : (
-                    <>
-                      <Upload size={36} className="text-primary mb-2 opacity-50" />
-                      <p className="mb-1 text-white-50 small">Kéo thả ảnh vào đây hoặc <span className="text-primary fw-bold">Chọn file</span></p>
-                      <p className="mb-0 text-white-25 x-small">JPG, PNG, WebP (tối đa 5MB)</p>
-                    </>
-                  )}
-                </div>
-                <input ref={fileInputRef} type="file" accept="image/*" className="d-none" onChange={handleFileChange} />
-              </Form.Group>
-            </div>
-
             <div className="d-flex align-items-center justify-content-between mt-5 pt-4 border-top border-white-10">
               <Form.Check 
                 type="switch" 

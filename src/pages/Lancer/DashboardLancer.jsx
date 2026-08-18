@@ -58,6 +58,10 @@ const DashboardLancer = () => {
   // Đơn hàng tôi là người mua (mua dịch vụ của người khác)
   const [myOrders, setMyOrders] = useState([]);
 
+  // Mở rộng danh sách đã lưu (để toggle "Xem thêm")
+  const [showAllSavedJobs, setShowAllSavedJobs] = useState(false);
+  const [showAllSavedServices, setShowAllSavedServices] = useState(false);
+
   // Modal tạo hợp đồng mới
   const [showCreateContractModal, setShowCreateContractModal] = useState(false);
 
@@ -644,42 +648,53 @@ const DashboardLancer = () => {
               <div className="d-flex align-items-center justify-content-between text-danger x-small fw-bold uppercase-tracking mb-4">
                 <div className="d-flex align-items-center gap-2"><Heart size={16} fill="currentColor" /> VIỆC LÀM ĐÃ LƯU</div>
                 {savedJobs.length > 0 && (
-                  <Button variant="link" className="text-danger p-0 x-small text-decoration-none fw-bold d-flex align-items-center gap-1" onClick={handleClearUnavailable}>
-                    <Trash2 size={12} /> Dọn
-                  </Button>
+                  <div className="d-flex align-items-center gap-2">
+                    <Button variant="link" className="text-danger p-0 x-small text-decoration-none fw-bold d-flex align-items-center gap-1" onClick={() => setShowAllSavedJobs(!showAllSavedJobs)}>
+                      <ChevronRight size={12} style={{ transform: showAllSavedJobs ? 'rotate(90deg)' : 'rotate(0)' }} /> {showAllSavedJobs ? 'Thu gọn' : 'Xem thêm'}
+                    </Button>
+                    <Button variant="link" className="text-danger p-0 x-small text-decoration-none fw-bold d-flex align-items-center gap-1" onClick={handleClearUnavailable}>
+                      <Trash2 size={12} /> Dọn
+                    </Button>
+                  </div>
                 )}
               </div>
-              {savedJobs.slice(0, 2).map(job => (
-                <Link to={`/jobs/${job.jobId}`} key={job.jobId} className="text-decoration-none">
-                  <div className="service-mini-item p-2 mb-2 rounded border-white-5 hover-edit">
-                    <p className="mb-0 small fw-bold text-white text-truncate">{job.title}</p>
-                    <p className="mb-0 x-small text-primary-glow">{formatMoney(job.salary)}</p>
-                  </div> 
-                </Link>
-              ))}
-              {savedJobs.length === 0 && <p className="text-center x-small opacity-25 py-2">Trống</p>}
+               {(showAllSavedJobs ? savedJobs : savedJobs.slice(0, 2)).map(job => (
+                 <Link to={`/jobs/${job.jobId}`} key={job.jobId} className="text-decoration-none">
+                   <div className="service-mini-item p-2 mb-2 rounded border-white-5 hover-edit">
+                     <p className="mb-0 small fw-bold text-white text-truncate">{job.title}</p>
+                     <p className="mb-0 x-small text-primary-glow">{formatMoney(job.salary)}</p>
+                   </div> 
+                 </Link>
+               ))}
+               {savedJobs.length === 0 && <p className="text-center x-small opacity-25 py-2">Trống</p>}
             </div>
 
             <div className="glass-card p-4 border-white-10 shadow-sm">
               <div className="d-flex align-items-center justify-content-between text-info x-small fw-bold uppercase-tracking mb-4">
                 <div className="d-flex align-items-center gap-2"><Bookmark size={16} fill="currentColor" /> DỊCH VỤ ĐÃ LƯU</div>
                 {savedServices.length > 0 && (
-                  <Button variant="link" className="text-info p-0 x-small text-decoration-none fw-bold d-flex align-items-center gap-1" onClick={handleClearUnavailable}>
-                    <Trash2 size={12} /> Dọn
-                  </Button>
+                  <div className="d-flex align-items-center gap-2">
+                    <Button variant="link" className="text-info p-0 x-small text-decoration-none fw-bold d-flex align-items-center gap-1" onClick={() => setShowAllSavedServices(!showAllSavedServices)}>
+                      <ChevronRight size={12} style={{ transform: showAllSavedServices ? 'rotate(90deg)' : 'rotate(0)' }} /> {showAllSavedServices ? 'Thu gọn' : 'Xem thêm'}
+                    </Button>
+                    <Button variant="link" className="text-info p-0 x-small text-decoration-none fw-bold d-flex align-items-center gap-1" onClick={handleClearUnavailable}>
+                      <Trash2 size={12} /> Dọn
+                    </Button>
+                  </div>
                 )}
               </div>
-              {savedServices.slice(0, 2).map(svc => (
-                <Link to={`/service-detail/${svc.serviceId}`} key={svc.serviceId} className="text-decoration-none">
-                  <div className="service-mini-item p-2 mb-2 rounded border-white-5 hover-edit">
-                    <p className="mb-0 small fw-bold text-white text-truncate">{svc.title}</p>
-                    <p className="mb-0 x-small text-primary-glow">{formatMoney(svc.price)}</p>
-                  </div>
-                </Link>
-              ))}
-              {savedServices.length === 0 && <p className="text-center x-small opacity-25 py-2">Trống</p>}
+               {(showAllSavedServices ? savedServices : savedServices.slice(0, 2)).map(svc => (
+                 <Link to={`/service-detail/${svc.serviceId}`} key={svc.serviceId} className="text-decoration-none">
+                   <div className="service-mini-item p-2 mb-2 rounded border-white-5 hover-edit">
+                     <p className="mb-0 small fw-bold text-white text-truncate">{svc.title}</p>
+                     <p className="mb-0 x-small text-primary-glow">{formatMoney(svc.price)}</p>
+                   </div>
+                 </Link>
+               ))}
+               {savedServices.length === 0 && <p className="text-center x-small opacity-25 py-2">Trống</p>}
             </div>
           </Col>
+        
 
           {/* RIGHT CONTENT: TABS */}
           <Col lg={8}>
@@ -692,6 +707,7 @@ const DashboardLancer = () => {
                         <AlertCircle size={14} /> {contractsError}
                       </Alert>
                     )}
+                    {/* filter */}
                     {contracts.map(item => {
                       const cfg = getContractStatusConfig(item);
                       return (
@@ -908,6 +924,7 @@ const DashboardLancer = () => {
         </Modal.Footer>
       </Modal>
     </div>
+    
   );
 };
 

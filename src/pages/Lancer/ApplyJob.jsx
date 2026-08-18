@@ -93,10 +93,15 @@ const ApplyJob = () => {
     setIsSubmitting(true);
 
     try {
+      // Tính deadline từ số ngày
+      var deadlineDate = new Date();
+      deadlineDate.setDate(deadlineDate.getDate() + expectedDays);
+      var deadlineStr = deadlineDate.toISOString().split('T')[0];
+
       var payload = {
         bidAmount: bidAmount,
-        expectedDays: expectedDays,
-        message: formData.message
+        deadlineCommit: deadlineStr,
+        coverLetter: formData.message
       };
 
       await bidService.createBid(jobId, payload);
@@ -160,11 +165,11 @@ const ApplyJob = () => {
                 </div>
               </div>
 
-              <div className="p-3 rounded bg-white bg-opacity-5 border border-white border-opacity-10">
+              <div className="p-3 rounded" style={{ background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.2)' }}>
                 <h6 className="small fw-bold mb-2 d-flex align-items-center gap-2 text-warning">
                    <Info size={14}/> Lưu ý cho bạn
                 </h6>
-                <p className="x-small text-white-50 mb-0 italic">
+                <p className="x-small mb-0" style={{ color: 'rgba(255,255,255,0.65)' }}>
                   Bạn nên đưa ra mức giá cạnh tranh và lời nhắn ấn tượng để tăng cơ hội được chọn.
                 </p>
               </div>

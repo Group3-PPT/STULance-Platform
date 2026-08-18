@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Container, Row, Col, Form, Button, Badge, Spinner } from 'react-bootstrap';
-import { Link } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { Search, Globe, MapPin, Bookmark, Send, Laptop, ShieldCheck, Zap, Loader2, Sparkles, Building2, Filter, X, ShieldAlert } from 'lucide-react';
 import { jobService } from '../services/jobservice';
 import { savedItemsService } from '../services/saveditemsservice';
@@ -23,6 +23,8 @@ const Jobs = () => {
   // ============================================================
   // STATE
   // ============================================================
+
+  const { jobId } = useParams();
 
   // Danh sách job hiển thị trong sidebar
   const [jobs, setJobs] = useState([]);
@@ -164,8 +166,20 @@ const Jobs = () => {
 
           // Nếu job cũ không còn → chọn job đầu tiên
           if (!currentStillExists) {
-            setSelectedJob(jobList[0]);
-            selectedJobRef.current = jobList[0];
+            // Nếu có jobId từ URL → tìm và chọn job đó
+            if (jobId) {
+              var urlJob = jobList.find(function (j) { return j.jobId === jobId; });
+              if (urlJob) {
+                setSelectedJob(urlJob);
+                selectedJobRef.current = urlJob;
+              } else {
+                setSelectedJob(jobList[0]);
+                selectedJobRef.current = jobList[0];
+              }
+            } else {
+              setSelectedJob(jobList[0]);
+              selectedJobRef.current = jobList[0];
+            }
           }
         } else {
           // Không có job nào → bỏ chọn
@@ -214,6 +228,21 @@ const Jobs = () => {
   useEffect(function () {
     fetchJobs(1);
   }, []);
+
+  // ============================================================
+  // EFFECT: Nếu có jobId từ URL mà chưa chọn job → fetch trực tiếp
+  // ============================================================
+  useEffect(function () {
+    if (jobId && !selectedJobRef.current) {
+      jobService.getPublicJobDetail(jobId).then(function (res) {
+        const data = res?.data || res;
+        if (data) {
+          setSelectedJob(data);
+          selectedJobRef.current = data;
+        }
+      }).catch(function () {});
+    }
+  }, [jobId]);
 
   // ============================================================
   // EFFECT: Khi chọn job mới → tải thông tin doanh nghiệp

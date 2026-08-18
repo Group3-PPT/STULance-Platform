@@ -9,7 +9,7 @@ import {
 import { profileService } from '../../services/profileservice';
 import { studentService } from '../../services/studentservice';
 import { portfolioService } from '../../services/portfolioservice';
-import { unwrapList } from '../../services/responseUtils';
+import { cvService } from '../../services/cvApiService';
 import ReportModal from '../../components/ReportModal';
 import '../../CSS/Portfolio.css';
 
@@ -17,49 +17,42 @@ const Portfolio = () => {
   // ============================================================
   // ROUTING
   // ============================================================
-  var params = useParams();
-  var id = params.id;
-  var isPublicView = Boolean(id);
+  const params = useParams();
+  const id = params.id;
+  const isPublicView = Boolean(id);
 
   // ============================================================
   // STATE
   // ============================================================
-
-  // Loading trang
   const [loading, setLoading] = useState(true);
-
-  // Hiện modal tố cáo
   const [showReportModal, setShowReportModal] = useState(false);
 
-  // ID người dùng hiện tại
   const currentUserId = localStorage.getItem('userId');
-
-  // Kiểm tra có phải portfolio của mình không
   const isOwnPortfolio = isPublicView ? String(id) === String(currentUserId) : false;
 
   // ============================================================
   // STATE DỮ LIỆU
   // ============================================================
-
-  // Thông tin hồ sơ
   const [combinedData, setCombinedData] = useState({
+    studentId: '',
+    userId: '',
     fullName: 'Đang tải...',
     bio: '',
     avatarUrl: '',
     location: '',
     phoneNumber: '',
+    email: '',
     studentCode: '',
     school: '',
     major: '',
     gpa: 0,
     graduationYear: '',
-    verificationStatus: 'UNVERIFIED'
+    verificationStatus: 'UNVERIFIED',
+    activeCvId: null,
+    cvs: []
   });
 
-  // Danh sách kỹ năng
   const [skills, setSkills] = useState([]);
-
-  // Danh sách dự án
   const [projects, setProjects] = useState([]);
 
   // ============================================================
@@ -70,60 +63,65 @@ const Portfolio = () => {
 
     try {
       if (isPublicView) {
-        // Xem công khai → gọi API public
-        var res = await studentService.getPublicProfile(id);
-        var data = (res && res.data) ? res.data : {};
+        // Gọi API public profile theo studentId (/v1/students/{studentId}/public)
+        const res = await cvService.getStudentPublicProfile(id);
+        const data = (res && res.data) ? res.data : {};
 
-        setCombinedData(data);
+        // Chọn CV mặc định hoặc CV đầu tiên trong mảng cvs
+        const cvList = data.cvs || [];
+        const defaultCv = cvList.find(cv => cv.isDefault) || cvList[0];
+
+        setCombinedData({
+          ...data,
+          bio: data.bio || '',
+          location: data.location || '',
+          phoneNumber: data.phoneNumber || '',
+          email: data.email || '',
+          studentCode: data.studentCode || '',
+          activeCvId: defaultCv ? defaultCv.cvId : null,
+          cvs: cvList
+        });
+
         setSkills(data.skills || []);
         setProjects(data.portfolios || []);
 
       } else {
-        // Xem của mình → tải song song
-        var results = await Promise.allSettled([
+        // Xem hồ sơ cá nhân của mình → Tải song song
+        const results = await Promise.allSettled([
           profileService.getBasicProfile(),
           studentService.getProfile(),
           studentService.getMySkills(),
           portfolioService.getMyPortfolios()
         ]);
 
-        var tempInfo = {};
+        let tempInfo = {};
 
-        // Gộp thông tin từ profile và student
         if (results[0].status === 'fulfilled' && results[0].value && results[0].value.success) {
-          var profileData = results[0].value.data;
-          for (var key in profileData) {
-            tempInfo[key] = profileData[key];
-          }
+          const profileData = results[0].value.data;
+          Object.assign(tempInfo, profileData);
         }
 
         if (results[1].status === 'fulfilled' && results[1].value && results[1].value.success) {
-          var studentData = results[1].value.data;
-          for (var key2 in studentData) {
-            tempInfo[key2] = studentData[key2];
-          }
+          const studentData = results[1].value.data;
+          Object.assign(tempInfo, studentData);
         }
 
         setCombinedData(tempInfo);
 
-        // Lấy kỹ năng
         if (results[2].status === 'fulfilled') {
-          var skillsData = results[2].value && results[2].value.data;
+          const skillsData = results[2].value && results[2].value.data;
           setSkills(skillsData || []);
         }
 
-        // Lấy dự án
         if (results[3].status === 'fulfilled') {
-          var projectsValue = results[3].value;
-          var projectsList = [];
-          if (projectsValue && Array.isArray(projectsValue)) {
+          const projectsValue = results[3].value;
+          let projectsList = [];
+          if (Array.isArray(projectsValue)) {
             projectsList = projectsValue;
           } else if (projectsValue && projectsValue.data) {
-            if (Array.isArray(projectsValue.data)) {
-              projectsList = projectsValue.data;
-            } else if (projectsValue.data.items) {
-              projectsList = projectsValue.data.items;
-            }
+            projectsList = Array.isArray(projectsValue.data) 
+              ? projectsValue.data 
+              : (projectsValue.data.items || []);
           }
           setProjects(projectsList);
         }
@@ -131,15 +129,11 @@ const Portfolio = () => {
 
     } catch (err) {
       console.error("Lỗi tải dữ liệu:", err.message);
-
     } finally {
       setLoading(false);
     }
   };
 
-  // ============================================================
-  // EFFECT: Tải dữ liệu khi mount hoặc id thay đổi
-  // ============================================================
   useEffect(function () {
     loadData();
   }, [id]);
@@ -158,7 +152,7 @@ const Portfolio = () => {
   return (
     <div className="portfolio-page py-5 text-white">
       <Container>
-        {/* Back button */}
+        {/* Quay lại trang quản lý nếu không phải public view */}
         {!isPublicView && (
           <div className="text-end mb-4">
             <Button as={Link} to="/portfolio-manager" variant="link" className="text-primary p-0 text-decoration-none fw-bold d-flex align-items-center gap-1 ms-auto">
@@ -169,7 +163,6 @@ const Portfolio = () => {
 
         {/* --- HERO PROFILE CARD --- */}
         <div className="portfolio-profile-card glass-card mb-5 position-relative overflow-hidden animate-fade-in">
-          {/* Background gradient */}
           <div className="profile-hero-bg"></div>
           
           <div className="position-relative p-4 p-md-5">
@@ -177,7 +170,7 @@ const Portfolio = () => {
               <Col md={3} className="text-center mb-4 mb-md-0">
                 <div className="profile-avatar-wrapper">
                   <img 
-                    src={combinedData.avatarUrl || `https://ui-avatars.com/api/?name=${combinedData.fullName}&background=0D8ABC&color=fff&size=200`} 
+                    src={combinedData.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(combinedData.fullName)}&background=0D8ABC&color=fff&size=200`} 
                     className="profile-avatar-lg" 
                     alt="avatar" 
                   />
@@ -196,7 +189,7 @@ const Portfolio = () => {
                     </Button>
                   )}
                 </div>
-                <p className="h4 text-primary-glow mb-3">{combinedData.major || "Freelancer"}</p>
+                <p className="h4 text-primary-glow mb-3">{combinedData.major || "Chưa cập nhật chuyên ngành"}</p>
                 
                 <div className="d-flex flex-wrap gap-4 mb-4 text-white-50 small">
                   {combinedData.school && (
@@ -221,20 +214,31 @@ const Portfolio = () => {
                     {combinedData.bio}
                   </p>
                 )}
-                <div className="mt-3">
-                  <Button as={Link} to={`/cv/student/${combinedData.userId || id}`} variant="outline-primary" size="sm" className="fw-bold px-3" target="_blank">
-                    <FileText size={14} className="me-1" /> Xem CV
-                  </Button>
-                </div>
+
+                {/* Nút Xem CV chính */}
+                {combinedData.activeCvId && (
+                  <div className="mt-3">
+                    <Button 
+                      as={Link} 
+                      to={`/cv/student/${combinedData.studentId}/public`} 
+                      variant="outline-primary" 
+                      size="sm" 
+                      className="fw-bold px-3" 
+                      target="_blank"
+                    >
+                      <FileText size={14} className="me-1" /> Xem CV
+                    </Button>
+                  </div>
+                )}
               </Col>
             </Row>
           </div>
         </div>
 
         <Row className="g-4">
-          {/* --- CỘT TRÁI: THÔNG TIN --- */}
+          {/* --- CỘT TRÁI: THÔNG TIN HỌC VẤN & LIÊN HỆ & CVS --- */}
           <Col lg={4}>
-            {/* Education Card */}
+            {/* Học vấn */}
             <div className="portfolio-sidebar-card glass-card p-4 mb-4">
               <h5 className="fw-bold mb-4 text-primary-glow d-flex align-items-center gap-2">
                 <GraduationCap size={20}/> HỌC VẤN
@@ -265,46 +269,37 @@ const Portfolio = () => {
               )}
             </div>
 
-            {/* Contact Card */}
-            <div className="portfolio-sidebar-card glass-card p-4 mb-4">
-              <h5 className="fw-bold mb-4 text-primary-glow d-flex align-items-center gap-2">
-                <Smartphone size={20}/> LIÊN HỆ
-              </h5>
-              {combinedData.email && (
-                <div className="portfolio-info-item mb-3">
-                  <span className="portfolio-info-label">Email</span>
-                  <span className="portfolio-info-value">{combinedData.email}</span>
+            {/* Danh sách CV công khai nếu có */}
+            {combinedData.cvs && combinedData.cvs.length > 0 && (
+              <div className="portfolio-sidebar-card glass-card p-4 mb-4">
+                <h5 className="fw-bold mb-3 text-primary-glow d-flex align-items-center gap-2">
+                  <FileText size={20}/> DANH SÁCH CV
+                </h5>
+                <div className="d-flex flex-column gap-2">
+                  {combinedData.cvs.map(cv => (
+                    <Link 
+                      key={cv.cvId} 
+                      to={`/cv/${cv.cvId}`} 
+                      target="_blank" 
+                      className="d-flex justify-content-between align-items-center p-2 rounded bg-dark border border-secondary text-decoration-none text-white small"
+                    >
+                      <span className="fw-semibold">{cv.title}</span>
+                      <ExternalLink size={14} className="text-primary" />
+                    </Link>
+                  ))}
                 </div>
-              )}
-              {combinedData.phoneNumber && (
-                <div className="portfolio-info-item mb-3">
-                  <span className="portfolio-info-label">Số điện thoại</span>
-                  <span className="portfolio-info-value">{combinedData.phoneNumber}</span>
-                </div>
-              )}
-              {combinedData.location && (
-                <div className="portfolio-info-item mb-3">
-                  <span className="portfolio-info-label">Địa chỉ</span>
-                  <span className="portfolio-info-value">{combinedData.location}</span>
-                </div>
-              )}
-              {combinedData.birthday && (
-                <div className="portfolio-info-item mb-0">
-                  <span className="portfolio-info-label">Ngày sinh</span>
-                  <span className="portfolio-info-value">{new Date(combinedData.birthday).toLocaleDateString('vi-VN')}</span>
-                </div>
-              )}
-            </div>
+              </div>
+            )}
 
-            {/* Skills Card */}
+            {/* Kỹ năng */}
             {skills.length > 0 && (
-              <div className="portfolio-sidebar-card glass-card p-4">
+              <div className="portfolio-sidebar-card glass-card p-4 mb-4">
                 <h5 className="fw-bold mb-4 text-primary-glow d-flex align-items-center gap-2">
                   <Code2 size={20}/> KỸ NĂNG
                 </h5>
                 <div className="d-flex flex-wrap gap-2">
                   {skills.map(skill => (
-                    <Badge key={skill.skillId} pill bg={skill.status === 'APPROVED' ? 'primary' : 'secondary'} className="portfolio-skill-badge">
+                    <Badge key={skill.skillId || skill.skillName} pill bg={skill.status === 'APPROVED' ? 'primary' : 'secondary'} className="portfolio-skill-badge">
                       {skill.skillName}
                     </Badge>
                   ))}
@@ -330,12 +325,12 @@ const Portfolio = () => {
             {projects.length > 0 ? (
               <Row className="g-4">
                 {projects.map((project, index) => (
-                  <Col md={6} key={project.portfolioId}>
+                  <Col md={6} key={project.portfolioId || index}>
                     <div className="portfolio-view-card glass-card h-100 border-0 overflow-hidden" style={{animationDelay: `${index * 0.1}s`}}>
                       <div className="portfolio-view-img-wrapper">
                         <img 
                           src={project.imageUrl || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='340' fill='%230f172a'%3E%3Crect width='600' height='340'/%3E%3C/svg%3E"} 
-                          alt={project.title} 
+                          alt={project.projectName || project.title} 
                           className="portfolio-view-img"
                         />
                         <div className="portfolio-view-img-overlay">
