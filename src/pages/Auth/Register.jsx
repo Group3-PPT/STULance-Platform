@@ -10,7 +10,7 @@ const Register = () => {
   const [loading, setLoading] = useState(false);
   const [showPass, setShowPass] = useState(false);
   const [isOtpSent, setIsOtpSent] = useState(false);
-  const [timer, setTimer] = useState(120); 
+  const [timer, setTimer] = useState(600); 
   
   // --- MỚI: State lưu danh sách vai trò từ API ---
   const [roles, setRoles] = useState([]);
@@ -118,7 +118,8 @@ const handleRegister = async (e) => {
   try {
     const res = await axios.post('/api/v1/auth/register', formData);
     setIsOtpSent(true);
-    setTimer(120);
+    setTimer(600);
+    setOtp(new Array(6).fill(""));
     alert("Mã OTP đã được gửi!");
   } catch (error) {
     // --- ĐOẠN FIX: Lấy lỗi chi tiết từ Server ---
@@ -142,6 +143,20 @@ const handleRegister = async (e) => {
     setLoading(false);
   }
 };
+
+  const handleResendOtp = async () => {
+    setLoading(true);
+    try {
+      await axios.post('/api/v1/auth/register', formData);
+      setTimer(600);
+      setOtp(new Array(6).fill(""));
+      alert("Mã OTP đã được gửi lại!");
+    } catch (error) {
+      alert("Không thể gửi lại mã. Vui lòng thử lại sau.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleVerifyOtp = async () => {
     const codeString = otp.join("");
@@ -256,12 +271,31 @@ const handleRegister = async (e) => {
                         setOtp(newOtp);
                         if (e.target.value !== "" && index < 5) inputRefs.current[index + 1].focus();
                     }}
+                    onKeyDown={(e) => {
+                        if (e.key === "Backspace") {
+                          e.preventDefault();
+                          let newOtp = [...otp];
+                          if (otp[index] !== "") {
+                            newOtp[index] = "";
+                            setOtp(newOtp);
+                          } else if (index > 0) {
+                            newOtp[index - 1] = "";
+                            setOtp(newOtp);
+                            inputRefs.current[index - 1].focus();
+                          }
+                        }
+                    }}
                   />
                 ))}
               </div>
               <Button onClick={handleVerifyOtp} variant="primary" className="w-100 py-3 fw-bold mb-3 shadow-glow" disabled={loading || timer === 0}>
                 {loading ? <Spinner size="sm" /> : "XÁC NHẬN MÃ"}
               </Button>
+              {timer === 0 && (
+                <Button variant="outline-primary" className="w-100 py-2 fw-bold" onClick={handleResendOtp} disabled={loading}>
+                  Gửi lại mã OTP
+                </Button>
+              )}
             </div>
           )}
           <div className="text-center mt-4">

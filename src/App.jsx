@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { authService } from './services/authService';
-import { createBrowserRouter, RouterProvider, Outlet, useSearchParams, useLocation, useNavigate } from 'react-router-dom';
+import { createBrowserRouter, RouterProvider, Outlet, useSearchParams, useLocation, useNavigate, Navigate } from 'react-router-dom';
 
 import NavbarComp from './components/NavbarComp';
 import FooterComp from './components/Footer';
@@ -14,6 +14,7 @@ import Home from './pages/Home';
 import Login from './pages/Auth/Login';
 import Register from './pages/Auth/Register';
 import ForgotPassword from './pages/Auth/ForgotPassword';
+import VerifyOtp from './pages/Auth/VerifyOtp';
 import CVMaker from './pages/CVMaker';
 import Portfolio from './pages/Lancer/Portfolio';
 import BusinessProfile from './pages/Business/BusinessProfile';
@@ -22,7 +23,6 @@ import Businesses from './pages/Business/Businesses';
 import FindStudents from './pages/Business/FindStudents';
 import FindEnterprises from './pages/Business/FindEnterprises';
 import Services from './pages/Services/Services';
-import ServicesList from './pages/Services/ServicesList';
 import ServiceDetail from './pages/Services/ServiceDetail';
 import Payment from './pages/Payment';
 import ServiceInvoice from './pages/Services/ServiceInvoice';
@@ -174,12 +174,13 @@ const router = createBrowserRouter([
       { path: 'login', element: <Login /> },
       { path: 'register', element: <Register /> },
       { path: 'forgot-password', element: <ForgotPassword /> },
+      { path: 'verify-otp', element: <VerifyOtp /> },
       { path: 'jobs', element: <Jobs /> },
       { path: 'jobs/apply/:jobId', element: <ApplyJob /> },
       { path: 'businesses', element: <Businesses /> },
       { path: 'businesses/business-profile/:id', element: <BusinessProfile /> },
       { path: 'businesses/business-profile', element: <BusinessProfile /> },
-      { path: 'services-list', element: <ServicesList /> },
+      { path: 'services-list', element: <Navigate to="/services" replace /> },
       { path: 'services', element: <Services /> },
       { path: 'service-detail/:id', element: <ServiceDetail /> },
       { path: 'portfolio', element: <Portfolio /> },

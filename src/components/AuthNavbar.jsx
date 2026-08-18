@@ -16,7 +16,7 @@ const AuthNavbar = () => {
         <Navbar.Collapse id="auth-navbar">
           <Nav className="mx-auto nav-links-gap">
             <Nav.Link as={Link} to="/jobs">Việc Làm</Nav.Link>
-            <Nav.Link as={Link} to="/services-list">Dịch Vụ</Nav.Link>
+            <Nav.Link as={Link} to="/services">Dịch Vụ</Nav.Link>
             <Nav.Link as={Link} to="/businesses">Doanh nghiệp</Nav.Link>
             <Nav.Link as={Link} to="/handbook">Cẩm Nang</Nav.Link>
           </Nav>

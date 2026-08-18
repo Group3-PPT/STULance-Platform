@@ -793,7 +793,7 @@ const DashboardLancer = () => {
                               <ShoppingBag size={14} className="text-info" />
                               <h6 className="fw-bold mb-0 text-white">{order.serviceTitle}</h6>
                             </div>
-                            <div className="x-small text-white-50 mb-1">Khách: <strong>{order.buyerName || 'N/A'}</strong> | {formatMoney(order.orderPrice)}</div>
+                            <div className="x-small text-white-50 mb-1">Khách: <strong>{order.buyerName || 'N/A'}</strong> | {formatMoney(order.orderPrice || order.totalAmount || order.totalPrice || order.price || 0)}</div>
                             <div className="x-small text-white-50">Ngày đặt: {new Date(order.createdAt).toLocaleDateString()}</div>
                             <div className="d-flex align-items-center gap-1 mt-1">
                               {[...Array(5)].map((_, i) => (

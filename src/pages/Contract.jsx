@@ -221,7 +221,7 @@ const Contract = () => {
   // Doanh nghiệp đã ký chưa?
   // Có 2 cách kiểm tra:
   //   1. Tìm trong danh sách chữ ký có role là CLIENT hoặc ENTERPRISE
-  //   2. Nếu hợp đồng đã qua giai đoạn ký + đã khóa → coi như đã ký
+  //   2. Nếu hợp đồng đã qua giai đoạn ký + đã khóa + status >= AWAITING_PAYMENT → coi như đã ký
   let hasEnterpriseSigned = false;
   for (let i = 0; i < sigList.length; i++) {
     const sig = sigList[i];
@@ -230,7 +230,8 @@ const Contract = () => {
       break;
     }
   }
-  if (!hasEnterpriseSigned && pastSigning && isLocked) {
+  // Chi coi da ky khi hop dong da qua SIGNING va da khoa
+  if (!hasEnterpriseSigned && pastSigning && isLocked && sigList.length > 0) {
     hasEnterpriseSigned = true;
   }
 
@@ -243,7 +244,7 @@ const Contract = () => {
       break;
     }
   }
-  if (!hasStudentSigned && pastSigning && isLocked) {
+  if (!hasStudentSigned && pastSigning && isLocked && sigList.length > 0) {
     hasStudentSigned = true;
   }
 
@@ -619,6 +620,19 @@ const Contract = () => {
   // Thử nhiều trường có thể chứa giá trị tiền
   let contractAmount = 0;
   if (contract) {
+    console.log("Contract fields:", Object.keys(contract));
+    console.log("Contract budget fields:", {
+      totalBudget: contract.totalBudget,
+      totalAmount: contract.totalAmount,
+      bidAmount: contract.bidAmount,
+      price: contract.price,
+      amount: contract.amount,
+      budget: contract.budget,
+      value: contract.value,
+      contractAmount: contract.contractAmount,
+      bidPrice: contract.bidPrice,
+      servicePrice: contract.servicePrice,
+    });
     if (contract.totalBudget) {
       contractAmount = contract.totalBudget;
     } else if (contract.totalAmount) {
@@ -629,6 +643,14 @@ const Contract = () => {
       contractAmount = contract.price;
     } else if (contract.amount) {
       contractAmount = contract.amount;
+    } else if (contract.budget) {
+      contractAmount = contract.budget;
+    } else if (contract.contractAmount) {
+      contractAmount = contract.contractAmount;
+    } else if (contract.value) {
+      contractAmount = contract.value;
+    } else if (contract.bidPrice) {
+      contractAmount = contract.bidPrice;
     }
   }
 

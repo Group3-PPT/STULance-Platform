@@ -125,7 +125,25 @@ const Login = function () {
                 return;
             }
 
-            // Nếu yêu cầu chấp nhận chính sách → chuyển trang Policy
+            // ============================================================
+            // TRƯỜNG HỢP 1: Tài khoản chưa xác thực OTP
+            // Server trả về requiresOtpVerification = true
+            // → Chuyển trang xác thực OTP
+            // ============================================================
+            if (result.requiresOtpVerification) {
+                navigate('/verify-otp', {
+                    state: {
+                        email: email,
+                        password: password
+                    }
+                });
+                return;
+            }
+
+            // ============================================================
+            // TRƯỜNG HỢP 2: Yêu cầu chấp nhận chính sách
+            // → Chuyển trang Policy
+            // ============================================================
             if (result.requiresPolicyAcceptance) {
                 sessionStorage.setItem('pendingPolicyEmail', email);
                 sessionStorage.setItem('pendingPolicyPassword', password);
@@ -178,7 +196,51 @@ const Login = function () {
 
         } catch (error) {
             console.error('Lỗi đăng nhập:', error);
-            var errorMsg = error.response?.data?.message || 'Email hoặc mật khẩu không chính xác!';
+            var errorResponse = error.response?.data;
+            var errorMsg = errorResponse?.message || errorResponse?.error || 'Email hoặc mật khẩu không chính xác!';
+            var errorStatus = error.response?.status;
+
+            // Parse validation errors (server trả về object errors)
+            if (errorResponse?.errors) {
+                errorMsg = Object.values(errorResponse.errors).flat().join('\n');
+            }
+
+            // Debug: log chi tiết response từ server
+            console.log('=== LOGIN DEBUG ===');
+            console.log('Status:', errorStatus);
+            console.log('Response data:', JSON.stringify(errorResponse, null, 2));
+            console.log('Parsed message:', errorMsg);
+            console.log('==================');
+
+            // ============================================================
+            // TRƯỜNG HỢP: Backend trả lỗi vì account chưa xác thực OTP
+            // Server có thể trả 400 hoặc 403 + message chứa keyword
+            // → Redirect sang trang verify-otp thay vì báo lỗi sai mật khẩu
+            // ============================================================
+            var msgLower = errorMsg.toLowerCase();
+            var isUnverified = (
+                errorStatus === 403 ||
+                (errorStatus === 400 && (
+                    msgLower.includes('chưa xác thực') ||
+                    msgLower.includes('chua xac thuc') ||
+                    msgLower.includes('not verified') ||
+                    msgLower.includes('unverified') ||
+                    msgLower.includes('otp') ||
+                    msgLower.includes('verify') ||
+                    msgLower.includes('xác thực') ||
+                    msgLower.includes('xac thuc')
+                ))
+            );
+
+            if (isUnverified) {
+                navigate('/verify-otp', {
+                    state: {
+                        email: e.target.elements.email.value,
+                        password: e.target.elements.password.value
+                    }
+                });
+                return;
+            }
 
             // Tăng số lần thử sai
             var newCount = attempts.count + 1;

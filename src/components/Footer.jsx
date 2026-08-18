@@ -35,7 +35,7 @@ const FooterComp = () => {
             <h6 className="footer-heading text-white fw-bold mb-4">TÍNH NĂNG</h6>
             <ul className="footer-links list-unstyled">
               <li><Link to="/jobs">Tìm việc làm</Link></li>
-              <li><Link to="/services-list">Gói dịch vụ</Link></li>
+              <li><Link to="/services">Gói dịch vụ</Link></li>
               <li><Link to="/cv-maker">Tạo CV mẫu</Link></li>
               <li><Link to="/portfolio">Hồ sơ năng lực</Link></li>
             </ul>

@@ -238,19 +238,14 @@ const Home = () => {
             </div>
             <div className="search-body p-2">
               <Row className="g-2 align-items-center">
-                <Col md={4}>
+                <Col md={6}>
                   <Button as={Link} to="/jobs" variant="primary" className="w-100 fw-bold d-flex align-items-center justify-content-center gap-2 hero-search-btn">
                     <Briefcase size={14}/> TÌM VIỆC LÀM
                   </Button>
                 </Col>
-                <Col md={4}>
+                <Col md={6}>
                   <Button as={Link} to="/services" variant="outline-primary" className="w-100 fw-bold d-flex align-items-center justify-content-center gap-2 hero-search-btn">
                     <Sparkles size={14}/> KHÁM PHÁ DỊCH VỤ
-                  </Button>
-                </Col>
-                <Col md={4}>
-                  <Button as={Link} to="/services-list" variant="outline-light" className="w-100 fw-bold d-flex align-items-center justify-content-center gap-2 hero-search-btn">
-                    <Layout size={14}/> DANH MỤC
                   </Button>
                 </Col>
               </Row>

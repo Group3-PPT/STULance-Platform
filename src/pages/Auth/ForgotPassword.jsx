@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Container, Form, Button, InputGroup, Spinner } from 'react-bootstrap';
 import { useNavigate, Link } from 'react-router-dom';
 import { Mail, Lock, ChevronLeft, Smartphone, KeyRound, CheckCircle2, Eye, EyeOff } from 'lucide-react';
@@ -19,10 +19,41 @@ const ForgotPassword = () => {
   });
 
   const [otpArray, setOtpArray] = useState(new Array(6).fill(""));
+  const [timer, setTimer] = useState(600);
   const inputRefs = useRef([]);
 
   const handleInputChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  // Timer countdown
+  useEffect(() => {
+    let interval;
+    if (step === 2 && timer > 0) {
+      interval = setInterval(() => setTimer((prev) => prev - 1), 1000);
+    }
+    return () => clearInterval(interval);
+  }, [step, timer]);
+
+  const formatTime = (seconds) => {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m}:${s < 10 ? '0' : ''}${s}`;
+  };
+
+  // Gửi lại OTP
+  const handleResendOtp = async () => {
+    setLoading(true);
+    try {
+      await axios.post('/api/v1/auth/forgot-password', { email });
+      setTimer(600);
+      setOtpArray(new Array(6).fill(""));
+      alert("Mã OTP đã được gửi lại!");
+    } catch (error) {
+      alert("Không thể gửi lại mã. Vui lòng thử lại sau.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   // --- BƯỚC 1: GỬI YÊU CẦU QUÊN MẬT KHẨU ---
@@ -119,6 +150,11 @@ const ForgotPassword = () => {
             /* FORM 2: NHẬP OTP & PASS MỚI */
             <Form onSubmit={handleResetPassword}>
               <div className="text-center mb-4">
+                {timer > 0 && (
+                  <div className={`mb-2 ${timer < 60 ? 'text-danger' : 'text-primary-glow'}`}>
+                    <span className="fw-bold small">Hiệu lực: {formatTime(timer)}</span>
+                  </div>
+                )}
                 <div className="d-flex justify-content-center gap-2 mb-2">
                   {otpArray.map((data, index) => (
                     <input
@@ -130,11 +166,28 @@ const ForgotPassword = () => {
                       value={data}
                       ref={el => inputRefs.current[index] = el}
                       onChange={(e) => handleOtpChange(e.target.value, index)}
-                      onKeyDown={(e) => e.key === "Backspace" && index > 0 && !otpArray[index] && inputRefs.current[index-1].focus()}
+                      onKeyDown={(e) => {
+                        if (e.key === "Backspace") {
+                          e.preventDefault();
+                          let newOtp = [...otpArray];
+                          if (otpArray[index] !== "") {
+                            newOtp[index] = "";
+                            setOtpArray(newOtp);
+                          } else if (index > 0) {
+                            newOtp[index - 1] = "";
+                            setOtpArray(newOtp);
+                            inputRefs.current[index - 1].focus();
+                          }
+                        }
+                      }}
                     />
                   ))}
                 </div>
-                <small className="text-primary pointer" onClick={() => setStep(1)}>Gửi lại mã?</small>
+                {timer === 0 ? (
+                  <small className="text-primary pointer fw-bold" onClick={handleResendOtp}>Gửi lại mã OTP</small>
+                ) : (
+                  <small className="text-white-50">Gửi lại mã sau <span className="text-primary fw-bold">{formatTime(timer)}</span></small>
+                )}
               </div>
 
               <Form.Group className="mb-3">
