@@ -164,14 +164,16 @@ const Contract = () => {
   // BIẾN TÍNH TOÁN (Derived Variables)
   let isClient = false;
   let isProvider = false;
+  let clientIsEnterprise = false;
+  let providerIsEnterprise = false;
 
   if (contract) {
-    // Lấy userId của bên thuê (doanh nghiệp)
+    // Lấy userId của bên thuê (client)
     const clientUserId = contract.clientInfo && contract.clientInfo.userId
       ? contract.clientInfo.userId
       : contract.clientUserId;
 
-    // Lấy userId của bên thực hiện (sinh viên)
+    // Lấy userId của bên thực hiện (provider)
     const providerUserId = contract.providerInfo && contract.providerInfo.userId
       ? contract.providerInfo.userId
       : contract.providerUserId;
@@ -179,7 +181,25 @@ const Contract = () => {
     // So sánh với currentUserId để xác định vai trò của người dùng hiện tại
     isClient = String(clientUserId) === String(currentUserId);
     isProvider = String(providerUserId) === String(currentUserId);
+
+    // Xác định client có phải doanh nghiệp không (co ma so thue = doanh nghiep)
+    clientIsEnterprise = Boolean(
+      (contract.clientInfo && contract.clientInfo.companyTaxCode)
+      || contract.clientRoles && contract.clientRoles.includes('ENTERPRISE')
+    );
+
+    // Xác định provider có phải doanh nghiệp không
+    providerIsEnterprise = Boolean(
+      (contract.providerInfo && contract.providerInfo.companyTaxCode)
+      || contract.providerRoles && contract.providerRoles.includes('ENTERPRISE')
+    );
   }
+
+  // Nhan xet ten vai tro cho moi ben (sinh vien / doanh nghiep)
+  var clientRoleLabel = clientIsEnterprise ? 'Doanh nghiệp' : 'Sinh viên';
+  var providerRoleLabel = providerIsEnterprise ? 'Doanh nghiệp' : 'Sinh viên';
+  var clientShortLabel = clientIsEnterprise ? 'DN' : 'SV';
+  var providerShortLabel = providerIsEnterprise ? 'DN' : 'SV';
 
   // Hợp đồng này có phải của tôi không? (dùng để ẩn nút tố cáo)
   const isOwnContract = isClient || isProvider;
@@ -301,7 +321,7 @@ const Contract = () => {
     let confirmMessage = "";
 
     if (actionType === 'complete') {
-      confirmMessage = "Xác nhận hoàn thành dự án và giải ngân tiền cho sinh viên?";
+      confirmMessage = "Xác nhận hoàn thành dự án và giải ngân tiền cho Bên B?";
     }
     if (actionType === 'cancel') {
       confirmMessage = "Bạn muốn yêu cầu hủy hợp đồng này?";
@@ -778,7 +798,7 @@ const Contract = () => {
                 <p className="mb-3 italic" style={{fontSize: '11.5px'}}>Căn cứ vào nội dung {contract.bidId ? 'Đấu thầu dự án' : 'Đơn đặt hàng dịch vụ'} trên sàn StudentLance, hai bên đồng ý ký kết hợp đồng với các điều khoản sau:</p>
 
                 <div className="party-info mb-3">
-                  <p className="fw-bold mb-1 text-primary" style={{fontSize: '12px'}}>BÊN THUÊ (BÊN A): {contract.clientInfo?.displayName || contract.clientName || 'N/A'}</p>
+                  <p className="fw-bold mb-1 text-primary" style={{fontSize: '12px'}}>BÊN THUÊ (BÊN A): {contract.clientInfo?.displayName || contract.clientName || 'N/A'} <span className="text-muted fw-normal">({clientRoleLabel})</span></p>
                   <p className="mb-0" style={{fontSize: '11px'}}>Họ tên: {contract.clientInfo?.fullName || contract.clientInfo?.displayName || 'N/A'}</p>
                   <p className="mb-0" style={{fontSize: '11px'}}>Email: {contract.clientInfo?.email || 'N/A'}</p>
                   {contract.clientInfo?.companyTaxCode && (
@@ -793,7 +813,7 @@ const Contract = () => {
                 </div>
 
                 <div className="party-info mb-3">
-                  <p className="fw-bold mb-1 text-primary" style={{fontSize: '12px'}}>BÊN THỰC HIỆN (BÊN B): {contract.providerInfo?.displayName || contract.providerName || 'N/A'}</p>
+                  <p className="fw-bold mb-1 text-primary" style={{fontSize: '12px'}}>BÊN THỰC HIỆN (BÊN B): {contract.providerInfo?.displayName || contract.providerName || 'N/A'} <span className="text-muted fw-normal">({providerRoleLabel})</span></p>
                   {contract.providerInfo?.citizenId && (
                     <p className="mb-0" style={{fontSize: '11px'}}>Số CCCD: {maskInfo(contract.providerInfo.citizenId)}</p>
                   )}
@@ -833,11 +853,11 @@ const Contract = () => {
 
                   {/* ĐIỀU 4: QUYỀN VÀ NGHĨA VỤ CÁC BÊN */}
                   <h6 className="fw-bold border-bottom pb-1 mt-3" style={{fontSize: '12px'}}>ĐIỀU 4: QUYỀN VÀ NGHĨA VỤ CÁC BÊN</h6>
-                  <p className="ps-2 fw-bold mb-1" style={{fontSize: '11.5px'}}>Bên A (Doanh nghiệp):</p>
+                  <p className="ps-2 fw-bold mb-1" style={{fontSize: '11.5px'}}>Bên A ({clientRoleLabel}):</p>
                   <p className="ps-2 mb-1" style={{fontSize: '11.5px'}}>4.1. Cung cấp đầy đủ thông tin, tài liệu và yêu cầu cần thiết để Bên B thực hiện công việc.</p>
                   <p className="ps-2 mb-1" style={{fontSize: '11.5px'}}>4.2. Phản hồi và đánh giá bản giao trong vòng <strong>3 ngày</strong> kể từ khi nhận được.</p>
                   <p className="ps-2 mb-1" style={{fontSize: '11.5px'}}>4.3. Thanh toán đúng hạn qua hệ thống Escrow khi chấp nhận bản giao.</p>
-                  <p className="ps-2 fw-bold mb-1 mt-2" style={{fontSize: '11.5px'}}>Bên B (Sinh viên):</p>
+                  <p className="ps-2 fw-bold mb-1 mt-2" style={{fontSize: '11.5px'}}>Bên B ({providerRoleLabel}):</p>
                   <p className="ps-2 mb-1" style={{fontSize: '11.5px'}}>4.4. Thực hiện công việc đúng tiến độ và chất lượng đã cam kết.</p>
                   <p className="ps-2 mb-1" style={{fontSize: '11.5px'}}>4.5. Nộp bản giao đúng hạn và chịu trách nhiệm về chất lượng sản phẩm.</p>
                   <p className="ps-2 mb-2" style={{fontSize: '11.5px'}}>4.6. Không được chuyển giao công việc cho bên thứ ba mà không có sự đồng ý của Bên A.</p>
@@ -885,9 +905,9 @@ const Contract = () => {
                 {/* Khu vực chữ ký */}
                 <div className="signature-area mt-5 pt-5 d-flex justify-content-around text-center">
 
-                  {/* CHỮ KÝ BÊN A (DOANH NGHIỆP) */}
+                  {/* CHỮ KÝ BÊN A */}
                   <div className="sig-block">
-                    <p className="fw-bold mb-4">ĐẠI DIỆN BÊN A</p>
+                    <p className="fw-bold mb-4">ĐẠI DIỆN BÊN A ({clientShortLabel})</p>
 
                     {hasEnterpriseSigned ? (
                       <div className="stamp-box signed">
@@ -898,13 +918,13 @@ const Contract = () => {
                     )}
 
                     <p className="mt-3 fw-bold">
-                      {contract.representName || 'Người thuê'}
+                      {contract.clientInfo?.fullName || contract.representName || 'Bên A'}
                     </p>
                   </div>
 
-                  {/* CHỮ KÝ BÊN B (SINH VIÊN) */}
+                  {/* CHỮ KÝ BÊN B */}
                   <div className="sig-block">
-                    <p className="fw-bold mb-4">ĐẠI DIỆN BÊN B</p>
+                    <p className="fw-bold mb-4">ĐẠI DIỆN BÊN B ({providerShortLabel})</p>
 
                     {hasStudentSigned ? (
                       <div className="stamp-box signed-blue">
@@ -914,7 +934,7 @@ const Contract = () => {
                       <div className="empty-sig">Chờ ký...</div>
                     )}
 
-                    <p className="mt-3 fw-bold">{contract.studentName}</p>
+                    <p className="mt-3 fw-bold">{contract.providerInfo?.fullName || contract.studentName || 'Bên B'}</p>
                   </div>
 
                 </div>
@@ -1180,7 +1200,7 @@ const Contract = () => {
             </div>
             <div>
               <span className="text-white">Yêu cầu chỉnh sửa</span>
-              <p className="x-small text-white-50 mb-0">Gửi yêu cầu chỉnh sửa cho Sinh viên</p>
+              <p className="x-small text-white-50 mb-0">Gửi yêu cầu chỉnh sửa cho Bên B</p>
             </div>
           </Modal.Title>
         </Modal.Header>
